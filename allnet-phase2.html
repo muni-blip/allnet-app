@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Game Session</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0A0A0A; --bg-elevated: #141414; --bg-card: #1A1A1A; --surface: #111111;
+  --orange: #FF5A1F; --orange-glow: rgba(255,90,31,0.15);
+  --green: #22C55E; --green-glow: rgba(34,197,94,0.15);
+  --blue: #3B82F6; --blue-glow: rgba(59,130,246,0.15);
+  --yellow: #FACC15; --red: #EF4444;
+  --text-primary: #F5F5F5; --text-secondary: #A3A3A3; --text-muted: #6B6B6B;
+  --border: #2A2A2A; --border-light: #333;
+  --radius: 12px; --radius-sm: 8px; --radius-lg: 20px;
+  --font-display: 'Oswald', sans-serif; --font-body: 'DM Sans', sans-serif; --font-mono: 'JetBrains Mono', monospace;
+  --transition: 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+html, body { height:100%; font-family:var(--font-body); background:var(--bg); color:var(--text-primary); -webkit-font-smoothing:antialiased; overflow:hidden; }
+.app { height:100%; display:flex; flex-direction:column; position:relative; max-width:480px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); }
+.top-bar { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg); z-index:10; }
+.top-bar__logo { font-family:var(--font-display); font-size:20px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; text-decoration:none; color:var(--text-primary); }
+.top-bar__logo span { color:var(--orange); }
+.top-bar__back { font-size:14px; color:var(--text-secondary); cursor:pointer; background:none; border:none; font-family:var(--font-body); font-weight:600; transition:color 0.2s; }
+.top-bar__back:hover { color:var(--text-primary); }
+.screen { flex:1; overflow-y:auto; padding:24px 20px 32px; display:none; flex-direction:column; }
+.screen.active { display:flex; }
+.section-label { font-family:var(--font-mono); font-size:11px; color:var(--orange); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:12px; }
+.screen-title { font-family:var(--font-display); font-size:28px; font-weight:700; text-transform:uppercase; line-height:1.1; margin-bottom:8px; }
+.screen-sub { font-size:14px; color:var(--text-secondary); line-height:1.6; margin-bottom:28px; }
+.btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:16px 24px; border:none; border-radius:var(--radius); font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer; transition:var(--transition); width:100%; }
+.btn--primary { background:var(--orange); color:white; }
+.btn--primary:hover { background:#FF6B35; transform:translateY(-1px); box-shadow:0 6px 20px rgba(255,90,31,0.3); }
+.btn--primary:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn--secondary { background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-light); }
+.btn--danger { background:var(--red); color:white; }
+.btn-row { display:flex; gap:10px; margin-top:auto; padding-top:24px; }
+.btn-row .btn { flex:1; }
+.court-context { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:24px; }
+.court-context__dot { width:10px; height:10px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.court-context__name { font-weight:600; font-size:14px; flex:1; }
+.court-context__badge { font-size:10px; font-weight:700; text-transform:uppercase; color:var(--green); background:var(--green-glow); padding:3px 8px; border-radius:100px; }
+.action-cards { display:flex; flex-direction:column; gap:14px; margin-bottom:24px; }
+.action-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; cursor:pointer; transition:var(--transition); display:flex; align-items:center; gap:18px; }
+.action-card:hover { border-color:var(--orange); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+.action-card__icon { width:52px; height:52px; border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+.action-card__icon--create { background:var(--orange-glow); }
+.action-card__icon--join { background:var(--green-glow); }
+.action-card__title { font-family:var(--font-display); font-size:18px; font-weight:600; text-transform:uppercase; margin-bottom:2px; }
+.action-card__desc { font-size:13px; color:var(--text-muted); }
+.format-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:24px; }
+.format-option { background:var(--bg-card); border:2px solid var(--border); border-radius:var(--radius); padding:20px; text-align:center; cursor:pointer; transition:var(--transition); }
+.format-option:hover { border-color:var(--border-light); }
+.format-option.selected { border-color:var(--orange); background:rgba(255,90,31,0.05); }
+.format-option__label { font-family:var(--font-display); font-size:28px; font-weight:700; margin-bottom:4px; }
+.format-option.selected .format-option__label { color:var(--orange); }
+.format-option__desc { font-size:12px; color:var(--text-muted); }
+.team-codes { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+.single-code { display:flex; flex-direction:column; align-items:center; margin-bottom:24px; }
+.single-code__card { background:var(--bg-card); border:1px solid rgba(255,90,31,0.3); border-radius:var(--radius); padding:24px; text-align:center; width:100%; }
+.single-code__label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--orange); margin-bottom:16px; }
+.single-code__code { font-family:var(--font-mono); font-size:36px; font-weight:700; letter-spacing:0.2em; color:var(--orange); margin-bottom:6px; }
+.single-code__hint { font-size:12px; color:var(--text-muted); }
+.qr-wrapper { display:flex; justify-content:center; margin-bottom:16px; }
+.qr-box { width:160px; height:160px; background:white; border-radius:var(--radius-sm); position:relative; overflow:hidden; }
+.qr-box__grid { position:absolute; inset:8px; display:grid; grid-template-columns:repeat(21,1fr); grid-template-rows:repeat(21,1fr); gap:0; }
+.qr-box__cell { background:white; }
+.qr-box__cell--dark { background:#000; }
+.qr-box__logo { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--orange); color:white; font-family:var(--font-display); font-size:9px; font-weight:700; padding:4px 8px; border-radius:4px; letter-spacing:0.05em; z-index:2; white-space:nowrap; }
+.single-code__or { font-size:11px; color:var(--text-muted); margin:12px 0; text-transform:uppercase; letter-spacing:0.1em; }
+.team-code-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center; }
+.team-code-card--a { border-color:rgba(255,90,31,0.3); }
+.team-code-card--b { border-color:rgba(59,130,246,0.3); }
+.team-code-card__label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; }
+.team-code-card--a .team-code-card__label { color:var(--orange); }
+.team-code-card--b .team-code-card__label { color:var(--blue); }
+.team-code-card__code { font-family:var(--font-mono); font-size:24px; font-weight:700; letter-spacing:0.15em; }
+.team-code-card__hint { font-size:10px; color:var(--text-muted); margin-top:4px; }
+.lobby-section { margin-bottom:20px; }
+.lobby-section__title { font-family:var(--font-display); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.lobby-section__title--a { color:var(--orange); }
+.lobby-section__title--b { color:var(--blue); }
+.team-dot { width:8px; height:8px; border-radius:50%; }
+.team-dot--a { background:var(--orange); }
+.team-dot--b { background:var(--blue); }
+.lobby-player { display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:6px; animation:slideIn 0.3s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+.lobby-player__avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:13px; font-weight:700; color:white; flex-shrink:0; }
+.avatar--a { background:linear-gradient(135deg,var(--orange),#FF8C42); }
+.avatar--b { background:linear-gradient(135deg,var(--blue),#60A5FA); }
+.lobby-player__name { font-weight:600; font-size:14px; }
+.lobby-player__meta { font-size:11px; color:var(--text-muted); }
+.lobby-player__you { font-size:10px; font-weight:700; text-transform:uppercase; color:var(--orange); background:var(--orange-glow); padding:3px 8px; border-radius:100px; }
+.lobby-slot { display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px dashed var(--border-light); border-radius:var(--radius); margin-bottom:6px; color:var(--text-muted); font-size:13px; }
+.lobby-slot__dot { width:36px; height:36px; border-radius:50%; border:2px dashed var(--border-light); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.waiting-indicator { display:flex; align-items:center; justify-content:center; gap:8px; padding:16px; color:var(--text-muted); font-size:13px; }
+.waiting-dots span { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--text-muted); animation:dotPulse 1.4s ease-in-out infinite; }
+.waiting-dots span:nth-child(2) { animation-delay:0.2s; }
+.waiting-dots span:nth-child(3) { animation-delay:0.4s; }
+@keyframes dotPulse { 0%,80%,100% { opacity:0.3; transform:scale(0.8); } 40% { opacity:1; transform:scale(1.2); } }
+.join-input { width:100%; padding:18px; text-align:center; font-family:var(--font-mono); font-size:28px; font-weight:700; letter-spacing:0.2em; background:var(--bg-card); border:2px solid var(--border); border-radius:var(--radius); color:var(--text-primary); outline:none; transition:var(--transition); margin-bottom:24px; }
+.join-input:focus { border-color:var(--orange); box-shadow:0 0 0 4px rgba(255,90,31,0.1); }
+.join-input::placeholder { color:var(--text-muted); font-size:16px; letter-spacing:0.05em; }
+.join-or { text-align:center; color:var(--text-muted); font-size:13px; margin:20px 0; position:relative; }
+.join-or::before,.join-or::after { content:''; position:absolute; top:50%; width:35%; height:1px; background:var(--border); }
+.join-or::before { left:0; } .join-or::after { right:0; }
+.scan-btn { display:flex; align-items:center; justify-content:center; gap:10px; padding:18px; background:var(--bg-card); border:1px dashed var(--border-light); border-radius:var(--radius); color:var(--text-secondary); font-size:14px; font-weight:600; cursor:pointer; transition:var(--transition); width:100%; }
+.scan-btn:hover { border-color:var(--orange); color:var(--orange); }
+.active-game { text-align:center; flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.game-timer { font-family:var(--font-mono); font-size:48px; font-weight:700; color:var(--green); margin-bottom:4px; }
+.game-timer-label { font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:32px; }
+.game-format-badge { font-family:var(--font-mono); font-size:12px; color:var(--text-muted); background:var(--bg-card); border:1px solid var(--border); padding:6px 16px; border-radius:100px; margin-bottom:24px; }
+.teams-vs { display:flex; align-items:flex-start; gap:12px; margin-bottom:32px; width:100%; }
+.team-roster { flex:1; display:flex; flex-direction:column; gap:6px; align-items:center; }
+.team-roster__label { font-family:var(--font-display); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+.team-roster__label--a { color:var(--orange); }
+.team-roster__label--b { color:var(--blue); }
+.team-roster__player { display:flex; align-items:center; gap:8px; padding:6px 10px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); width:100%; }
+.team-roster__avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:10px; font-weight:700; color:white; flex-shrink:0; }
+.team-roster__name { font-size:12px; font-weight:600; }
+.vs-divider { font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--text-muted); flex-shrink:0; padding-top:24px; }
+.review-progress { display:flex; gap:6px; margin-bottom:24px; }
+.review-progress__dot { flex:1; height:4px; border-radius:2px; background:var(--border); }
+.review-progress__dot.done { background:var(--green); }
+.review-progress__dot.current { background:var(--orange); }
+.review-player-header { display:flex; align-items:center; gap:14px; padding:16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:24px; }
+.review-player-header__count { font-size:12px; color:var(--text-muted); margin-left:auto; }
+.review-question { margin-bottom:24px; }
+.review-question__number { font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:6px; }
+.review-question__text { font-family:var(--font-display); font-size:16px; font-weight:600; text-transform:uppercase; margin-bottom:12px; }
+.review-options { display:flex; gap:8px; flex-wrap:wrap; }
+.review-option { padding:10px 18px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-card); color:var(--text-secondary); font-size:14px; font-weight:600; cursor:pointer; transition:var(--transition); }
+.review-option:hover { border-color:var(--text-muted); }
+.review-option.selected { border-color:var(--orange); color:var(--orange); background:rgba(255,90,31,0.08); }
+.rating-options { display:flex; gap:8px; }
+.rating-btn { width:48px; height:48px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-card); color:var(--text-secondary); font-family:var(--font-display); font-size:18px; font-weight:700; cursor:pointer; transition:var(--transition); display:flex; align-items:center; justify-content:center; }
+.rating-btn.selected { border-color:var(--orange); color:var(--orange); background:rgba(255,90,31,0.08); }
+.card-update { text-align:center; flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.card-update__label { font-size:14px; color:var(--text-secondary); margin-bottom:24px; }
+.career-card { width:100%; max-width:320px; background:linear-gradient(145deg,#1A1A1A 0%,#0F0F0F 100%); border:1px solid var(--border-light); border-radius:var(--radius-lg); overflow:hidden; position:relative; animation:cardReveal 0.6s ease; }
+@keyframes cardReveal { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.career-card::before { content:''; position:absolute; top:-1px; left:-1px; right:-1px; height:3px; background:linear-gradient(90deg,var(--orange),#FF8C42,var(--orange)); }
+.career-card__name-bar { padding:18px 20px 14px; }
+.career-card__first-name,.career-card__last-name { font-family:var(--font-display); font-size:28px; font-weight:700; text-transform:uppercase; line-height:1; }
+.career-card__last-name { text-align:right; }
+.career-card__color-bars { display:flex; margin:4px 0; }
+.career-card__color-bar { height:6px; flex:1; }
+.career-card__photo { width:100%; height:180px; background:linear-gradient(135deg,#1a1a3e,#4a1942,#1a3a4a); display:flex; align-items:flex-end; justify-content:space-around; padding:16px 20px; }
+.career-card__wld { display:flex; justify-content:space-around; width:100%; }
+.career-card__wld-item { text-align:center; }
+.career-card__wld-letter { font-family:var(--font-display); font-size:14px; font-weight:600; color:rgba(255,255,255,0.7); }
+.career-card__wld-value { font-family:var(--font-display); font-size:32px; font-weight:700; color:white; }
+.career-card__wld-change { font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--green); animation:changePop 0.5s ease 0.8s both; }
+@keyframes changePop { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+.career-card__ratings { padding:16px 20px 20px; }
+.career-card__rating-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
+.career-card__rating-label { font-family:var(--font-display); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+.career-card__rating-value { display:flex; align-items:center; gap:8px; }
+.career-card__rating-number { font-family:var(--font-display); font-size:16px; font-weight:700; }
+.career-card__rating-change { font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--green); animation:changePop 0.5s ease 1s both; }
+.career-card__formats { display:flex; gap:6px; padding:0 20px 16px; }
+.career-card__format { padding:5px 14px; border-radius:100px; border:1px solid var(--border); font-size:12px; font-weight:600; color:var(--text-muted); }
+.career-card__format--active { border-color:var(--text-primary); color:var(--text-primary); background:rgba(255,255,255,0.05); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top-bar"><a href="allnet-app.html" class="top-bar__logo">ALLNE<span>T</span></a><button class="top-bar__back" id="backBtn" onclick="goBack()">← Back</button></div>
+  <div class="screen active" id="screenChoose">
+    <div class="court-context"><div class="court-context__dot"></div><div class="court-context__name">Loading...</div><div class="court-context__badge">Checked In</div></div>
+    <div class="section-label">// Game Session</div><h1 class="screen-title">Ready to play?</h1><p class="screen-sub">Start a game to log it, or join someone else's.</p>
+    <div class="action-cards">
+      <div class="action-card" onclick="goTo('screenSetup')"><div class="action-card__icon action-card__icon--create">🏀</div><div><div class="action-card__title">Start a Game</div><div class="action-card__desc">Pick format, get team codes, share with everyone</div></div></div>
+      <div class="action-card" onclick="goTo('screenJoin')"><div class="action-card__icon action-card__icon--join">📲</div><div><div class="action-card__title">Join a Game</div><div class="action-card__desc">Enter a team code or scan QR to join</div></div></div>
+    </div>
+  </div>
+  <div class="screen" id="screenSetup">
+    <div class="section-label">// Step 1</div><h1 class="screen-title">Pick your format</h1><p class="screen-sub">What are you running today?</p>
+    <div class="format-grid">
+      <div class="format-option" onclick="selectFormat('1v1',this)"><div class="format-option__label">1v1</div><div class="format-option__desc">2 players</div></div>
+      <div class="format-option" onclick="selectFormat('2v2',this)"><div class="format-option__label">2v2</div><div class="format-option__desc">4 players</div></div>
+      <div class="format-option" onclick="selectFormat('3v3',this)"><div class="format-option__label">3v3</div><div class="format-option__desc">6 players</div></div>
+      <div class="format-option" onclick="selectFormat('5v5',this)"><div class="format-option__label">5v5</div><div class="format-option__desc">10 players</div></div>
+    </div>
+    <div class="btn-row"><button class="btn btn--primary" id="setupNextBtn" disabled onclick="createGame()">Create Game →</button></div>
+  </div>
+  <div class="screen" id="screenLobby">
+    <div class="section-label">// Game Lobby</div><h1 class="screen-title" id="lobbyTitle">Waiting for players</h1><p class="screen-sub" id="lobbySub">Share the code with your opponent.</p>
+    <div id="codesContainer"></div>
+    <div class="lobby-section" id="teamASection"><div class="lobby-section__title lobby-section__title--a"><span class="team-dot team-dot--a"></span> <span id="teamALabel">Team A</span></div><div id="teamAList"></div></div>
+    <div class="lobby-section" id="teamBSection"><div class="lobby-section__title lobby-section__title--b"><span class="team-dot team-dot--b"></span> <span id="teamBLabel">Team B</span></div><div id="teamBList"></div></div>
+    <div class="waiting-indicator" id="waitingIndicator"><span>Waiting for opponent</span><div class="waiting-dots"><span></span><span></span><span></span></div></div>
+    <div class="btn-row"><button class="btn btn--primary" id="readyBtn" disabled onclick="startGame()">Everyone's Here — Play →</button></div>
+  </div>
+  <div class="screen" id="screenJoin">
+    <div class="section-label">// Join a game</div><h1 class="screen-title">Enter Game Code</h1><p class="screen-sub">Get the code from the game creator.</p>
+    <input class="join-input" id="joinInput" type="text" maxlength="4" placeholder="0000" oninput="onJoinInput(this)">
+    <div class="btn-row" style="margin-top:0;"><button class="btn btn--primary" id="joinBtn" disabled onclick="joinGame()">Join Game →</button></div>
+    <div class="join-or">or</div><button class="scan-btn" onclick="simulateScan()">📷 Scan QR Code</button>
+  </div>
+  <div class="screen" id="screenActive">
+    <div class="active-game">
+      <div class="section-label">// Game in Progress</div><div class="game-format-badge" id="activeFormat">1v1</div>
+      <div class="teams-vs" id="teamsVsContainer"></div>
+      <div class="game-timer" id="gameTimer">00:00</div><div class="game-timer-label">Time Elapsed</div>
+      <div class="btn-row" style="width:100%;"><button class="btn btn--danger" onclick="endGame()">🛑 End Game</button></div>
+    </div>
+  </div>
+  <div class="screen" id="screenReview">
+    <div class="section-label">// Post-Game Review</div><h1 class="screen-title" id="reviewTitle">Rate players</h1><p class="screen-sub" id="reviewSub">Quick — 3 questions per player.</p>
+    <div class="review-progress" id="reviewProgress"></div>
+    <div class="review-player-header" id="reviewPlayerHeader"></div>
+    <div id="reviewQuestions">
+      <div class="review-question" id="winnerQuestion"><div class="review-question__number">01</div><div class="review-question__text">Who won the game?</div><div class="review-options" id="winnerOptions"></div></div>
+      <div class="review-question"><div class="review-question__number" id="skillQNum">02</div><div class="review-question__text">Rate their skill</div><div class="rating-options" id="skillRating"></div></div>
+      <div class="review-question"><div class="review-question__number" id="socialQNum">03</div><div class="review-question__text">Rate their sportsmanship</div><div class="rating-options" id="socialRating"></div></div>
+    </div>
+    <div class="btn-row"><button class="btn btn--secondary" id="reviewPrevBtn" style="display:none;" onclick="prevPlayerReview()">← Previous</button><button class="btn btn--primary" id="reviewNextBtn" disabled onclick="submitPlayerReview()">Next Player →</button></div>
+  </div>
+  <div class="screen" id="screenCardUpdate">
+    <div class="card-update">
+      <div class="card-update__label">Your career card has updated!</div>
+      <div class="career-card">
+        <div class="career-card__name-bar"><div class="career-card__first-name">JASON <span style="display:inline-block;width:60%;height:6px;background:var(--orange);vertical-align:middle;margin-left:8px;border-radius:2px;"></span></div><div class="career-card__color-bars"><div class="career-card__color-bar" style="background:#3B82F6;"></div><div class="career-card__color-bar" style="background:#3B82F6;"></div></div><div class="career-card__last-name"><span style="display:inline-block;width:50%;height:6px;background:#3B82F6;vertical-align:middle;margin-right:8px;border-radius:2px;"></span> REYES</div></div>
+        <div class="career-card__photo"><div class="career-card__wld">
+          <div class="career-card__wld-item"><div class="career-card__wld-letter">W</div><div class="career-card__wld-value" id="cardWins">0</div><div class="career-card__wld-change" id="cardWinChange"></div></div>
+          <div class="career-card__wld-item"><div class="career-card__wld-letter">L</div><div class="career-card__wld-value" id="cardLosses">0</div><div class="career-card__wld-change" id="cardLossChange"></div></div>
+          <div class="career-card__wld-item"><div class="career-card__wld-letter">D</div><div class="career-card__wld-value" id="cardDraws">0</div><div class="career-card__wld-change" id="cardDrawChange"></div></div>
+        </div></div>
+        <div class="career-card__ratings">
+          <div class="career-card__rating-row"><div class="career-card__rating-label">Skill Rating</div><div class="career-card__rating-value"><span style="color:var(--orange);">■■</span><span class="career-card__rating-number" id="cardSkill">—</span><span class="career-card__rating-change" id="cardSkillChange"></span></div></div>
+          <div class="career-card__rating-row"><div class="career-card__rating-label">Social Rating</div><div class="career-card__rating-value"><span style="color:var(--yellow);">★</span><span class="career-card__rating-number" id="cardSocial">—</span><span class="career-card__rating-change" id="cardSocialChange"></span></div></div>
+        </div>
+        <div class="career-card__formats" id="cardFormats"></div>
+      </div>
+      <div class="btn-row" style="width:100%;"><button class="btn btn--secondary" onclick="window.location.href='allnet-app.html'">Back to Map</button><button class="btn btn--primary" onclick="goTo('screenChoose');resetGame();">Play Again</button></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════════════════════════════════
+// AllNet — Supabase Client Configuration
+// Include after: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+// ═══════════════════════════════════════════════
+
+const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth helpers ──
+async function getUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+async function getUserProfile() {
+  const user = await getUser();
+  if (!user) return null;
+  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  return data;
+}
+
+async function signUp(email, password, name, location) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, location } }
+  });
+  if (error) throw error;
+  // Update profile with location after auto-creation
+  if (data.user) {
+    await supabase.from('profiles').update({ location, name, initials: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }).eq('id', data.user.id);
+  }
+  return data;
+}
+
+async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+async function signOut() {
+  await supabase.auth.signOut();
+}
+
+// ── Court helpers ──
+async function fetchCourts() {
+  const { data, error } = await supabase.from('courts').select('*').order('name');
+  if (error) throw error;
+  return data;
+}
+
+async function fetchCourtWithCheckins(courtId) {
+  const { data: court } = await supabase.from('courts').select('*').eq('id', courtId).single();
+  const { data: checkins } = await supabase
+    .from('checkins')
+    .select('*, profiles(name, initials, is_founding_hooper)')
+    .eq('court_id', courtId)
+    .gte('checked_in_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+    .order('checked_in_at', { ascending: false });
+  return { court, checkins: checkins || [] };
+}
+
+// ── Check-in helpers ──
+async function checkInAtCourt(courtId) {
+  const user = await getUser();
+  if (!user) throw new Error('Not logged in');
+  const { data, error } = await supabase.from('checkins').insert({ user_id: user.id, court_id: courtId });
+  if (error) throw error;
+  return data;
+}
+
+async function getUserCheckins(userId) {
+  const { data } = await supabase
+    .from('checkins')
+    .select('*, courts(name)')
+    .eq('user_id', userId)
+    .order('checked_in_at', { ascending: false })
+    .limit(20);
+  return data || [];
+}
+
+// ── Game session helpers ──
+async function createGameSession(courtId, format, teamSize, codeA, codeB) {
+  const user = await getUser();
+  if (!user) throw new Error('Not logged in');
+  const { data, error } = await supabase.from('game_sessions').insert({
+    court_id: courtId,
+    creator_id: user.id,
+    format,
+    team_size: teamSize,
+    code_a: codeA,
+    code_b: codeB,
+    status: 'lobby'
+  }).select().single();
+  if (error) throw error;
+  // Add creator to team A
+  await supabase.from('game_players').insert({ game_id: data.id, user_id: user.id, team: 'a' });
+  return data;
+}
+
+async function joinGameByCode(code) {
+  // Find game by either code
+  const { data: gameA } = await supabase.from('game_sessions')
+    .select('*').eq('code_a', code).in('status', ['lobby', 'active']).single();
+  const { data: gameB } = await supabase.from('game_sessions')
+    .select('*').eq('code_b', code).in('status', ['lobby', 'active']).single();
+  
+  const game = gameA || gameB;
+  if (!game) throw new Error('Game not found');
+  
+  const team = gameA ? 'a' : 'b';
+  const user = await getUser();
+  await supabase.from('game_players').insert({ game_id: game.id, user_id: user.id, team });
+  return { game, team };
+}
+
+async function startGameSession(gameId) {
+  await supabase.from('game_sessions').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', gameId);
+}
+
+async function endGameSession(gameId, durationSeconds) {
+  await supabase.from('game_sessions').update({
+    status: 'review',
+    ended_at: new Date().toISOString(),
+    duration_seconds: durationSeconds
+  }).eq('id', gameId);
+}
+
+async function completeGame(gameId, winner) {
+  await supabase.from('game_sessions').update({ status: 'completed', winner }).eq('id', gameId);
+}
+
+async function getGamePlayers(gameId) {
+  const { data } = await supabase.from('game_players')
+    .select('*, profiles(name, initials, is_founding_hooper)')
+    .eq('game_id', gameId);
+  return data || [];
+}
+
+// ── Review helpers ──
+async function submitReview(gameId, revieweeId, skillRating, socialRating, relationship) {
+  const user = await getUser();
+  if (!user) throw new Error('Not logged in');
+  const { error } = await supabase.from('reviews').insert({
+    game_id: gameId,
+    reviewer_id: user.id,
+    reviewee_id: revieweeId,
+    skill_rating: skillRating,
+    social_rating: socialRating,
+    relationship
+  });
+  if (error) throw error;
+}
+
+// ── Player card helper ──
+async function getPlayerCard(userId) {
+  const { data } = await supabase.from('player_cards').select('*').eq('id', userId).single();
+  return data;
+}
+
+// ── Realtime subscriptions ──
+function subscribeToCheckins(courtId, callback) {
+  return supabase.channel('checkins-' + courtId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins', filter: 'court_id=eq.' + courtId }, callback)
+    .subscribe();
+}
+
+function subscribeToGamePlayers(gameId, callback) {
+  return supabase.channel('game-' + gameId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_players', filter: 'game_id=eq.' + gameId }, callback)
+    .subscribe();
+}
+
+</script>
+<script>
+const FORMAT_SIZES={'1v1':1,'2v2':2,'3v3':3,'5v5':5};
+
+// Read court name from URL param
+const urlParams=new URLSearchParams(window.location.search);
+const courtName=urlParams.get('court')||'Great Park';
+document.querySelector('.court-context__name').textContent=courtName+' · Checked In';
+
+const ALL_PLAYERS=[
+  {name:'Marcus T',initials:'MT'},{name:'Deon W',initials:'DW'},{name:'Chris L',initials:'CL'},
+  {name:'Andre P',initials:'AP'},{name:'Kev R',initials:'KR'},{name:'Tyler M',initials:'TM'},
+  {name:'Sam J',initials:'SJ'},{name:'Ricky F',initials:'RF'},{name:'Omar B',initials:'OB'},
+  {name:'Dante H',initials:'DH'},{name:'Luis G',initials:'LG'},{name:'Jay K',initials:'JK'},
+];
+
+function generateQR(containerId,code){
+  const el=document.getElementById(containerId);if(!el)return;
+  const size=21;const cells=[];
+  let seed=0;for(let i=0;i<code.length;i++) seed=((seed<<5)-seed)+code.charCodeAt(i);
+  const rand=()=>{seed=(seed*16807+0)%2147483647;return(seed&0x7fffffff)/2147483647;};
+  const isFinderPattern=(r,c)=>{
+    const corners=[[0,0],[0,size-7],[size-7,0]];
+    for(const[cr,cc] of corners){
+      if(r>=cr&&r<cr+7&&c>=cc&&c<cc+7){
+        if(r===cr||r===cr+6||c===cc||c===cc+6) return true;
+        if(r>=cr+2&&r<=cr+4&&c>=cc+2&&c<=cc+4) return true;
+        return false;
+      }
+    }
+    return null;
+  };
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const fp=isFinderPattern(r,c);
+      if(fp!==null) cells.push(fp);
+      else if(r===6||c===6) cells.push((r+c)%2===0);
+      else if(r>8&&r<13&&c>8&&c<13) cells.push(false);
+      else cells.push(rand()>0.5);
+    }
+  }
+  el.innerHTML=cells.map(dark=>'<div class="qr-box__cell'+(dark?' qr-box__cell--dark':'')+'"></div>').join('');
+}
+
+let G={format:null,codeA:null,codeB:null,teamA:[],teamB:[],teamSize:0,timerInterval:null,timerSeconds:0,joinTimeouts:[],winner:null,reviews:[],currentReviewIdx:0,currentReview:{skill:null,social:null},stats:{wins:0,losses:0,draws:0,skillRating:null,socialRating:null}};
+const ME={name:'Jason R',initials:'JR',isYou:true};
+const hist=['screenChoose'];
+
+function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');hist.push(id);updateBack(id);}
+function goBack(){G.joinTimeouts.forEach(t=>clearTimeout(t));G.joinTimeouts=[];if(hist.length>1){hist.pop();const p=hist[hist.length-1];document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(p).classList.add('active');updateBack(p);}else window.location.href='allnet-app.html';}
+function updateBack(id){const b=document.getElementById('backBtn');if(id==='screenChoose'){b.textContent='← Map';b.style.display='';b.onclick=()=>window.location.href='allnet-app.html';}else if(['screenActive','screenReview','screenCardUpdate'].includes(id)){b.style.display='none';}else{b.style.display='';b.textContent='← Back';b.onclick=goBack;}}
+
+function selectFormat(f,el){document.querySelectorAll('.format-option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');G.format=f;document.getElementById('setupNextBtn').disabled=false;}
+
+function createGame(){
+  G.teamSize=FORMAT_SIZES[G.format];
+  G.codeA=String(Math.floor(1000+Math.random()*9000));
+  G.codeB=String(Math.floor(1000+Math.random()*9000));
+  while(G.codeB===G.codeA) G.codeB=String(Math.floor(1000+Math.random()*9000));
+  G.teamA=[{...ME}];G.teamB=[];
+  const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);
+  goTo('screenLobby');
+
+  // Render code section based on format
+  const codesEl=document.getElementById('codesContainer');
+  if(G.format==='1v1'){
+    codesEl.innerHTML='<div class="single-code"><div class="single-code__card"><div class="single-code__label">Scan QR or Enter Code</div><div class="qr-wrapper"><div class="qr-box"><div class="qr-box__grid" id="qr1v1"></div><div class="qr-box__logo">ALLNET</div></div></div><div class="single-code__or">— or enter code —</div><div class="single-code__code">'+G.codeA+'</div><div class="single-code__hint">Show this to your opponent</div></div></div>';
+    generateQR('qr1v1',G.codeA);
+    document.getElementById('lobbySub').textContent='Your opponent scans the QR or enters the code.';
+    document.getElementById('teamALabel').textContent='You';
+    document.getElementById('teamBLabel').textContent='Opponent';
+  } else {
+    codesEl.innerHTML='<div class="team-codes"><div class="team-code-card team-code-card--a"><div class="team-code-card__label">Your Team (A)</div><div class="qr-wrapper"><div class="qr-box" style="width:100px;height:100px;"><div class="qr-box__grid" id="qrA"></div><div class="qr-box__logo" style="font-size:7px;padding:3px 6px;">TEAM A</div></div></div><div class="team-code-card__code">'+G.codeA+'</div><div class="team-code-card__hint">Share with teammates</div></div><div class="team-code-card team-code-card--b"><div class="team-code-card__label">Opponents (B)</div><div class="qr-wrapper"><div class="qr-box" style="width:100px;height:100px;"><div class="qr-box__grid" id="qrB"></div><div class="qr-box__logo" style="font-size:7px;padding:3px 6px;">TEAM B</div></div></div><div class="team-code-card__code">'+G.codeB+'</div><div class="team-code-card__hint">Share with opponents</div></div></div>';
+    generateQR('qrA',G.codeA);generateQR('qrB',G.codeB);
+    document.getElementById('lobbySub').textContent='Two QR codes — one per team. Players scan to join.';
+    document.getElementById('teamALabel').textContent='Team A';
+    document.getElementById('teamBLabel').textContent='Team B';
+  }
+
+  renderLobby();
+  let delay=1500;const needA=G.teamSize-1;const needB=G.teamSize;
+  shuffled.slice(0,needA).forEach(p=>{const t=setTimeout(()=>{G.teamA.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
+  shuffled.slice(needA,needA+needB).forEach(p=>{const t=setTimeout(()=>{G.teamB.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
+}
+
+function renderLobby(){
+  const rTeam=(list,cid,avCls)=>{let h='';list.forEach(p=>{h+='<div class="lobby-player"><div class="lobby-player__avatar '+avCls+'">'+p.initials+'</div><div style="flex:1"><div class="lobby-player__name">'+p.name+'</div><div class="lobby-player__meta">'+(p.isYou?'Game creator':'Joined just now')+'</div></div>'+(p.isYou?'<span class="lobby-player__you">You</span>':'')+'</div>';});for(let i=0;i<G.teamSize-list.length;i++){h+='<div class="lobby-slot"><div class="lobby-slot__dot">?</div>Waiting for player...</div>';}document.getElementById(cid).innerHTML=h;};
+  rTeam(G.teamA,'teamAList','avatar--a');rTeam(G.teamB,'teamBList','avatar--b');
+}
+function checkReady(){if(G.teamA.length>=G.teamSize&&G.teamB.length>=G.teamSize){document.getElementById('readyBtn').disabled=false;document.getElementById('waitingIndicator').style.display='none';document.getElementById('lobbyTitle').textContent=G.format==='1v1'?"Your opponent is here!":"Everyone's here!";}}
+
+function onJoinInput(inp){inp.value=inp.value.replace(/\D/g,'');document.getElementById('joinBtn').disabled=inp.value.length!==4;}
+function joinGame(){
+  const code=document.getElementById('joinInput').value;const isTeamA=Math.random()>0.5;
+  const fmts=['1v1','2v2','3v3','5v5'];G.format=fmts[Math.floor(Math.random()*fmts.length)];G.teamSize=FORMAT_SIZES[G.format];
+  G.codeA=isTeamA?code:String(Math.floor(1000+Math.random()*9000));G.codeB=isTeamA?String(Math.floor(1000+Math.random()*9000)):code;
+  if(isTeamA){G.teamA=[{...ME}];G.teamB=[];}else{G.teamA=[];G.teamB=[{...ME}];}
+  goTo('screenLobby');
+  const codesEl=document.getElementById('codesContainer');
+  if(G.format==='1v1'){
+    codesEl.innerHTML='<div class="single-code"><div class="single-code__card"><div class="single-code__label">Game Code</div><div class="qr-wrapper"><div class="qr-box" style="opacity:0.5;"><div class="qr-box__grid" id="qrJoin"></div><div class="qr-box__logo">ALLNET</div></div></div><div class="single-code__code">'+code+'</div><div class="single-code__hint">You joined this game</div></div></div>';
+    generateQR('qrJoin',code);
+    document.getElementById('lobbySub').textContent='Waiting for all players.';
+    document.getElementById('teamALabel').textContent='Player 1';
+    document.getElementById('teamBLabel').textContent='Player 2';
+  } else {
+    codesEl.innerHTML='<div class="team-codes"><div class="team-code-card team-code-card--a"><div class="team-code-card__label">Team A</div><div class="team-code-card__code">'+G.codeA+'</div><div class="team-code-card__hint">'+(isTeamA?'Your team':'Opponents')+'</div></div><div class="team-code-card team-code-card--b"><div class="team-code-card__label">Team B</div><div class="team-code-card__code">'+G.codeB+'</div><div class="team-code-card__hint">'+(isTeamA?'Opponents':'Your team')+'</div></div></div>';
+    document.getElementById('lobbySub').textContent='Waiting for all players.';
+    document.getElementById('teamALabel').textContent='Team A';
+    document.getElementById('teamBLabel').textContent='Team B';
+  }
+  renderLobby();
+  const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);let idx=0,delay=1000;
+  const fillA=G.teamSize-G.teamA.length,fillB=G.teamSize-G.teamB.length;
+  for(let i=0;i<fillA;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamA.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
+  for(let i=0;i<fillB;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamB.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
+}
+function simulateScan(){document.getElementById('joinInput').value='4829';document.getElementById('joinBtn').disabled=false;}
+
+function startGame(){
+  goTo('screenActive');document.getElementById('activeFormat').textContent=G.format;
+  const c=document.getElementById('teamsVsContainer');
+  const labelA=G.format==='1v1'?'You':'Team A';
+  const labelB=G.format==='1v1'?(G.teamB[0]?G.teamB[0].name:'Opponent'):'Team B';
+  const rr=(team,label,cls,avCls)=>{let h='<div class="team-roster"><div class="team-roster__label team-roster__label--'+cls+'">'+label+'</div>';team.forEach(p=>{h+='<div class="team-roster__player"><div class="team-roster__avatar '+avCls+'">'+p.initials+'</div><div class="team-roster__name">'+(p.isYou?'You':p.name)+'</div></div>';});return h+'</div>';};
+  c.innerHTML=rr(G.teamA,labelA,'a','avatar--a')+'<div class="vs-divider">VS</div>'+rr(G.teamB,labelB,'b','avatar--b');
+  G.timerSeconds=0;G.timerInterval=setInterval(()=>{G.timerSeconds++;const m=String(Math.floor(G.timerSeconds/60)).padStart(2,'0');const s=String(G.timerSeconds%60).padStart(2,'0');document.getElementById('gameTimer').textContent=m+':'+s;},1000);
+}
+
+function endGame(){
+  clearInterval(G.timerInterval);
+  G.reviews=[];const all=[...G.teamA,...G.teamB].filter(p=>!p.isYou);
+  const myTeam=G.teamA.some(t=>t.isYou)?'A':'B';
+  all.forEach(p=>{const pTeam=G.teamA.some(t=>t.name===p.name)?'A':'B';G.reviews.push({...p,team:pTeam===myTeam?'teammate':'opponent',skill:null,social:null});});
+  G.currentReviewIdx=0;G.winner=null;goTo('screenReview');renderReview();
+}
+
+function renderReview(){
+  const total=G.reviews.length,idx=G.currentReviewIdx,p=G.reviews[idx],isFirst=idx===0,isLast=idx===total-1;
+  document.getElementById('reviewTitle').textContent='Rate '+p.name;
+  document.getElementById('reviewSub').textContent='Player '+(idx+1)+' of '+total+' · '+(p.team==='opponent'?'Opponent':'Teammate');
+  document.getElementById('reviewProgress').innerHTML=G.reviews.map((_,i)=>'<div class="review-progress__dot '+(i<idx||(i===idx&&p.skill!==null)?'done':i===idx?'current':'')+'"></div>').join('');
+  const avCls=p.team==='opponent'?'avatar--b':'avatar--a';
+  document.getElementById('reviewPlayerHeader').innerHTML='<div class="lobby-player__avatar '+avCls+'">'+p.initials+'</div><div style="flex:1"><div class="lobby-player__name">'+p.name+'</div><div class="lobby-player__meta">'+(p.team==='opponent'?'Opponent':'Teammate')+' · '+G.format+'</div></div><div class="review-player-header__count">'+(idx+1)+'/'+total+'</div>';
+
+  // Show/hide Previous button
+  document.getElementById('reviewPrevBtn').style.display=isFirst?'none':'';
+
+  // Winner question — show on first player, allow editing if going back
+  const wq=document.getElementById('winnerQuestion');
+  if(isFirst){
+    wq.style.display='';
+    document.getElementById('skillQNum').textContent='02';document.getElementById('socialQNum').textContent='03';
+    if(G.format==='1v1'){document.getElementById('winnerOptions').innerHTML='<div class="review-option" onclick="selectWinner(\'me\',this)">I won</div><div class="review-option" onclick="selectWinner(\'them\',this)">'+p.name+' won</div><div class="review-option" onclick="selectWinner(\'draw\',this)">Draw</div>';}
+    else{document.getElementById('winnerOptions').innerHTML='<div class="review-option" onclick="selectWinner(\'me\',this)">My team won</div><div class="review-option" onclick="selectWinner(\'them\',this)">Their team won</div><div class="review-option" onclick="selectWinner(\'draw\',this)">Draw</div>';}
+    // Restore winner selection if previously set
+    if(G.winner!==null){
+      const opts=document.querySelectorAll('#winnerOptions .review-option');
+      if(G.winner==='me') opts[0].classList.add('selected');
+      else if(G.winner==='them') opts[1].classList.add('selected');
+      else if(G.winner==='draw') opts[2].classList.add('selected');
+    }
+  } else {wq.style.display='none';document.getElementById('skillQNum').textContent='01';document.getElementById('socialQNum').textContent='02';}
+
+  // Render skill buttons
+  document.getElementById('skillRating').innerHTML=[1,2,3,4,5].map(v=>'<button class="rating-btn'+(p.skill===v?' selected':'')+'" onclick="selectRating(\'skill\','+v+',this)">'+v+'</button>').join('');
+  // Render social buttons
+  document.getElementById('socialRating').innerHTML=[1,2,3,4,5].map(v=>'<button class="rating-btn'+(p.social===v?' selected':'')+'" onclick="selectRating(\'social\','+v+',this)">'+v+'</button>').join('');
+
+  // Restore current review from saved data
+  G.currentReview={skill:p.skill,social:p.social};
+
+  document.getElementById('reviewNextBtn').textContent=isLast?'Submit All Reviews':'Next Player →';
+  // Enable button if answers already filled (going back to a completed review)
+  checkReviewReady();
+}
+
+function prevPlayerReview(){
+  // Save current answers before going back
+  G.reviews[G.currentReviewIdx].skill=G.currentReview.skill;
+  G.reviews[G.currentReviewIdx].social=G.currentReview.social;
+  if(G.currentReviewIdx>0){
+    G.currentReviewIdx--;
+    renderReview();
+    document.getElementById('screenReview').scrollTop=0;
+  }
+}
+
+function selectWinner(w,el){document.querySelectorAll('#winnerOptions .review-option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');G.winner=w;checkReviewReady();}
+function selectRating(type,val,el){const cid=type==='skill'?'skillRating':'socialRating';document.querySelectorAll('#'+cid+' .rating-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');G.currentReview[type]=val;checkReviewReady();}
+function checkReviewReady(){const needW=G.currentReviewIdx===0&&G.winner===null;const ok=G.currentReview.skill!==null&&G.currentReview.social!==null&&(!needW||G.winner!==null);document.getElementById('reviewNextBtn').disabled=!ok;}
+
+function submitPlayerReview(){
+  G.reviews[G.currentReviewIdx].skill=G.currentReview.skill;G.reviews[G.currentReviewIdx].social=G.currentReview.social;
+  if(G.currentReviewIdx<G.reviews.length-1){G.currentReviewIdx++;renderReview();document.getElementById('screenReview').scrollTop=0;}else{finalizeGame();}
+}
+
+function finalizeGame(){
+  const prev={skill:G.stats.skillRating,social:G.stats.socialRating};
+  if(G.winner==='me') G.stats.wins++;else if(G.winner==='them') G.stats.losses++;else G.stats.draws++;
+  const oppR=G.reviews.filter(r=>r.team==='opponent');
+  const avgSk=oppR.length?oppR.reduce((s,r)=>s+r.skill,0)/oppR.length:3;
+  const avgSo=G.reviews.reduce((s,r)=>s+r.social,0)/G.reviews.length;
+  const total=G.stats.wins+G.stats.losses+G.stats.draws;
+  if(prev.skill===null){G.stats.skillRating=Math.round(avgSk*10)/10;G.stats.socialRating=Math.round(avgSo*10)/10;}
+  else{G.stats.skillRating=Math.round(((prev.skill*(total-1)+avgSk)/total)*10)/10;G.stats.socialRating=Math.round(((prev.social*(total-1)+avgSo)/total)*10)/10;}
+  goTo('screenCardUpdate');
+  document.getElementById('cardWins').textContent=G.stats.wins;document.getElementById('cardLosses').textContent=G.stats.losses;document.getElementById('cardDraws').textContent=G.stats.draws;
+  document.getElementById('cardSkill').textContent=G.stats.skillRating.toFixed(1);document.getElementById('cardSocial').textContent=G.stats.socialRating.toFixed(1);
+  document.getElementById('cardWinChange').textContent=G.winner==='me'?'+1':'';document.getElementById('cardLossChange').textContent=G.winner==='them'?'+1':'';document.getElementById('cardDrawChange').textContent=G.winner==='draw'?'+1':'';
+  const sd=prev.skill===null?G.stats.skillRating:(G.stats.skillRating-prev.skill);const scd=prev.social===null?G.stats.socialRating:(G.stats.socialRating-prev.social);
+  document.getElementById('cardSkillChange').textContent=sd>=0?'+'+sd.toFixed(1)+' ↗':sd.toFixed(1)+' ↘';
+  document.getElementById('cardSocialChange').textContent=scd>=0?'+'+scd.toFixed(1)+' ↗':scd.toFixed(1)+' ↘';
+  document.getElementById('cardSkillChange').style.color=sd<0?'var(--red)':'';document.getElementById('cardSocialChange').style.color=scd<0?'var(--red)':'';
+  document.getElementById('cardFormats').innerHTML='<span class="career-card__format career-card__format--active">'+G.format+'</span>';
+}
+
+function resetGame(){
+  G.joinTimeouts.forEach(t=>clearTimeout(t));clearInterval(G.timerInterval);
+  G.format=null;G.codeA=null;G.codeB=null;G.teamA=[];G.teamB=[];G.teamSize=0;G.timerSeconds=0;G.joinTimeouts=[];G.winner=null;G.reviews=[];G.currentReviewIdx=0;G.currentReview={skill:null,social:null};
+  document.querySelectorAll('.format-option').forEach(o=>o.classList.remove('selected'));
+  document.getElementById('setupNextBtn').disabled=true;document.getElementById('joinInput').value='';document.getElementById('joinBtn').disabled=true;document.getElementById('readyBtn').disabled=true;
+  document.getElementById('waitingIndicator').style.display='';document.getElementById('lobbyTitle').textContent='Waiting for players';document.getElementById('backBtn').style.display='';
+  document.getElementById('codesContainer').innerHTML='';document.getElementById('teamAList').innerHTML='';document.getElementById('teamBList').innerHTML='';
+  document.getElementById('cardWinChange').textContent='';document.getElementById('cardLossChange').textContent='';document.getElementById('cardDrawChange').textContent='';
+  document.getElementById('cardSkillChange').style.color='';document.getElementById('cardSocialChange').style.color='';document.getElementById('gameTimer').textContent='00:00';
+  hist.length=0;hist.push('screenChoose');updateBack('screenChoose');
+}
+
+/* ══════════════════════════════
+   SUPABASE INTEGRATION LAYER
+   ══════════════════════════════ */
+let currentUser = null;
+let currentProfile = null;
+let dbGameId = null;
+let dbCourtId = null;
+
+async function initPhase2() {
+  if (typeof supabase === 'undefined' || typeof getUser !== 'function') {
+    console.log('Phase 2: Running in demo mode');
+    return;
+  }
+  try {
+    currentUser = await getUser();
+    if (!currentUser) { console.log('Phase 2: Not logged in'); return; }
+    currentProfile = await getUserProfile();
+    if (currentProfile) {
+      // Update ME object with real user data
+      ME.name = currentProfile.name;
+      ME.initials = currentProfile.initials;
+    }
+    // Try to resolve court ID from URL court name
+    const courtName = new URLSearchParams(window.location.search).get('court');
+    if (courtName) {
+      const courts = await fetchCourts();
+      const match = courts.find(c => c.name === courtName);
+      if (match) dbCourtId = match.id;
+    }
+    console.log('Phase 2: Connected as ' + currentProfile?.name);
+  } catch (err) { console.error('Phase 2 init error:', err); }
+}
+
+// Override createGame to persist to Supabase
+const _origCreateGame = createGame;
+createGame = async function() {
+  _origCreateGame(); // Run original (sets up UI, mock players, etc)
+  if (currentUser && dbCourtId) {
+    try {
+      const data = await createGameSession(dbCourtId, G.format, G.teamSize, G.codeA, G.codeB);
+      dbGameId = data.id;
+      console.log('Game created in DB:', dbGameId);
+      // Subscribe to real player joins
+      subscribeToGamePlayers(dbGameId, (payload) => {
+        console.log('Real player joined:', payload);
+      });
+    } catch (err) { console.error('Failed to create game in DB:', err); }
+  }
+};
+
+// Override startGame to update DB status
+const _origStartGame = startGame;
+startGame = async function() {
+  _origStartGame();
+  if (dbGameId) {
+    try { await startGameSession(dbGameId); } catch (err) { console.error('DB start error:', err); }
+  }
+};
+
+// Override endGame to update DB status
+const _origEndGame = endGame;
+endGame = async function() {
+  const duration = G.timerSeconds;
+  _origEndGame();
+  if (dbGameId) {
+    try { await endGameSession(dbGameId, duration); } catch (err) { console.error('DB end error:', err); }
+  }
+};
+
+// Override finalizeGame to persist reviews and game result
+const _origFinalizeGame = finalizeGame;
+finalizeGame = async function() {
+  _origFinalizeGame(); // Run original (updates local stats + UI)
+  if (dbGameId && currentUser) {
+    try {
+      // Determine winner in DB format
+      const myTeam = G.teamA.some(p => p.isYou) ? 'a' : 'b';
+      let dbWinner;
+      if (G.winner === 'me') dbWinner = myTeam === 'a' ? 'team_a' : 'team_b';
+      else if (G.winner === 'them') dbWinner = myTeam === 'a' ? 'team_b' : 'team_a';
+      else dbWinner = 'draw';
+
+      await completeGame(dbGameId, dbWinner);
+      console.log('Game completed in DB, winner:', dbWinner);
+
+      // Submit reviews (only for real users in the game - in prototype, mock players aren't in DB)
+      // In production, each review.reviewee_id would be a real UUID
+      // For now we log that reviews would be submitted
+      console.log('Reviews to submit:', G.reviews.length, 'players reviewed');
+    } catch (err) { console.error('DB finalize error:', err); }
+  }
+};
+
+initPhase2();
+</script>
+</body>
+</html>

@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Phase 1 App</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0A0A0A;
+  --bg-elevated: #141414;
+  --bg-card: #1A1A1A;
+  --bg-sheet: #161616;
+  --surface: #111111;
+  --orange: #FF5A1F;
+  --orange-glow: rgba(255, 90, 31, 0.15);
+  --green-live: #22C55E;
+  --green-glow: rgba(34, 197, 94, 0.2);
+  --yellow: #FACC15;
+  --red: #EF4444;
+  --text-primary: #F5F5F5;
+  --text-secondary: #A3A3A3;
+  --text-muted: #6B6B6B;
+  --border: #2A2A2A;
+  --border-light: #333333;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --font-display: 'Oswald', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════
+   APP SHELL
+   ═══════════════════════════════════════════════ */
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ── Top bar ── */
+.top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.6) 60%, transparent 100%);
+  pointer-events: none;
+}
+
+.top-bar > * { pointer-events: all; }
+
+.top-bar__logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.top-bar__logo span { color: var(--orange); }
+
+.top-bar__profile {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.15);
+  transition: var(--transition);
+}
+
+.top-bar__profile:hover { transform: scale(1.08); }
+
+/* ── Map ── */
+.map-view {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Pulse filter bar ── */
+.pulse-filter {
+  position: absolute;
+  top: 64px;
+  left: 16px;
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.pulse-filter > * { pointer-events: all; }
+
+.filter-chip {
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border-light);
+  background: rgba(20,20,20,0.85);
+  backdrop-filter: blur(12px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-chip:hover { border-color: var(--text-muted); }
+
+.filter-chip.active {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(255, 90, 31, 0.1);
+}
+
+.filter-chip__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+/* ── Near me button ── */
+.locate-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(20,20,20,0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: var(--transition);
+}
+
+.locate-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ═══════════════════════════════════════════════
+   BOTTOM SHEET
+   ═══════════════════════════════════════════════ */
+.sheet-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sheet-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 301;
+  background: var(--bg-sheet);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.bottom-sheet.open { transform: translateY(0); }
+
+.sheet__handle-wrapper {
+  padding: 12px 0 8px;
+  display: flex;
+  justify-content: center;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border-light);
+}
+
+.sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 32px;
+  min-height: 0;
+}
+
+/* Court detail header */
+.court-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.court-header__info { flex: 1; }
+
+.court-header__name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.court-header__address {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.court-header__tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.court-tag {
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.court-tag--outdoor { background: rgba(34,197,94,0.1); color: var(--green-live); border: 1px solid rgba(34,197,94,0.2); }
+.court-tag--indoor { background: rgba(59,130,246,0.1); color: #3B82F6; border: 1px solid rgba(59,130,246,0.2); }
+.court-tag--lit { background: rgba(250,204,21,0.1); color: var(--yellow); border: 1px solid rgba(250,204,21,0.2); }
+
+.court-header__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-dot-lg {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.status-dot-lg--active { background: var(--green-glow); }
+.status-dot-lg--packed { background: var(--orange-glow); }
+.status-dot-lg--quiet { background: rgba(107,107,107,0.15); }
+
+.status-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-label--active { color: var(--green-live); }
+.status-label--packed { color: var(--orange); }
+.status-label--quiet { color: var(--text-muted); }
+
+/* Pulse stats */
+.pulse-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.pulse-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+
+.pulse-stat__value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.pulse-stat__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* Forecast chart */
+.forecast-section { margin-bottom: 24px; }
+
+.forecast-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.forecast-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 80px;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+.forecast-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.forecast-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: background 0.2s ease;
+}
+
+.forecast-bar--low { background: var(--border-light); }
+.forecast-bar--med { background: var(--green-live); opacity: 0.6; }
+.forecast-bar--high { background: var(--green-live); }
+.forecast-bar--packed { background: var(--orange); }
+
+.forecast-bar--now {
+  box-shadow: 0 0 8px rgba(255, 90, 31, 0.4);
+}
+
+.forecast-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.forecast-label--now { color: var(--orange); }
+
+/* Checked-in players */
+.checkins-section { margin-bottom: 24px; }
+
+.checkin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkin-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.checkin-player:hover {
+  border-color: var(--border-light);
+  background: var(--bg-elevated);
+}
+
+/* ═══════════════════════════════════════════════
+   PLAYER CARD MODAL
+   ═══════════════════════════════════════════════ */
+.player-modal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.player-modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.player-modal {
+  background: var(--bg-sheet);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 360px;
+  overflow: hidden;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.player-modal-overlay.active .player-modal {
+  transform: translateY(0);
+}
+
+.player-modal__header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.player-modal__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.player-modal__name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.player-modal__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.player-modal__badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--orange);
+  background: var(--orange-glow);
+  padding: 3px 8px;
+  border-radius: 100px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.player-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.player-modal__close:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+.player-modal__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+
+.player-modal__stat {
+  background: var(--bg-sheet);
+  padding: 16px;
+  text-align: center;
+}
+
+.player-modal__stat-value {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.player-modal__stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.player-modal__ratings {
+  padding: 16px 20px;
+}
+
+.player-modal__rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.player-modal__rating-row:last-child { border-bottom: none; }
+
+.player-modal__rating-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.player-modal__rating-value {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.player-modal__history {
+  padding: 0 20px 20px;
+}
+
+.player-modal__history-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.player-modal__game {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.player-modal__game:last-child { border-bottom: none; }
+
+.player-modal__game-result {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.player-modal__game-result--w { background: var(--green); }
+.player-modal__game-result--l { background: var(--red); }
+.player-modal__game-result--d { background: var(--text-muted); }
+
+.player-modal__game-detail { flex: 1; color: var(--text-secondary); }
+.player-modal__game-time { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.checkin-player__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.checkin-player__info { flex: 1; }
+
+.checkin-player__name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.checkin-player__meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.checkin-player__badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--orange);
+  background: var(--orange-glow);
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+
+.empty-checkins {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Directions button */
+.court-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition);
+  flex: 1;
+}
+
+.btn--primary {
+  background: var(--orange);
+  color: white;
+}
+
+.btn--primary:hover {
+  background: #FF6B35;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 90, 31, 0.3);
+}
+
+.btn--primary:active { transform: translateY(0); }
+
+.btn--secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+
+.btn--secondary:hover { border-color: var(--text-muted); }
+
+.btn--success {
+  background: var(--green-live);
+  color: white;
+}
+
+.btn--success:hover { background: #1DAE51; }
+
+/* ═══════════════════════════════════════════════
+   CHECK-IN CONFIRMATION TOAST
+   ═══════════════════════════════════════════════ */
+.toast {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  z-index: 500;
+  background: var(--bg-card);
+  border: 1px solid var(--green-live);
+  border-radius: var(--radius);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  white-space: nowrap;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: all;
+}
+
+.toast__icon { font-size: 18px; }
+.toast__text span { color: var(--green-live); }
+
+/* ═══════════════════════════════════════════════
+   PROFILE SCREEN
+   ═══════════════════════════════════════════════ */
+.profile-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  background: var(--bg);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow-y: auto;
+  padding: 0 0 32px;
+}
+
+.profile-screen.open { transform: translateX(0); }
+
+.profile-back {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 16px;
+  background: rgba(10,10,10,0.9);
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: none;
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.profile-back:hover { color: var(--text-primary); }
+
+.profile-content { padding: 0 20px; }
+
+.profile-card {
+  text-align: center;
+  padding: 32px 0 28px;
+}
+
+.profile-card__avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: white;
+  margin: 0 auto 16px;
+  border: 3px solid rgba(255,255,255,0.1);
+}
+
+.profile-card__name {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.profile-card__location {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.profile-card__founding-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--orange-glow);
+  border: 1px solid rgba(255, 90, 31, 0.3);
+  color: var(--orange);
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.profile-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.profile-stat__value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.profile-stat__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.profile-section-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+/* History timeline */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.history-item__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--green-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.history-item__info { flex: 1; }
+
+.history-item__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.history-item__meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.history-item__time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Phase 2 teaser */
+.phase2-teaser {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.phase2-teaser__title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.phase2-teaser__text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════
+   MAPBOX OVERRIDES
+   ═══════════════════════════════════════════════ */
+.mapboxgl-popup-content {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5) !important;
+}
+
+.mapboxgl-popup-tip { border-top-color: var(--bg-card) !important; }
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip { border-top-color: var(--bg-card) !important; }
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip { border-bottom-color: var(--bg-card) !important; }
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip { border-right-color: var(--bg-card) !important; }
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip { border-left-color: var(--bg-card) !important; }
+.mapboxgl-popup-close-button { display: none; }
+.mapboxgl-ctrl-group { background: rgba(20,20,20,0.9) !important; border: 1px solid var(--border-light) !important; border-radius: 8px !important; }
+.mapboxgl-ctrl-group button { background: transparent !important; }
+.mapboxgl-ctrl-group button span { filter: invert(1); }
+.mapboxgl-ctrl-attrib { display: none !important; }
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════ */
+@keyframes marker-pulse {
+  0%, 100% { transform: translate(-50%,-50%) scale(0.8); opacity: 0.5; }
+  50% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+}
+
+@keyframes checkin-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- ═══ Top bar ═══ -->
+  <div class="top-bar">
+    <a href="allnet-landing.html" class="top-bar__logo" style="text-decoration:none;">ALLNE<span>T</span></a>
+    <div class="top-bar__profile" id="profileBtn" onclick="openProfile()">JR</div>
+  </div>
+
+  <!-- ═══ Pulse filter chips ═══ -->
+  <div class="pulse-filter" id="pulseFilter">
+    <button class="filter-chip active" data-filter="all" onclick="setFilter('all', this)">All Courts</button>
+    <button class="filter-chip" data-filter="active" onclick="setFilter('active', this)">
+      <span class="filter-chip__dot" style="background:var(--green-live);"></span> Active
+    </button>
+    <button class="filter-chip" data-filter="packed" onclick="setFilter('packed', this)">
+      <span class="filter-chip__dot" style="background:var(--orange);"></span> Packed
+    </button>
+  </div>
+
+  <!-- ═══ Map ═══ -->
+  <div class="map-view">
+    <div id="map"></div>
+    <button class="locate-btn" onclick="centerMap()" title="Center on OC">📍</button>
+  </div>
+
+  <!-- ═══ Sheet overlay ═══ -->
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+
+  <!-- ═══ Court detail bottom sheet ═══ -->
+  <div class="bottom-sheet" id="courtSheet">
+    <div class="sheet__handle-wrapper" onclick="closeSheet()">
+      <div class="sheet__handle"></div>
+    </div>
+    <div class="sheet__body" id="sheetBody">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- ═══ Toast ═══ -->
+  <div class="toast" id="toast">
+    <span class="toast__icon">✅</span>
+    <span class="toast__text">Checked in at <span id="toastCourt"></span></span>
+  </div>
+
+  <!-- ═══ Player card modal ═══ -->
+  <div class="player-modal-overlay" id="playerModal" onclick="if(event.target===this)closePlayerCard()">
+    <div class="player-modal" style="position:relative;">
+      <button class="player-modal__close" onclick="closePlayerCard()">✕</button>
+      <div class="player-modal__header">
+        <div class="player-modal__avatar" id="pmAvatar"></div>
+        <div>
+          <div class="player-modal__name" id="pmName"></div>
+          <div class="player-modal__meta" id="pmMeta"></div>
+          <div class="player-modal__badge" id="pmBadge" style="display:none;">🏅 Founding Hooper</div>
+        </div>
+      </div>
+      <div class="player-modal__stats">
+        <div class="player-modal__stat"><div class="player-modal__stat-value" id="pmWins">0</div><div class="player-modal__stat-label">Wins</div></div>
+        <div class="player-modal__stat"><div class="player-modal__stat-value" id="pmLosses">0</div><div class="player-modal__stat-label">Losses</div></div>
+        <div class="player-modal__stat"><div class="player-modal__stat-value" id="pmDraws">0</div><div class="player-modal__stat-label">Draws</div></div>
+      </div>
+      <div class="player-modal__ratings">
+        <div class="player-modal__rating-row">
+          <div class="player-modal__rating-label">Skill Rating</div>
+          <div class="player-modal__rating-value" id="pmSkill" style="color:var(--orange);">—</div>
+        </div>
+        <div class="player-modal__rating-row">
+          <div class="player-modal__rating-label">Social Rating</div>
+          <div class="player-modal__rating-value" id="pmSocial" style="color:var(--yellow);">—</div>
+        </div>
+      </div>
+      <div class="player-modal__history">
+        <div class="player-modal__history-title">// Recent Games</div>
+        <div id="pmHistory"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Profile screen ═══ -->
+  <div class="profile-screen" id="profileScreen">
+    <button class="profile-back" onclick="closeProfile()">← Back to Map</button>
+    <div class="profile-content">
+      <div class="profile-card">
+        <div class="profile-card__avatar">JR</div>
+        <div class="profile-card__name">Jason Reyes</div>
+        <div class="profile-card__location">📍 Irvine, CA</div>
+        <div class="profile-card__founding-badge">🏅 Founding Hooper · #00142</div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat__value" id="profileDays">47</div>
+          <div class="profile-stat__label">Days In</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat__value" id="profileCheckins">0</div>
+          <div class="profile-stat__label">Check-ins</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat__value" id="profileCourts">0</div>
+          <div class="profile-stat__label">Courts</div>
+        </div>
+      </div>
+
+      <div class="profile-section-title">// Recent Activity</div>
+      <div class="history-list" id="historyList">
+        <div class="empty-checkins">No check-ins yet. Visit a court and tap "I'm Here" to start building your history.</div>
+      </div>
+
+      <div class="profile-section-title">// Coming in Phase 2</div>
+      <div class="phase2-teaser">
+        <div class="phase2-teaser__title">Track & Rate</div>
+        <div class="phase2-teaser__text">Skill ratings, social ratings, career card, post-game reviews. Your check-in history today becomes the foundation of your reputation tomorrow.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════════════════════════════════
+// AllNet — Supabase Client Configuration
+// Include after: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+// ═══════════════════════════════════════════════
+
+const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Auth helpers ──
+async function getUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+async function getUserProfile() {
+  const user = await getUser();
+  if (!user) return null;
+  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  return data;
+}
+
+async function signUp(email, password, name, location) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, location } }
+  });
+  if (error) throw error;
+  // Update profile with location after auto-creation
+  if (data.user) {
+    await supabase.from('profiles').update({ location, name, initials: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }).eq('id', data.user.id);
+  }
+  return data;
+}
+
+async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+async function signOut() {
+  await supabase.auth.signOut();
+}
+
+// ── Court helpers ──
+async function fetchCourts() {
+  const { data, error } = await supabase.from('courts').select('*').order('name');
+  if (error) throw error;
+  return data;
+}
+
+async function fetchCourtWithCheckins(courtId) {
+  const { data: court } = await supabase.from('courts').select('*').eq('id', courtId).single();
+  const { data: checkins } = await supabase
+    .from('checkins')
+    .select('*, profiles(name, initials, is_founding_hooper)')
+    .eq('court_id', courtId)
+    .gte('checked_in_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+    .order('checked_in_at', { ascending: false });
+  return { court, checkins: checkins || [] };
+}
+
+// ── Check-in helpers ──
+async function checkInAtCourt(courtId) {
+  const user = await getUser();
+  if (!user) throw new Error('Not logged in');
+  const { data, error } = await supabase.from('checkins').insert({ user_id: user.id, court_id: courtId });
+  if (error) throw error;
+  return data;
+}
+
+async function getUserCheckins(userId) {
+  const { data } = await supabase
+    .from('checkins')
+    .select('*, courts(name)')
+    .eq('user_id', userId)
+    .order('checked_in_at', { ascending: false })
+    .limit(20);
+  return data || [];
+}
+
+// ── Game session helpers ──
+async function createGameSession(courtId, format, teamSize, codeA, codeB) {
+  const user = await getUser();
+  if (!user) throw new Error('Not logged in');
+  const { data, error } = await supabase.from('game_sessions').insert({
+    court_id: courtId,
+    creator_id: user.id,
+    format,
+    team_size: teamSize,
+    code_a: codeA,
+    code_b: codeB,
+    status: 'lobby'
+  }).select().single();
+  if (error) throw error;
+  // Add creator to team A
+  await supabase.from('game_players').insert({ game_id: data.id, user_id: user.id, team: 'a' });
+  return data;
+}
+
+async function joinGameByCode(code) {
+  // Find game by either code
+  const { data: gameA } = await supabase.from('game_sessions')
+    .select('*').eq('code_a', code).in('status', ['lobby', 'active']).single();
+  const { data: gameB } = await supabase.from('game_sessions')
+    .select('*').eq('code_b', code).in('status', ['lobby', 'active']).single();
+  
+  const game = gameA || gameB;
+  if (!game) throw new Error('Game not found');
+  
+  const team = gameA ? 'a' : 'b';
+  const user = await getUser();
+  await supabase.from('game_players').insert({ game_id: game.id, user_id: user.id, team });
+  return { game, team };
+}
+
+async function startGameSession(gameId) {
+  await supabase.from('game_sessions').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', gameId);
+}
+
+async function endGameSession(gameId, durationSeconds) {
+  await supabase.from('game_sessions').update({
+    status: 'review',
+    ended_at: new Date().toISOString(),
+    duration_seconds: durationSeconds
+  }).eq('id', gameId);
+}
+
+async function completeGame(gameId, winner) {
+  await supabase.from('game_sessions').update({ status: 'completed', winner }).eq('id', gameId);
+}
+
+async function getGamePlayers(gameId) {
+  const { data } = await supabase.from('game_players')
+    .select('*, profiles(name, initials, is_founding_hooper)')
+    .eq('game_id', gameId);
+  return data || [];
+}
+
+// ── Review helpers ──
+async function submitReview(gameId, revieweeId, skillRating, socialRating, relationship) {
+  const user = await getUser();
+  if (!user) throw new Error('Not logged in');
+  const { error } = await supabase.from('reviews').insert({
+    game_id: gameId,
+    reviewer_id: user.id,
+    reviewee_id: revieweeId,
+    skill_rating: skillRating,
+    social_rating: socialRating,
+    relationship
+  });
+  if (error) throw error;
+}
+
+// ── Player card helper ──
+async function getPlayerCard(userId) {
+  const { data } = await supabase.from('player_cards').select('*').eq('id', userId).single();
+  return data;
+}
+
+// ── Realtime subscriptions ──
+function subscribeToCheckins(courtId, callback) {
+  return supabase.channel('checkins-' + courtId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins', filter: 'court_id=eq.' + courtId }, callback)
+    .subscribe();
+}
+
+function subscribeToGamePlayers(gameId, callback) {
+  return supabase.channel('game-' + gameId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_players', filter: 'game_id=eq.' + gameId }, callback)
+    .subscribe();
+}
+
+</script>
+<script>
+/* ══════════════════════════════
+   DATA
+   ══════════════════════════════ */
+const courts = [
+  { id: 'great-park', name: 'Great Park', address: '6950 Marine Way, Irvine, CA 92618', lat: 33.6694, lng: -117.7672, status: 'active', players: 8, detail: '5v5 forming', type: 'outdoor', lit: true,
+    forecast: [20,35,50,80,90,70,40], checkedIn: [{name:'Marcus T', initials:'MT', time:'12 min ago', badge:true},{name:'Deon W', initials:'DW', time:'18 min ago', badge:false}] },
+  { id: 'lifetime-irvine', name: 'Life Time Irvine', address: '18007 Von Karman Ave, Irvine, CA 92612', lat: 33.6946, lng: -117.8465, status: 'packed', players: 14, detail: 'Next game 10 min', type: 'indoor', lit: true,
+    forecast: [30,40,60,90,100,85,50], checkedIn: [{name:'Chris L', initials:'CL', time:'5 min ago', badge:true},{name:'Andre P', initials:'AP', time:'8 min ago', badge:false},{name:'Jay K', initials:'JK', time:'15 min ago', badge:true}] },
+  { id: 'seal-beach', name: 'Seal Beach Pier Court', address: 'Ocean Ave, Seal Beach, CA 90740', lat: 33.7414, lng: -118.1048, status: 'active', players: 6, detail: '3v3 running', type: 'outdoor', lit: false,
+    forecast: [10,15,40,60,70,50,20], checkedIn: [{name:'Kev R', initials:'KR', time:'22 min ago', badge:false}] },
+  { id: 'woodbridge', name: 'Woodbridge Park', address: '24 Almond Tree Ln, Irvine, CA 92604', lat: 33.7142, lng: -117.7936, status: 'active', players: 10, detail: '5v5 running', type: 'outdoor', lit: true,
+    forecast: [15,25,45,75,85,60,30], checkedIn: [{name:'Tyler M', initials:'TM', time:'10 min ago', badge:true}] },
+  { id: 'tewinkle', name: 'TeWinkle Park', address: '970 Arlington Dr, Costa Mesa, CA 92626', lat: 33.6576, lng: -117.9086, status: 'quiet', players: 0, detail: 'Usually active after 5pm', type: 'outdoor', lit: true,
+    forecast: [5,10,15,30,55,45,20], checkedIn: [] },
+  { id: 'atlantis', name: 'Atlantis Park', address: '20431 Craimer Ln, Lake Forest, CA 92630', lat: 33.6871, lng: -117.6768, status: 'active', players: 4, detail: 'Shooting around', type: 'outdoor', lit: false,
+    forecast: [10,20,30,45,50,35,15], checkedIn: [] },
+  { id: 'hb-central', name: 'HB Central Park', address: '18100 Goldenwest St, Huntington Beach, CA 92648', lat: 33.6595, lng: -117.9988, status: 'packed', players: 12, detail: 'Full court running', type: 'outdoor', lit: true,
+    forecast: [25,40,55,85,95,75,45], checkedIn: [{name:'Sam J', initials:'SJ', time:'3 min ago', badge:false},{name:'Ricky F', initials:'RF', time:'7 min ago', badge:true}] },
+  { id: 'mile-square', name: 'Mile Square Park', address: '16801 Euclid St, Fountain Valley, CA 92708', lat: 33.7175, lng: -117.9453, status: 'active', players: 6, detail: 'Half court 3v3', type: 'outdoor', lit: false,
+    forecast: [10,20,35,55,65,45,20], checkedIn: [] },
+  { id: 'clark-park', name: 'Ralph B. Clark Park', address: '8800 Rosecrans Ave, Buena Park, CA 90621', lat: 33.8878, lng: -117.9686, status: 'quiet', players: 0, detail: 'Typically busy weekends', type: 'outdoor', lit: false,
+    forecast: [5,8,12,20,35,25,10], checkedIn: [] },
+  { id: 'laguna-niguel', name: 'Laguna Niguel Regional', address: '28241 La Paz Rd, Laguna Niguel, CA 92677', lat: 33.5367, lng: -117.7126, status: 'active', players: 5, detail: 'Looking for 1 more', type: 'outdoor', lit: true,
+    forecast: [8,15,25,40,55,40,18], checkedIn: [{name:'Omar B', initials:'OB', time:'30 min ago', badge:false}] },
+  { id: '24-fitness', name: '24 Hour Fitness Sport', address: '1732 E McFadden Ave, Santa Ana, CA 92705', lat: 33.7461, lng: -117.8685, status: 'packed', players: 16, detail: 'Wait list active', type: 'indoor', lit: true,
+    forecast: [35,50,65,90,100,90,55], checkedIn: [{name:'Dante H', initials:'DH', time:'2 min ago', badge:true},{name:'Luis G', initials:'LG', time:'6 min ago', badge:false}] },
+  { id: 'aliso-viejo', name: 'Aliso Viejo Community Park', address: '1 Journey, Aliso Viejo, CA 92656', lat: 33.5676, lng: -117.7276, status: 'quiet', players: 0, detail: 'Open courts available', type: 'outdoor', lit: false,
+    forecast: [5,10,15,25,40,30,12], checkedIn: [] },
+];
+
+const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+let currentFilter = 'all';
+let markers = [];
+let userCheckins = [];
+let checkinCourts = new Set();
+
+/* ── Player profiles (mock data for career cards) ── */
+const playerProfiles = {
+  'Marcus T':  { initials:'MT', location:'Irvine, CA', badge:true, w:24,l:8,d:2, skill:3.8,social:4.5, games:[{r:'W',d:'5v5 at Great Park',t:'2d ago'},{r:'W',d:'3v3 at Woodbridge',t:'4d ago'},{r:'L',d:'1v1 at Life Time',t:'1w ago'}]},
+  'Deon W':    { initials:'DW', location:'Costa Mesa, CA', badge:false, w:15,l:12,d:1, skill:3.2,social:3.8, games:[{r:'L',d:'3v3 at TeWinkle',t:'1d ago'},{r:'W',d:'5v5 at HB Central',t:'3d ago'}]},
+  'Chris L':   { initials:'CL', location:'Irvine, CA', badge:true, w:37,l:11,d:4, skill:4.2,social:4.6, games:[{r:'W',d:'2v2 at Life Time',t:'1d ago'},{r:'W',d:'5v5 at Great Park',t:'2d ago'},{r:'D',d:'1v1 at Woodbridge',t:'5d ago'}]},
+  'Andre P':   { initials:'AP', location:'Santa Ana, CA', badge:false, w:18,l:14,d:3, skill:3.0,social:4.1, games:[{r:'L',d:'3v3 at 24 Hour',t:'2d ago'},{r:'W',d:'5v5 at Mile Square',t:'4d ago'}]},
+  'Kev R':     { initials:'KR', location:'Seal Beach, CA', badge:false, w:9,l:6,d:0, skill:3.5,social:3.9, games:[{r:'W',d:'3v3 at Seal Beach',t:'1d ago'},{r:'L',d:'1v1 at HB Central',t:'3d ago'}]},
+  'Tyler M':   { initials:'TM', location:'Irvine, CA', badge:true, w:31,l:9,d:2, skill:4.0,social:4.7, games:[{r:'W',d:'5v5 at Woodbridge',t:'12h ago'},{r:'W',d:'3v3 at Great Park',t:'2d ago'},{r:'W',d:'2v2 at Life Time',t:'4d ago'}]},
+  'Sam J':     { initials:'SJ', location:'Huntington Beach, CA', badge:false, w:12,l:10,d:1, skill:3.3,social:3.6, games:[{r:'L',d:'5v5 at HB Central',t:'1d ago'},{r:'W',d:'3v3 at Mile Square',t:'3d ago'}]},
+  'Ricky F':   { initials:'RF', location:'Huntington Beach, CA', badge:true, w:28,l:7,d:3, skill:4.1,social:4.4, games:[{r:'W',d:'5v5 at HB Central',t:'6h ago'},{r:'W',d:'1v1 at Seal Beach',t:'2d ago'},{r:'L',d:'3v3 at Great Park',t:'5d ago'}]},
+  'Omar B':    { initials:'OB', location:'Laguna Niguel, CA', badge:false, w:6,l:8,d:2, skill:2.8,social:4.2, games:[{r:'D',d:'1v1 at Laguna Niguel',t:'1d ago'},{r:'L',d:'3v3 at Aliso Viejo',t:'4d ago'}]},
+  'Dante H':   { initials:'DH', location:'Santa Ana, CA', badge:true, w:22,l:5,d:1, skill:4.4,social:4.3, games:[{r:'W',d:'5v5 at 24 Hour',t:'4h ago'},{r:'W',d:'2v2 at Life Time',t:'1d ago'},{r:'W',d:'1v1 at Great Park',t:'3d ago'}]},
+  'Luis G':    { initials:'LG', location:'Santa Ana, CA', badge:false, w:10,l:13,d:0, skill:2.9,social:3.7, games:[{r:'L',d:'5v5 at 24 Hour',t:'1d ago'},{r:'W',d:'3v3 at Mile Square',t:'3d ago'}]},
+  'Jay K':     { initials:'JK', location:'Irvine, CA', badge:true, w:19,l:6,d:2, skill:3.7,social:4.8, games:[{r:'W',d:'3v3 at Life Time',t:'8h ago'},{r:'W',d:'5v5 at Great Park',t:'2d ago'},{r:'L',d:'1v1 at Woodbridge',t:'6d ago'}]},
+};
+
+function showPlayerCard(name) {
+  const p = playerProfiles[name];
+  if (!p) return;
+  document.getElementById('pmAvatar').textContent = p.initials;
+  document.getElementById('pmName').textContent = name;
+  document.getElementById('pmMeta').textContent = '📍 ' + p.location;
+  document.getElementById('pmBadge').style.display = p.badge ? 'inline-block' : 'none';
+  document.getElementById('pmWins').textContent = p.w;
+  document.getElementById('pmLosses').textContent = p.l;
+  document.getElementById('pmDraws').textContent = p.d;
+  document.getElementById('pmSkill').textContent = p.skill.toFixed(1);
+  document.getElementById('pmSocial').textContent = p.social.toFixed(1);
+  document.getElementById('pmHistory').innerHTML = p.games.map(g => {
+    const cls = g.r === 'W' ? 'w' : g.r === 'L' ? 'l' : 'd';
+    return '<div class="player-modal__game"><div class="player-modal__game-result player-modal__game-result--' + cls + '">' + g.r + '</div><div class="player-modal__game-detail">' + g.d + '</div><div class="player-modal__game-time">' + g.t + '</div></div>';
+  }).join('');
+  document.getElementById('playerModal').classList.add('active');
+}
+
+function closePlayerCard() {
+  document.getElementById('playerModal').classList.remove('active');
+}
+
+/* ══════════════════════════════
+   MAP INIT
+   ══════════════════════════════ */
+mapboxgl.accessToken = 'pk.eyJ1IjoibWFzaHJhZnkiLCJhIjoiY21rYnJqd3UwMDc0NTNrcHMzZTNydGR6eiJ9.LJBgJ1mpL1Q9Xv9aoBTwNw';
+
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/dark-v11',
+  center: [-117.83, 33.68],
+  zoom: 10.5,
+  attributionControl: false,
+});
+
+map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+
+map.on('load', () => renderMarkers());
+
+function renderMarkers() {
+  // Remove existing
+  markers.forEach(m => m.remove());
+  markers = [];
+
+  courts.forEach(court => {
+    if (currentFilter !== 'all' && court.status !== currentFilter) return;
+
+    const color = court.status === 'packed' ? '#FF5A1F' : court.status === 'active' ? '#22C55E' : '#555';
+    const size = court.status === 'quiet' ? 12 : 14 + (court.players / 2.5);
+
+    const el = document.createElement('div');
+    el.style.cssText = `width:${size+18}px;height:${size+18}px;position:relative;cursor:pointer;`;
+
+    // Pulse
+    if (court.status !== 'quiet') {
+      const glow = document.createElement('div');
+      glow.style.cssText = `width:${size+14}px;height:${size+14}px;border-radius:50%;background:${color};position:absolute;top:50%;left:50%;animation:marker-pulse 2.5s ease-in-out infinite;`;
+      el.appendChild(glow);
+    }
+
+    // Dot
+    const dot = document.createElement('div');
+    dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;transition:transform 0.15s ease;`;
+    el.appendChild(dot);
+
+    el.addEventListener('mouseenter', () => dot.style.transform = 'translate(-50%,-50%) scale(1.2)');
+    el.addEventListener('mouseleave', () => dot.style.transform = 'translate(-50%,-50%) scale(1)');
+    el.addEventListener('click', (e) => { e.stopPropagation(); openSheet(court); });
+
+    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([court.lng, court.lat])
+      .addTo(map);
+
+    markers.push(marker);
+  });
+}
+
+/* ══════════════════════════════
+   FILTER
+   ══════════════════════════════ */
+function setFilter(filter, chipEl) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  chipEl.classList.add('active');
+  renderMarkers();
+}
+
+/* ══════════════════════════════
+   CENTER MAP
+   ══════════════════════════════ */
+function centerMap() {
+  map.flyTo({ center: [-117.83, 33.68], zoom: 10.5, duration: 1000 });
+}
+
+/* ══════════════════════════════
+   BOTTOM SHEET — COURT DETAIL
+   ══════════════════════════════ */
+function openSheet(court) {
+  const statusIcon = court.status === 'packed' ? '🔥' : court.status === 'active' ? '🏀' : '😴';
+  const statusClass = court.status;
+  const typeTag = court.type === 'indoor'
+    ? '<span class="court-tag court-tag--indoor">Indoor</span>'
+    : '<span class="court-tag court-tag--outdoor">Outdoor</span>';
+  const litTag = court.lit ? '<span class="court-tag court-tag--lit">Lit</span>' : '';
+
+  // Forecast bars
+  const maxForecast = Math.max(...court.forecast);
+  const today = new Date().getDay();
+  const todayIdx = today === 0 ? 6 : today - 1;
+  const forecastBars = court.forecast.map((val, i) => {
+    const h = Math.max(6, (val / maxForecast) * 60);
+    const level = val >= 80 ? 'packed' : val >= 50 ? 'high' : val >= 25 ? 'med' : 'low';
+    const isNow = i === todayIdx;
+    return `<div class="forecast-bar-wrapper">
+      <div class="forecast-bar forecast-bar--${level} ${isNow ? 'forecast-bar--now' : ''}" style="height:${h}px;"></div>
+      <span class="forecast-label ${isNow ? 'forecast-label--now' : ''}">${dayLabels[i]}</span>
+    </div>`;
+  }).join('');
+
+  // Checked-in players
+  const checkinHTML = court.checkedIn.length > 0
+    ? court.checkedIn.map(p => `
+      <div class="checkin-player" onclick="${p.name === 'Jason R' || (currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,\'${p.userId}\'` : ''})`}">
+        <div class="checkin-player__avatar">${p.initials}</div>
+        <div class="checkin-player__info">
+          <div class="checkin-player__name">${p.name}</div>
+          <div class="checkin-player__meta">${p.time}</div>
+        </div>
+        ${p.badge ? '<span class="checkin-player__badge">Founding</span>' : ''}
+      </div>`).join('')
+    : '<div class="empty-checkins">No one checked in yet. Be the first!</div>';
+
+  document.getElementById('sheetBody').innerHTML = `
+    <div class="court-header">
+      <div class="court-header__info">
+        <div class="court-header__name">${court.name}</div>
+        <div class="court-header__address">${court.address}</div>
+        <div class="court-header__tags">${typeTag}${litTag}</div>
+      </div>
+      <div class="court-header__status">
+        <div class="status-dot-lg status-dot-lg--${statusClass}">${statusIcon}</div>
+        <span class="status-label status-label--${statusClass}">${court.status.charAt(0).toUpperCase() + court.status.slice(1)}</span>
+      </div>
+    </div>
+
+    <div class="pulse-stats">
+      <div class="pulse-stat">
+        <div class="pulse-stat__value" style="color:${court.status === 'packed' ? 'var(--orange)' : court.status === 'active' ? 'var(--green-live)' : 'var(--text-muted)'};">${court.players}</div>
+        <div class="pulse-stat__label">Players Now</div>
+      </div>
+      <div class="pulse-stat">
+        <div class="pulse-stat__value">${court.checkedIn.length}</div>
+        <div class="pulse-stat__label">Checked In</div>
+      </div>
+      <div class="pulse-stat">
+        <div class="pulse-stat__value">${court.detail.length > 12 ? court.detail.split(' ')[0] : court.detail.split(' · ')[0]}</div>
+        <div class="pulse-stat__label">Activity</div>
+      </div>
+    </div>
+
+    <div class="forecast-section">
+      <div class="forecast-title">// Weekly Forecast</div>
+      <div class="forecast-chart">${forecastBars}</div>
+    </div>
+
+    <div class="checkins-section">
+      <div class="forecast-title">// Checked In Now</div>
+      <div class="checkin-list">${checkinHTML}</div>
+    </div>
+
+    <div class="court-actions">
+      ${checkinCourts.has(court.id)
+        ? `<a href="allnet-phase2.html?court=${encodeURIComponent(court.name)}" class="btn btn--success" style="text-decoration:none;">🏀 Start a Game</a>`
+        : `<button class="btn btn--primary" onclick="checkIn('${court.id}')">📍 I'm Here</button>`}
+      <button class="btn btn--secondary" onclick="getDirections(${court.lat}, ${court.lng})">🧭 Directions</button>
+    </div>
+  `;
+
+  document.getElementById('sheetOverlay').classList.add('active');
+  document.getElementById('courtSheet').classList.add('open');
+
+  // Pan map to court
+  map.flyTo({ center: [court.lng, court.lat], zoom: 13, duration: 600 });
+}
+
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('active');
+  document.getElementById('courtSheet').classList.remove('open');
+}
+
+/* ══════════════════════════════
+   CHECK-IN
+   ══════════════════════════════ */
+function checkIn(courtId) {
+  const court = courts.find(c => c.id === courtId);
+  if (!court) return;
+
+  // Prevent duplicate check-ins
+  if (checkinCourts.has(courtId)) return;
+
+  // Add user to court's checked-in list
+  court.checkedIn.unshift({ name: 'Jason R', initials: 'JR', time: 'Just now', badge: true });
+  court.players += 1;
+
+  // Update status if needed
+  if (court.players >= 10 && court.status !== 'packed') court.status = 'packed';
+  else if (court.players > 0 && court.status === 'quiet') court.status = 'active';
+
+  // Track user check-in
+  const timestamp = new Date();
+  userCheckins.unshift({ courtId: court.id, courtName: court.name, time: timestamp });
+  checkinCourts.add(court.id);
+
+  // Update profile stats
+  updateProfileStats();
+
+  // Close sheet, show toast
+  closeSheet();
+  renderMarkers();
+  showToast(court.name);
+}
+
+function showToast(courtName) {
+  document.getElementById('toastCourt').textContent = courtName;
+  const toast = document.getElementById('toast');
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 3000);
+}
+
+function getDirections(lat, lng) {
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+}
+
+/* ══════════════════════════════
+   PROFILE
+   ══════════════════════════════ */
+function openProfile() {
+  updateProfileStats();
+  renderHistory();
+  document.getElementById('profileScreen').classList.add('open');
+}
+
+function closeProfile() {
+  document.getElementById('profileScreen').classList.remove('open');
+}
+
+function updateProfileStats() {
+  document.getElementById('profileCheckins').textContent = userCheckins.length;
+  document.getElementById('profileCourts').textContent = checkinCourts.size;
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (userCheckins.length === 0) {
+    list.innerHTML = '<div class="empty-checkins">No check-ins yet. Visit a court and tap "I\'m Here" to start building your history.</div>';
+    return;
+  }
+
+  list.innerHTML = userCheckins.map(c => {
+    const timeStr = formatTime(c.time);
+    return `<div class="history-item">
+      <div class="history-item__icon">📍</div>
+      <div class="history-item__info">
+        <div class="history-item__title">${c.courtName}</div>
+        <div class="history-item__meta">Checked in</div>
+      </div>
+      <div class="history-item__time">${timeStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function formatTime(date) {
+  const now = new Date();
+  const diff = Math.floor((now - date) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ══════════════════════════════
+   SUPABASE INTEGRATION LAYER
+   Falls back to mock data if not authenticated
+   ══════════════════════════════ */
+let currentUser = null;
+let currentProfile = null;
+let dbCourts = null;
+
+async function initApp() {
+  if (typeof supabase === 'undefined' || typeof getUser !== 'function') {
+    console.log('AllNet: Running in demo mode (no Supabase)');
+    return;
+  }
+
+  try {
+    currentUser = await getUser();
+    if (!currentUser) {
+      console.log('AllNet: Not logged in, using mock data');
+      return;
+    }
+
+    currentProfile = await getUserProfile();
+    if (currentProfile) {
+      // Update profile UI with real user data
+      document.getElementById('profileBtn').textContent = currentProfile.initials || 'U';
+      const profileCard = document.querySelector('.profile-card__name');
+      if (profileCard) profileCard.textContent = currentProfile.name;
+      const profileAvatar = document.querySelector('.profile-card__avatar');
+      if (profileAvatar) profileAvatar.textContent = currentProfile.initials || 'U';
+      const profileLocation = document.querySelector('.profile-card__location');
+      if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
+      const profileDays = document.getElementById('profileDays');
+      if (profileDays) {
+        const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
+        profileDays.textContent = daysSince || 1;
+      }
+      document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
+      document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
+    }
+
+    // Load courts from Supabase
+    const courtData = await fetchCourts();
+    if (courtData && courtData.length > 0) {
+      dbCourts = courtData;
+      // Transform DB format to match existing court object structure
+      courts.length = 0; // Clear mock courts
+      courtData.forEach(c => {
+        courts.push({
+          id: c.id,
+          name: c.name,
+          address: c.address,
+          lat: parseFloat(c.lat),
+          lng: parseFloat(c.lng),
+          status: c.status || 'quiet',
+          players: c.current_checkins || 0,
+          detail: c.current_checkins >= 10 ? 'Full court running' : c.current_checkins > 0 ? c.current_checkins + ' players here' : 'No one here yet',
+          type: c.court_type,
+          lit: c.is_lit,
+          forecast: [c.forecast_mon, c.forecast_tue, c.forecast_wed, c.forecast_thu, c.forecast_fri, c.forecast_sat, c.forecast_sun],
+          checkedIn: [] // Will be loaded on court tap
+        });
+      });
+      renderMarkers();
+    }
+
+    // Load user check-in history
+    const myCheckins = await getUserCheckins(currentUser.id);
+    if (myCheckins) {
+      userCheckins = myCheckins.map(c => ({
+        courtId: c.court_id,
+        courtName: c.courts?.name || 'Unknown',
+        time: new Date(c.checked_in_at)
+      }));
+      myCheckins.forEach(c => checkinCourts.add(c.court_id));
+      updateProfileStats();
+    }
+
+    console.log('AllNet: Connected to Supabase, ' + courts.length + ' courts loaded');
+  } catch (err) {
+    console.error('AllNet: Supabase init error, falling back to mock data', err);
+  }
+}
+
+// Override openSheet to load real check-ins from Supabase
+const _originalOpenSheet = openSheet;
+openSheet = async function(court) {
+  if (currentUser && court.id && typeof court.id === 'string' && court.id.length > 10) {
+    try {
+      const { court: freshCourt, checkins } = await fetchCourtWithCheckins(court.id);
+      if (checkins) {
+        court.checkedIn = checkins.map(c => ({
+          name: c.profiles?.name || 'Unknown',
+          initials: c.profiles?.initials || '??',
+          time: timeAgo(new Date(c.checked_in_at)),
+          badge: c.profiles?.is_founding_hooper || false,
+          userId: c.user_id
+        }));
+        court.players = checkins.length;
+        court.status = checkins.length >= 10 ? 'packed' : checkins.length > 0 ? 'active' : 'quiet';
+        court.detail = checkins.length > 0 ? checkins.length + ' players here' : 'No one here yet';
+      }
+    } catch (err) { console.error('Failed to load check-ins:', err); }
+  }
+  _originalOpenSheet(court);
+};
+
+// Override checkIn to write to Supabase
+const _originalCheckIn = checkIn;
+checkIn = async function(courtId) {
+  if (currentUser && courtId && typeof courtId === 'string' && courtId.length > 10) {
+    try {
+      await checkInAtCourt(courtId);
+      // Refresh the court data
+      const court = courts.find(c => c.id === courtId);
+      if (court) {
+        court.players++;
+        if (court.players >= 10) court.status = 'packed';
+        else if (court.players > 0) court.status = 'active';
+      }
+      checkinCourts.add(courtId);
+      userCheckins.unshift({ courtId, courtName: court?.name || 'Court', time: new Date() });
+      updateProfileStats();
+      closeSheet();
+      renderMarkers();
+      showToast(court?.name || 'Court');
+    } catch (err) {
+      console.error('Check-in failed:', err);
+      alert('Check-in failed: ' + err.message);
+    }
+  } else {
+    _originalCheckIn(courtId);
+  }
+};
+
+// Override showPlayerCard to try Supabase first
+const _originalShowPlayerCard = showPlayerCard;
+showPlayerCard = async function(name, userId) {
+  if (currentUser && userId) {
+    try {
+      const card = await getPlayerCard(userId);
+      if (card) {
+        document.getElementById('pmAvatar').textContent = card.initials || '??';
+        document.getElementById('pmName').textContent = card.name;
+        document.getElementById('pmMeta').textContent = '📍 ' + (card.location || 'OC/LA');
+        document.getElementById('pmBadge').style.display = card.is_founding_hooper ? 'inline-block' : 'none';
+        document.getElementById('pmWins').textContent = card.wins || 0;
+        document.getElementById('pmLosses').textContent = card.losses || 0;
+        document.getElementById('pmDraws').textContent = card.draws || 0;
+        document.getElementById('pmSkill').textContent = card.skill_rating ? card.skill_rating.toFixed(1) : '—';
+        document.getElementById('pmSocial').textContent = card.social_rating ? card.social_rating.toFixed(1) : '—';
+        const games = card.recent_games || [];
+        document.getElementById('pmHistory').innerHTML = games.length > 0 ? games.map(g => {
+          const cls = g.result === 'W' ? 'w' : g.result === 'L' ? 'l' : 'd';
+          return '<div class="player-modal__game"><div class="player-modal__game-result player-modal__game-result--' + cls + '">' + g.result + '</div><div class="player-modal__game-detail">' + g.format + ' at ' + (g.court_name || 'Court') + '</div><div class="player-modal__game-time">' + timeAgo(new Date(g.played_at)) + '</div></div>';
+        }).join('') : '<div style="text-align:center;color:var(--text-muted);padding:12px;font-size:13px;">No games yet</div>';
+        document.getElementById('playerModal').classList.add('active');
+        return;
+      }
+    } catch (err) { console.error('Failed to load player card:', err); }
+  }
+  _originalShowPlayerCard(name);
+};
+
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return 'Just now';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+// Update checkin-player onclick to pass userId when available
+const _originalCheckinHTML = '__patched__';
+
+// Init on load
+initApp();
+
+</script>
+
+</body>
+</html>

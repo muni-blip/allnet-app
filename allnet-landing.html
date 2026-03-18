@@ -1390,6 +1390,50 @@ a { color: inherit; text-decoration: none; }
   text-align: center;
 }
 
+.modal__oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  width: 100%;
+}
+
+.btn-oauth--google {
+  background: white;
+  color: #1f1f1f;
+}
+
+.btn-oauth--google:hover {
+  background: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.btn-oauth--apple {
+  background: #000000;
+  color: white;
+}
+
+.btn-oauth--apple:hover {
+  background: #1a1a1a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
 /* Success state */
 .modal__success {
   display: none;
@@ -1828,33 +1872,17 @@ a { color: inherit; text-decoration: none; }
       <h3 class="modal__title">Claim Your Spot</h3>
       <p class="modal__sub">Your verified history starts today. Founding badge is permanent.</p>
 
-      <form class="modal__form" onsubmit="handleSignup(event)">
-        <input class="modal__input" id="signupName" type="text" placeholder="First and last name" required>
-        <input class="modal__input" id="signupEmail" type="email" placeholder="Email address" required>
-        <input class="modal__input" id="signupPassword" type="password" placeholder="Create a password" minlength="6" required>
-        <select class="modal__select" id="signupLocation" required>
-          <option value="" disabled selected>Where do you hoop?</option>
-          <option value="irvine">Irvine</option>
-          <option value="costa-mesa">Costa Mesa</option>
-          <option value="huntington-beach">Huntington Beach</option>
-          <option value="lake-forest">Lake Forest</option>
-          <option value="mission-viejo">Mission Viejo</option>
-          <option value="fullerton">Fullerton</option>
-          <option value="anaheim">Anaheim</option>
-          <option value="santa-ana">Santa Ana</option>
-          <option value="long-beach">Long Beach</option>
-          <option value="la-downtown">LA — Downtown</option>
-          <option value="la-westside">LA — Westside</option>
-          <option value="la-valley">LA — Valley</option>
-          <option value="la-south">LA — South LA</option>
-          <option value="other-oc">Other OC</option>
-          <option value="other-la">Other LA</option>
-        </select>
-        <button class="btn btn--primary btn--large modal__submit" type="submit" style="width:100%;">
-          Get Founding Access
+      <div class="modal__oauth">
+        <button class="btn-oauth btn-oauth--google" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+          Continue with Google
         </button>
-      </form>
-      <p class="modal__footer">Free forever · No spam · Takes 10 seconds</p>
+        <button class="btn-oauth btn-oauth--apple" onclick="signInWithApple()">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path d="M15.537 14.273c-.347.8-.513 1.157-.958 1.868-.622.993-1.5 2.23-2.586 2.241-1.217.013-1.53-.793-3.182-.783-1.652.01-1.998.8-3.215.786-1.086-.011-1.915-1.128-2.537-2.12C1.458 13.625.776 10.51 1.461 8.367c.48-1.505 1.337-2.525 2.383-3.12 1.047-.594 2.14-.666 2.997-.443.663.172 1.237.665 1.898.68.464.011 1.138-.334 2.168-.56 1.28-.284 2.226-.105 3.042.566-1.148.73-1.925 1.772-1.815 3.316.126 1.763 1.374 2.88 2.826 3.08-.294.85-.613 1.527-1.423 2.387zM12.15.9C12.58.35 12.896-.372 12.807-1.1c-.667.044-1.445.466-1.9.996-.413.48-.775 1.21-.639 1.91.728.022 1.479-.363 1.882-.906z" fill="white" transform="translate(2,1)"/></svg>
+          Continue with Apple
+        </button>
+      </div>
+      <p class="modal__footer">Free forever · No spam · One tap signup</p>
     </div>
 
     <div class="modal__success" id="modalSuccess">
@@ -1875,7 +1903,7 @@ a { color: inherit; text-decoration: none; }
 <script>
 // ═══════════════════════════════════════════════
 // AllNet — Supabase Client Configuration
-// Include after: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+// AllNet Supabase Client
 // ═══════════════════════════════════════════════
 
 const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
@@ -2109,28 +2137,49 @@ document.getElementById('signupModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeModal();
 });
 
-async function handleSignup(e) {
-  e.preventDefault();
-  const name = document.getElementById('signupName').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
-  const password = document.getElementById('signupPassword').value;
-  const location = document.getElementById('signupLocation').value;
-  const btn = document.querySelector('.modal__submit');
-  btn.disabled = true; btn.textContent = 'Creating account...';
-
+async function signInWithGoogle() {
   try {
-    await signUp(email, password, name, location);
-    document.getElementById('modalForm').style.display = 'none';
-    document.getElementById('modalSuccess').classList.add('visible');
-    const counter = document.getElementById('counter-hoopers');
-    const current = parseInt(counter.textContent) || 142;
-    counter.textContent = current + 1;
-    document.getElementById('footer-counter').textContent = current + 1;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/allnet-app.html'
+      }
+    });
+    if (error) throw error;
   } catch (err) {
-    alert(err.message || 'Signup failed. Please try again.');
-    btn.disabled = false; btn.textContent = 'GET FOUNDING ACCESS';
+    alert('Google sign in failed: ' + (err.message || 'Please try again.'));
   }
 }
+
+async function signInWithApple() {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: window.location.origin + '/allnet-app.html'
+      }
+    });
+    if (error) throw error;
+  } catch (err) {
+    alert('Apple sign in failed: ' + (err.message || 'Please try again.'));
+  }
+}
+
+// Check if user just authenticated (returning from OAuth redirect)
+async function checkAuthRedirect() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    // User is authenticated, redirect to app
+    const isOnLanding = window.location.pathname.includes('landing');
+    if (isOnLanding) {
+      // Show success state briefly then redirect
+      document.getElementById('modalForm').style.display = 'none';
+      document.getElementById('modalSuccess').classList.add('visible');
+      document.getElementById('signupModal').classList.add('active');
+    }
+  }
+}
+checkAuthRedirect();
 
 /* ── Map initialization (Mapbox) ── */
 mapboxgl.accessToken = 'pk.eyJ1IjoibWFzaHJhZnkiLCJhIjoiY21rYnJqd3UwMDc0NTNrcHMzZTNydGR6eiJ9.LJBgJ1mpL1Q9Xv9aoBTwNw';

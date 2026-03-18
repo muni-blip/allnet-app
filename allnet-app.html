@@ -1569,23 +1569,21 @@ function renderMarkers() {
     const color = court.status === 'packed' ? '#FF5A1F' : court.status === 'active' ? '#22C55E' : '#3B82F6';
     const size = court.status === 'quiet' ? 12 : 14 + (court.players / 2.5);
 
+    // Use a simple centered structure — no absolute positioning to avoid zoom jitter
     const el = document.createElement('div');
-    el.style.cssText = `width:${size+18}px;height:${size+18}px;position:relative;cursor:pointer;`;
+    el.style.cssText = 'display:flex;align-items:center;justify-content:center;cursor:pointer;';
 
-    // Pulse
+    const dot = document.createElement('div');
+    dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);transition:transform 0.15s ease;`;
+    
     if (court.status !== 'quiet') {
-      const glow = document.createElement('div');
-      glow.style.cssText = `width:${size+14}px;height:${size+14}px;border-radius:50%;background:${color};position:absolute;top:50%;left:50%;animation:marker-pulse 2.5s ease-in-out infinite;`;
-      el.appendChild(glow);
+      dot.style.boxShadow = `0 0 ${size}px ${Math.round(size/2)}px ${color}40`;
     }
 
-    // Dot
-    const dot = document.createElement('div');
-    dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;transition:transform 0.15s ease;`;
     el.appendChild(dot);
 
-    el.addEventListener('mouseenter', () => dot.style.transform = 'translate(-50%,-50%) scale(1.2)');
-    el.addEventListener('mouseleave', () => dot.style.transform = 'translate(-50%,-50%) scale(1)');
+    el.addEventListener('mouseenter', () => dot.style.transform = 'scale(1.2)');
+    el.addEventListener('mouseleave', () => dot.style.transform = 'scale(1)');
     el.addEventListener('click', (e) => { e.stopPropagation(); openSheet(court); });
 
     const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })

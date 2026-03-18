@@ -485,7 +485,6 @@ function createGame(){
   G.codeB=String(Math.floor(1000+Math.random()*9000));
   while(G.codeB===G.codeA) G.codeB=String(Math.floor(1000+Math.random()*9000));
   G.teamA=[{...ME}];G.teamB=[];
-  const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);
   goTo('screenLobby');
 
   // Render code section based on format
@@ -505,9 +504,13 @@ function createGame(){
   }
 
   renderLobby();
-  let delay=1500;const needA=G.teamSize-1;const needB=G.teamSize;
-  shuffled.slice(0,needA).forEach(p=>{const t=setTimeout(()=>{G.teamA.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
-  shuffled.slice(needA,needA+needB).forEach(p=>{const t=setTimeout(()=>{G.teamB.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
+  // Only simulate fake players in demo mode (not logged in)
+  if(!currentUser){
+    const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);
+    let delay=1500;const needA=G.teamSize-1;const needB=G.teamSize;
+    shuffled.slice(0,needA).forEach(p=>{const t=setTimeout(()=>{G.teamA.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
+    shuffled.slice(needA,needA+needB).forEach(p=>{const t=setTimeout(()=>{G.teamB.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
+  }
 }
 
 function renderLobby(){
@@ -537,10 +540,13 @@ function joinGame(){
     document.getElementById('teamBLabel').textContent='Team B';
   }
   renderLobby();
-  const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);let idx=0,delay=1000;
-  const fillA=G.teamSize-G.teamA.length,fillB=G.teamSize-G.teamB.length;
-  for(let i=0;i<fillA;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamA.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
-  for(let i=0;i<fillB;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamB.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
+  // Only simulate fake players in demo mode (not logged in)
+  if(!currentUser){
+    const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);let idx=0,delay=1000;
+    const fillA=G.teamSize-G.teamA.length,fillB=G.teamSize-G.teamB.length;
+    for(let i=0;i<fillA;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamA.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
+    for(let i=0;i<fillB;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamB.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
+  }
 }
 function simulateScan(){document.getElementById('joinInput').value='4829';document.getElementById('joinBtn').disabled=false;}
 

@@ -101,6 +101,89 @@ html, body {
 
 .top-bar__profile:hover { transform: scale(1.08); }
 
+/* ── Check-in Nudge Banner ── */
+.nudge-banner {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: rgba(14,14,14,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.nudge-banner.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+.nudge-banner__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+  flex-shrink: 0;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.nudge-banner__text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.nudge-banner__text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.nudge-banner__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.nudge-btn {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+
+.nudge-btn--stay {
+  background: var(--green-live);
+  color: white;
+}
+
+.nudge-btn--stay:hover { background: #1DB954; }
+
+.nudge-btn--leave {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.nudge-btn--leave:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
 /* ── Map ── */
 .map-view {
   flex: 1;
@@ -1010,6 +1093,16 @@ html, body {
     <div class="top-bar__profile" id="profileBtn" onclick="openProfile()">JR</div>
   </div>
 
+  <!-- ═══ Check-in nudge banner ═══ -->
+  <div class="nudge-banner" id="nudgeBanner">
+    <div class="nudge-banner__dot"></div>
+    <div class="nudge-banner__text">Still at <strong id="nudgeCourtName">Court</strong>?</div>
+    <div class="nudge-banner__actions">
+      <button class="nudge-btn nudge-btn--stay" onclick="extendCheckin()">Still Here</button>
+      <button class="nudge-btn nudge-btn--leave" onclick="manualCheckout()">I Left</button>
+    </div>
+  </div>
+
   <!-- ═══ Pulse filter chips ═══ -->
   <div class="pulse-filter" id="pulseFilter">
     <button class="filter-chip active" data-filter="all" onclick="setFilter('all', this)">All Courts</button>
@@ -1191,6 +1284,7 @@ async function fetchCourtWithCheckins(courtId) {
     .select('*, profiles(name, initials, is_founding_hooper)')
     .eq('court_id', courtId)
     .gte('checked_in_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
+    .is('checked_out_at', null)
     .order('checked_in_at', { ascending: false });
   return { court, checkins: checkins || [] };
 }
@@ -1541,9 +1635,6 @@ function openSheet(court) {
 
   document.getElementById('sheetOverlay').classList.add('active');
   document.getElementById('courtSheet').classList.add('open');
-
-  // Pan map to court
-  map.flyTo({ center: [court.lng, court.lat], zoom: 13, duration: 600 });
 }
 
 function closeSheet() {
@@ -1577,9 +1668,12 @@ function checkIn(courtId) {
   // Update profile stats
   updateProfileStats();
 
-  // Close sheet, show toast
-  closeSheet();
+  // Start checkout timers (nudge at 90 min, expire at 120 min)
+  startCheckinTimers(court.id, court.name);
+
+  // Re-render sheet to show "Start a Game" button, keep it open
   renderMarkers();
+  openSheet(court);
   showToast(court.name);
 }
 
@@ -1592,6 +1686,109 @@ function showToast(courtName) {
 
 function getDirections(lat, lng) {
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+}
+
+/* ══════════════════════════════
+   CHECK-IN TIMER & CHECKOUT
+   ══════════════════════════════ */
+const NUDGE_MS = 90 * 60 * 1000;   // 90 minutes
+const EXPIRE_MS = 120 * 60 * 1000; // 120 minutes
+
+let activeCheckin = null;  // { courtId, courtName, time, checkinId }
+let nudgeTimer = null;
+let expireTimer = null;
+
+function startCheckinTimers(courtId, courtName) {
+  // Clear any existing timers
+  clearCheckinTimers();
+
+  activeCheckin = { courtId, courtName, time: Date.now(), checkinId: null };
+
+  // Timer 1: Show nudge banner at 90 min
+  nudgeTimer = setTimeout(() => {
+    showNudgeBanner(courtName);
+  }, NUDGE_MS);
+
+  // Timer 2: Auto-expire at 120 min
+  expireTimer = setTimeout(() => {
+    autoCheckout();
+  }, EXPIRE_MS);
+}
+
+function clearCheckinTimers() {
+  if (nudgeTimer) { clearTimeout(nudgeTimer); nudgeTimer = null; }
+  if (expireTimer) { clearTimeout(expireTimer); expireTimer = null; }
+}
+
+function showNudgeBanner(courtName) {
+  document.getElementById('nudgeCourtName').textContent = courtName;
+  document.getElementById('nudgeBanner').classList.add('visible');
+}
+
+function hideNudgeBanner() {
+  document.getElementById('nudgeBanner').classList.remove('visible');
+}
+
+function extendCheckin() {
+  // "Still Here" — create a new check-in, reset timers
+  hideNudgeBanner();
+  if (activeCheckin) {
+    const court = courts.find(c => c.id === activeCheckin.courtId);
+    if (currentUser && activeCheckin.courtId && typeof activeCheckin.courtId === 'string' && activeCheckin.courtId.length > 10) {
+      // Real Supabase check-in
+      checkInAtCourt(activeCheckin.courtId).catch(err => console.error('Extend check-in failed:', err));
+    }
+    startCheckinTimers(activeCheckin.courtId, activeCheckin.courtName);
+    showToast(activeCheckin.courtName + ' — extended');
+  }
+}
+
+function manualCheckout() {
+  // "I Left" — checkout and clean up
+  performCheckout();
+  showToast('Checked out');
+}
+
+function autoCheckout() {
+  // Timer expired — silent checkout
+  performCheckout();
+  showToast('Check-in expired');
+}
+
+function performCheckout() {
+  hideNudgeBanner();
+  clearCheckinTimers();
+
+  if (activeCheckin) {
+    const courtId = activeCheckin.courtId;
+
+    // Update Supabase if logged in
+    if (currentUser && courtId && typeof courtId === 'string' && courtId.length > 10) {
+      supabase.from('checkins')
+        .update({ checked_out_at: new Date().toISOString() })
+        .eq('court_id', courtId)
+        .eq('user_id', currentUser.id)
+        .is('checked_out_at', null)
+        .then(() => console.log('Checked out from DB'))
+        .catch(err => console.error('Checkout failed:', err));
+    }
+
+    // Update local state
+    checkinCourts.delete(courtId);
+    const court = courts.find(c => c.id === courtId);
+    if (court) {
+      court.players = Math.max(0, court.players - 1);
+      if (court.players === 0) court.status = 'quiet';
+      else if (court.players < 10) court.status = 'active';
+      // Remove user from checked-in list
+      court.checkedIn = court.checkedIn.filter(p => {
+        const isMe = (currentProfile && p.name === currentProfile.name) || p.name === 'Jason R';
+        return !isMe;
+      });
+    }
+    renderMarkers();
+    activeCheckin = null;
+  }
 }
 
 /* ══════════════════════════════
@@ -1762,8 +1959,9 @@ checkIn = async function(courtId) {
       checkinCourts.add(courtId);
       userCheckins.unshift({ courtId, courtName: court?.name || 'Court', time: new Date() });
       updateProfileStats();
-      closeSheet();
+      startCheckinTimers(courtId, court?.name || 'Court');
       renderMarkers();
+      openSheet(court);
       showToast(court?.name || 'Court');
     } catch (err) {
       console.error('Check-in failed:', err);

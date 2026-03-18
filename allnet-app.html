@@ -240,6 +240,12 @@ html, body {
   border-radius: 50%;
 }
 
+.filter-chip--nearme.active {
+  border-color: var(--yellow);
+  color: var(--yellow);
+  background: rgba(250, 204, 21, 0.1);
+}
+
 /* ── Near me button ── */
 .locate-btn {
   position: absolute;
@@ -1112,6 +1118,9 @@ html, body {
     <button class="filter-chip" data-filter="packed" onclick="setFilter('packed', this)">
       <span class="filter-chip__dot" style="background:var(--orange);"></span> Packed
     </button>
+    <button class="filter-chip filter-chip--nearme" id="nearMeChip" onclick="toggleNearMe()">
+      <span class="filter-chip__dot" style="background:var(--yellow);"></span> Near Me
+    </button>
   </div>
 
   <!-- ═══ Map ═══ -->
@@ -1502,6 +1511,13 @@ function renderMarkers() {
   courts.forEach(court => {
     if (currentFilter !== 'all' && court.status !== currentFilter) return;
 
+    // Distance filter — calculated client-side only, user location never leaves the browser
+    if (nearMeActive && userLat !== null && userLng !== null) {
+      const dist = haversineMiles(userLat, userLng, court.lat, court.lng);
+      if (dist > NEAR_ME_RADIUS_MILES) return;
+      court._distance = dist; // Temp property for display, not persisted
+    }
+
     const color = court.status === 'packed' ? '#FF5A1F' : court.status === 'active' ? '#22C55E' : '#555';
     const size = court.status === 'quiet' ? 12 : 14 + (court.players / 2.5);
 
@@ -1537,22 +1553,92 @@ function renderMarkers() {
    ══════════════════════════════ */
 function setFilter(filter, chipEl) {
   currentFilter = filter;
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.filter-chip:not(.filter-chip--nearme)').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
   renderMarkers();
+}
+
+/* ══════════════════════════════
+   NEAR ME — 10-MILE RADIUS FILTER
+   Location stays client-side only. Never sent to server.
+   ══════════════════════════════ */
+const NEAR_ME_RADIUS_MILES = 10;
+let nearMeActive = false;
+let userLat = null;
+let userLng = null;
+
+// Haversine formula — calculates distance in miles between two lat/lng points
+function haversineMiles(lat1, lng1, lat2, lng2) {
+  const R = 3958.8; // Earth radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function toggleNearMe() {
+  const chip = document.getElementById('nearMeChip');
+  if (nearMeActive) {
+    // Turn off
+    nearMeActive = false;
+    chip.classList.remove('active');
+    renderMarkers();
+    // Zoom back to full view
+    map.flyTo({ center: [-117.83, 33.68], zoom: 10.5, duration: 800 });
+  } else {
+    // Request location
+    chip.textContent = 'Locating...';
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      chip.innerHTML = '<span class="filter-chip__dot" style="background:var(--yellow);"></span> Near Me';
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // SUCCESS — location stays in memory only, never sent to server
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        nearMeActive = true;
+        chip.innerHTML = '<span class="filter-chip__dot" style="background:var(--yellow);"></span> Near Me';
+        chip.classList.add('active');
+        renderMarkers();
+        // Center map on user
+        map.flyTo({ center: [userLng, userLat], zoom: 12, duration: 800 });
+      },
+      (err) => {
+        chip.innerHTML = '<span class="filter-chip__dot" style="background:var(--yellow);"></span> Near Me';
+        if (err.code === 1) {
+          alert('Location access denied. Enable location in your browser settings to use Near Me.');
+        } else {
+          alert('Could not get your location. Please try again.');
+        }
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+  }
 }
 
 /* ══════════════════════════════
    CENTER MAP
    ══════════════════════════════ */
 function centerMap() {
-  map.flyTo({ center: [-117.83, 33.68], zoom: 10.5, duration: 1000 });
+  if (userLat && userLng) {
+    map.flyTo({ center: [userLng, userLat], zoom: 12, duration: 1000 });
+  } else {
+    map.flyTo({ center: [-117.83, 33.68], zoom: 10.5, duration: 1000 });
+  }
 }
 
 /* ══════════════════════════════
    BOTTOM SHEET — COURT DETAIL
    ══════════════════════════════ */
 function openSheet(court) {
+  // Calculate distance if user location available
+  if (userLat !== null && userLng !== null) {
+    court._distance = haversineMiles(userLat, userLng, court.lat, court.lng);
+  }
   const statusIcon = court.status === 'packed' ? '🔥' : court.status === 'active' ? '🏀' : '😴';
   const statusClass = court.status;
   const typeTag = court.type === 'indoor'
@@ -1591,7 +1677,7 @@ function openSheet(court) {
     <div class="court-header">
       <div class="court-header__info">
         <div class="court-header__name">${court.name}</div>
-        <div class="court-header__address">${court.address}</div>
+        <div class="court-header__address">${court.address}${nearMeActive && court._distance ? ' · <span style="color:var(--yellow);">' + court._distance.toFixed(1) + ' mi</span>' : ''}</div>
         <div class="court-header__tags">${typeTag}${litTag}</div>
       </div>
       <div class="court-header__status">

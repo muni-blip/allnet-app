@@ -2039,21 +2039,44 @@ let currentProfile = null;
 let dbCourts = null;
 
 async function initApp() {
-  if (typeof supabase === 'undefined' || typeof getUser !== 'function') {
+  if (typeof supabase === 'undefined' || typeof fetchCourts !== 'function') {
     console.log('AllNet: Running in demo mode (no Supabase)');
     return;
   }
 
   try {
+    // ALWAYS load courts — no auth needed, public data
+    const courtData = await fetchCourts();
+    if (courtData && courtData.length > 0) {
+      dbCourts = courtData;
+      courts.length = 0;
+      courtData.forEach(c => {
+        courts.push({
+          id: c.id,
+          name: c.name,
+          address: c.address,
+          lat: parseFloat(c.lat),
+          lng: parseFloat(c.lng),
+          status: c.status || 'quiet',
+          players: c.current_checkins || 0,
+          type: c.court_type,
+          forecast: [c.forecast_mon, c.forecast_tue, c.forecast_wed, c.forecast_thu, c.forecast_fri, c.forecast_sat, c.forecast_sun],
+          checkedIn: []
+        });
+      });
+      renderMarkers();
+      console.log('AllNet: ' + courts.length + ' courts loaded from Supabase');
+    }
+
+    // User-specific data — only when logged in
     currentUser = await getUser();
     if (!currentUser) {
-      console.log('AllNet: Not logged in, using mock data');
+      console.log('AllNet: Not logged in — courts loaded, user features disabled');
       return;
     }
 
     currentProfile = await getUserProfile();
     if (currentProfile) {
-      // Update profile UI with real user data
       document.getElementById('profileBtn').textContent = currentProfile.initials || 'U';
       const profileCard = document.querySelector('.profile-card__name');
       if (profileCard) profileCard.textContent = currentProfile.name;
@@ -2068,31 +2091,6 @@ async function initApp() {
       }
       document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
       document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
-    }
-
-    // Load courts from Supabase
-    const courtData = await fetchCourts();
-    if (courtData && courtData.length > 0) {
-      dbCourts = courtData;
-      // Transform DB format to match existing court object structure
-      courts.length = 0; // Clear mock courts
-      courtData.forEach(c => {
-        courts.push({
-          id: c.id,
-          name: c.name,
-          address: c.address,
-          lat: parseFloat(c.lat),
-          lng: parseFloat(c.lng),
-          status: c.status || 'quiet',
-          players: c.current_checkins || 0,
-          detail: c.current_checkins >= 10 ? 'Full court running' : c.current_checkins > 0 ? c.current_checkins + ' players here' : 'No one here yet',
-          type: c.court_type,
-          lit: c.is_lit,
-          forecast: [c.forecast_mon, c.forecast_tue, c.forecast_wed, c.forecast_thu, c.forecast_fri, c.forecast_sat, c.forecast_sun],
-          checkedIn: [] // Will be loaded on court tap
-        });
-      });
-      renderMarkers();
     }
 
     // Load user check-in history
@@ -2110,7 +2108,7 @@ async function initApp() {
     // Load court watches
     await loadUserWatches();
 
-    console.log('AllNet: Connected to Supabase, ' + courts.length + ' courts loaded');
+    console.log('AllNet: Fully connected — ' + courts.length + ' courts, user: ' + currentProfile?.name);
   } catch (err) {
     console.error('AllNet: Supabase init error', err);
   }

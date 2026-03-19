@@ -855,6 +855,23 @@ html, body {
 
 .btn--secondary:hover { border-color: var(--text-muted); }
 
+.btn--watch {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 0;
+  margin-bottom: 6px;
+}
+.btn--watch:hover { border-color: var(--yellow); }
+.btn--watch-active { border-color: var(--yellow); background: rgba(250,204,21,0.1); }
+
 .btn--success {
   background: var(--green-live);
   color: white;
@@ -1237,10 +1254,10 @@ html, body {
     <button class="profile-back" onclick="closeProfile()">← Back to Map</button>
     <div class="profile-content">
       <div class="profile-card">
-        <div class="profile-card__avatar">JR</div>
-        <div class="profile-card__name">Jason Reyes</div>
-        <div class="profile-card__location">📍 Irvine, CA</div>
-        <div class="profile-card__founding-badge">🏅 Founding Hooper · #00142</div>
+        <div class="profile-card__avatar">U</div>
+        <div class="profile-card__name">Your Profile</div>
+        <div class="profile-card__location">📍 OC/LA</div>
+        <div class="profile-card__founding-badge">🏅 Founding Hooper</div>
       </div>
 
       <div class="profile-stats">
@@ -1462,34 +1479,9 @@ function subscribeToGamePlayers(gameId, callback) {
 </script>
 <script>
 /* ══════════════════════════════
-   DATA
+   DATA — loaded from Supabase
    ══════════════════════════════ */
-const courts = [
-  { id: 'great-park', name: 'Great Park', address: '6950 Marine Way, Irvine, CA 92618', lat: 33.6694, lng: -117.7672, status: 'active', players: 8, detail: '5v5 forming', type: 'outdoor', lit: true,
-    forecast: [20,35,50,80,90,70,40], checkedIn: [{name:'Marcus T', initials:'MT', time:'12 min ago', badge:true},{name:'Deon W', initials:'DW', time:'18 min ago', badge:false}] },
-  { id: 'lifetime-irvine', name: 'Life Time Irvine', address: '18007 Von Karman Ave, Irvine, CA 92612', lat: 33.6946, lng: -117.8465, status: 'packed', players: 14, detail: 'Next game 10 min', type: 'indoor', lit: true,
-    forecast: [30,40,60,90,100,85,50], checkedIn: [{name:'Chris L', initials:'CL', time:'5 min ago', badge:true},{name:'Andre P', initials:'AP', time:'8 min ago', badge:false},{name:'Jay K', initials:'JK', time:'15 min ago', badge:true}] },
-  { id: 'seal-beach', name: 'Seal Beach Pier Court', address: 'Ocean Ave, Seal Beach, CA 90740', lat: 33.7414, lng: -118.1048, status: 'active', players: 6, detail: '3v3 running', type: 'outdoor', lit: false,
-    forecast: [10,15,40,60,70,50,20], checkedIn: [{name:'Kev R', initials:'KR', time:'22 min ago', badge:false}] },
-  { id: 'woodbridge', name: 'Woodbridge Park', address: '24 Almond Tree Ln, Irvine, CA 92604', lat: 33.7142, lng: -117.7936, status: 'active', players: 10, detail: '5v5 running', type: 'outdoor', lit: true,
-    forecast: [15,25,45,75,85,60,30], checkedIn: [{name:'Tyler M', initials:'TM', time:'10 min ago', badge:true}] },
-  { id: 'tewinkle', name: 'TeWinkle Park', address: '970 Arlington Dr, Costa Mesa, CA 92626', lat: 33.6576, lng: -117.9086, status: 'quiet', players: 0, detail: 'Usually active after 5pm', type: 'outdoor', lit: true,
-    forecast: [5,10,15,30,55,45,20], checkedIn: [] },
-  { id: 'atlantis', name: 'Atlantis Park', address: '20431 Craimer Ln, Lake Forest, CA 92630', lat: 33.6871, lng: -117.6768, status: 'active', players: 4, detail: 'Shooting around', type: 'outdoor', lit: false,
-    forecast: [10,20,30,45,50,35,15], checkedIn: [] },
-  { id: 'hb-central', name: 'HB Central Park', address: '18100 Goldenwest St, Huntington Beach, CA 92648', lat: 33.6595, lng: -117.9988, status: 'packed', players: 12, detail: 'Full court running', type: 'outdoor', lit: true,
-    forecast: [25,40,55,85,95,75,45], checkedIn: [{name:'Sam J', initials:'SJ', time:'3 min ago', badge:false},{name:'Ricky F', initials:'RF', time:'7 min ago', badge:true}] },
-  { id: 'mile-square', name: 'Mile Square Park', address: '16801 Euclid St, Fountain Valley, CA 92708', lat: 33.7175, lng: -117.9453, status: 'active', players: 6, detail: 'Half court 3v3', type: 'outdoor', lit: false,
-    forecast: [10,20,35,55,65,45,20], checkedIn: [] },
-  { id: 'clark-park', name: 'Ralph B. Clark Park', address: '8800 Rosecrans Ave, Buena Park, CA 90621', lat: 33.8878, lng: -117.9686, status: 'quiet', players: 0, detail: 'Typically busy weekends', type: 'outdoor', lit: false,
-    forecast: [5,8,12,20,35,25,10], checkedIn: [] },
-  { id: 'laguna-niguel', name: 'Laguna Niguel Regional', address: '28241 La Paz Rd, Laguna Niguel, CA 92677', lat: 33.5367, lng: -117.7126, status: 'active', players: 5, detail: 'Looking for 1 more', type: 'outdoor', lit: true,
-    forecast: [8,15,25,40,55,40,18], checkedIn: [{name:'Omar B', initials:'OB', time:'30 min ago', badge:false}] },
-  { id: '24-fitness', name: '24 Hour Fitness Sport', address: '1732 E McFadden Ave, Santa Ana, CA 92705', lat: 33.7461, lng: -117.8685, status: 'packed', players: 16, detail: 'Wait list active', type: 'indoor', lit: true,
-    forecast: [35,50,65,90,100,90,55], checkedIn: [{name:'Dante H', initials:'DH', time:'2 min ago', badge:true},{name:'Luis G', initials:'LG', time:'6 min ago', badge:false}] },
-  { id: 'aliso-viejo', name: 'Aliso Viejo Community Park', address: '1 Journey, Aliso Viejo, CA 92656', lat: 33.5676, lng: -117.7276, status: 'quiet', players: 0, detail: 'Open courts available', type: 'outdoor', lit: false,
-    forecast: [5,10,15,25,40,30,12], checkedIn: [] },
-];
+const courts = [];
 
 const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 let currentFilter = 'all';
@@ -1497,39 +1489,9 @@ let markers = [];
 let userCheckins = [];
 let checkinCourts = new Set();
 
-/* ── Player profiles (mock data for career cards) ── */
-const playerProfiles = {
-  'Marcus T':  { initials:'MT', location:'Irvine, CA', badge:true, w:24,l:8,d:2, skill:3.8,social:4.5, games:[{r:'W',d:'5v5 at Great Park',t:'2d ago'},{r:'W',d:'3v3 at Woodbridge',t:'4d ago'},{r:'L',d:'1v1 at Life Time',t:'1w ago'}]},
-  'Deon W':    { initials:'DW', location:'Costa Mesa, CA', badge:false, w:15,l:12,d:1, skill:3.2,social:3.8, games:[{r:'L',d:'3v3 at TeWinkle',t:'1d ago'},{r:'W',d:'5v5 at HB Central',t:'3d ago'}]},
-  'Chris L':   { initials:'CL', location:'Irvine, CA', badge:true, w:37,l:11,d:4, skill:4.2,social:4.6, games:[{r:'W',d:'2v2 at Life Time',t:'1d ago'},{r:'W',d:'5v5 at Great Park',t:'2d ago'},{r:'D',d:'1v1 at Woodbridge',t:'5d ago'}]},
-  'Andre P':   { initials:'AP', location:'Santa Ana, CA', badge:false, w:18,l:14,d:3, skill:3.0,social:4.1, games:[{r:'L',d:'3v3 at 24 Hour',t:'2d ago'},{r:'W',d:'5v5 at Mile Square',t:'4d ago'}]},
-  'Kev R':     { initials:'KR', location:'Seal Beach, CA', badge:false, w:9,l:6,d:0, skill:3.5,social:3.9, games:[{r:'W',d:'3v3 at Seal Beach',t:'1d ago'},{r:'L',d:'1v1 at HB Central',t:'3d ago'}]},
-  'Tyler M':   { initials:'TM', location:'Irvine, CA', badge:true, w:31,l:9,d:2, skill:4.0,social:4.7, games:[{r:'W',d:'5v5 at Woodbridge',t:'12h ago'},{r:'W',d:'3v3 at Great Park',t:'2d ago'},{r:'W',d:'2v2 at Life Time',t:'4d ago'}]},
-  'Sam J':     { initials:'SJ', location:'Huntington Beach, CA', badge:false, w:12,l:10,d:1, skill:3.3,social:3.6, games:[{r:'L',d:'5v5 at HB Central',t:'1d ago'},{r:'W',d:'3v3 at Mile Square',t:'3d ago'}]},
-  'Ricky F':   { initials:'RF', location:'Huntington Beach, CA', badge:true, w:28,l:7,d:3, skill:4.1,social:4.4, games:[{r:'W',d:'5v5 at HB Central',t:'6h ago'},{r:'W',d:'1v1 at Seal Beach',t:'2d ago'},{r:'L',d:'3v3 at Great Park',t:'5d ago'}]},
-  'Omar B':    { initials:'OB', location:'Laguna Niguel, CA', badge:false, w:6,l:8,d:2, skill:2.8,social:4.2, games:[{r:'D',d:'1v1 at Laguna Niguel',t:'1d ago'},{r:'L',d:'3v3 at Aliso Viejo',t:'4d ago'}]},
-  'Dante H':   { initials:'DH', location:'Santa Ana, CA', badge:true, w:22,l:5,d:1, skill:4.4,social:4.3, games:[{r:'W',d:'5v5 at 24 Hour',t:'4h ago'},{r:'W',d:'2v2 at Life Time',t:'1d ago'},{r:'W',d:'1v1 at Great Park',t:'3d ago'}]},
-  'Luis G':    { initials:'LG', location:'Santa Ana, CA', badge:false, w:10,l:13,d:0, skill:2.9,social:3.7, games:[{r:'L',d:'5v5 at 24 Hour',t:'1d ago'},{r:'W',d:'3v3 at Mile Square',t:'3d ago'}]},
-  'Jay K':     { initials:'JK', location:'Irvine, CA', badge:true, w:19,l:6,d:2, skill:3.7,social:4.8, games:[{r:'W',d:'3v3 at Life Time',t:'8h ago'},{r:'W',d:'5v5 at Great Park',t:'2d ago'},{r:'L',d:'1v1 at Woodbridge',t:'6d ago'}]},
-};
-
-function showPlayerCard(name) {
-  const p = playerProfiles[name];
-  if (!p) return;
-  document.getElementById('pmAvatar').textContent = p.initials;
-  document.getElementById('pmName').textContent = name;
-  document.getElementById('pmMeta').textContent = '📍 ' + p.location;
-  document.getElementById('pmBadge').style.display = p.badge ? 'inline-block' : 'none';
-  document.getElementById('pmWins').textContent = p.w;
-  document.getElementById('pmLosses').textContent = p.l;
-  document.getElementById('pmDraws').textContent = p.d;
-  document.getElementById('pmSkill').textContent = p.skill.toFixed(1);
-  document.getElementById('pmSocial').textContent = p.social.toFixed(1);
-  document.getElementById('pmHistory').innerHTML = p.games.map(g => {
-    const cls = g.r === 'W' ? 'w' : g.r === 'L' ? 'l' : 'd';
-    return '<div class="player-modal__game"><div class="player-modal__game-result player-modal__game-result--' + cls + '">' + g.r + '</div><div class="player-modal__game-detail">' + g.d + '</div><div class="player-modal__game-time">' + g.t + '</div></div>';
-  }).join('');
-  document.getElementById('playerModal').classList.add('active');
+function showPlayerCard(name, userId) {
+  // Only works with Supabase data — handled by override below
+  console.log('Player card: no mock data, requires Supabase');
 }
 
 function closePlayerCard() {
@@ -1739,10 +1701,9 @@ function openSheet(court) {
   const typeTag = court.type === 'indoor'
     ? '<span class="court-tag court-tag--indoor">Indoor</span>'
     : '<span class="court-tag court-tag--outdoor">Outdoor</span>';
-  const litTag = court.lit ? '<span class="court-tag court-tag--lit">Lit</span>' : '';
 
   // Forecast bars
-  const maxForecast = Math.max(...court.forecast);
+  const maxForecast = Math.max(...court.forecast, 1);
   const today = new Date().getDay();
   const todayIdx = today === 0 ? 6 : today - 1;
   const forecastBars = court.forecast.map((val, i) => {
@@ -1758,7 +1719,7 @@ function openSheet(court) {
   // Checked-in players
   const checkinHTML = court.checkedIn.length > 0
     ? court.checkedIn.map(p => `
-      <div class="checkin-player" onclick="${p.name === 'Jason R' || (currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,\'${p.userId}\'` : ''})`}">
+      <div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,\'${p.userId}\'` : ''})`}">
         <div class="checkin-player__avatar">${p.initials}</div>
         <div class="checkin-player__info">
           <div class="checkin-player__name">${p.name}</div>
@@ -1768,20 +1729,29 @@ function openSheet(court) {
       </div>`).join('')
     : '<div class="empty-checkins">No one checked in yet. Be the first!</div>';
 
+  // Watch button
+  const isWatching = currentUser && court._watching;
+  const watchBtn = currentUser
+    ? `<button class="btn btn--watch ${isWatching ? 'btn--watch-active' : ''}" onclick="toggleWatch('${court.id}')" title="${isWatching ? 'Stop watching' : 'Watch this court'}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="${isWatching ? 'var(--yellow)' : 'none'}" stroke="${isWatching ? 'var(--yellow)' : 'var(--text-secondary)'}" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>`
+    : '';
+
   document.getElementById('sheetBody').innerHTML = `
     <div class="court-header">
       <div class="court-header__info">
         <div class="court-header__name">${court.name}</div>
         <div class="court-header__address">${court.address}${court._distance ? ' · <span style="color:var(--yellow);">' + court._distance.toFixed(1) + ' mi</span>' : ''}</div>
-        <div class="court-header__tags">${typeTag}${litTag}</div>
+        <div class="court-header__tags">${typeTag}</div>
       </div>
       <div class="court-header__status">
+        ${watchBtn}
         <div class="status-dot-lg status-dot-lg--${statusClass}">${statusIcon}</div>
         <span class="status-label status-label--${statusClass}">${court.status.charAt(0).toUpperCase() + court.status.slice(1)}</span>
       </div>
     </div>
 
-    <div class="pulse-stats">
+    <div class="pulse-stats" style="grid-template-columns:1fr 1fr;">
       <div class="pulse-stat">
         <div class="pulse-stat__value" style="color:${court.status === 'packed' ? 'var(--orange)' : court.status === 'active' ? 'var(--green-live)' : 'var(--text-muted)'};">${court.players}</div>
         <div class="pulse-stat__label">Players Now</div>
@@ -1789,10 +1759,6 @@ function openSheet(court) {
       <div class="pulse-stat">
         <div class="pulse-stat__value">${court.checkedIn.length}</div>
         <div class="pulse-stat__label">Checked In</div>
-      </div>
-      <div class="pulse-stat">
-        <div class="pulse-stat__value">${court.detail.length > 12 ? court.detail.split(' ')[0] : court.detail.split(' · ')[0]}</div>
-        <div class="pulse-stat__label">Activity</div>
       </div>
     </div>
 
@@ -1834,7 +1800,10 @@ function checkIn(courtId) {
   if (checkinCourts.has(courtId)) return;
 
   // Add user to court's checked-in list
-  court.checkedIn.unshift({ name: 'Jason R', initials: 'JR', time: 'Just now', badge: true });
+  const userName = currentProfile?.name || 'You';
+  const userInitials = currentProfile?.initials || 'U';
+  const isFounding = currentProfile?.is_founding_hooper || false;
+  court.checkedIn.unshift({ name: userName, initials: userInitials, time: 'Just now', badge: isFounding });
   court.players += 1;
 
   // Update status if needed
@@ -1867,6 +1836,49 @@ function showToast(courtName) {
 
 function getDirections(lat, lng) {
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+}
+
+/* ══════════════════════════════
+   COURT WATCHING
+   ══════════════════════════════ */
+let userWatches = new Set(); // Set of court IDs being watched
+
+async function loadUserWatches() {
+  if (!currentUser) return;
+  try {
+    const { data } = await supabase.from('court_watches').select('court_id').eq('user_id', currentUser.id);
+    if (data) {
+      userWatches = new Set(data.map(w => w.court_id));
+    }
+  } catch (err) {
+    console.error('Failed to load watches:', err);
+  }
+}
+
+async function toggleWatch(courtId) {
+  if (!currentUser) return;
+  const court = courts.find(c => c.id === courtId);
+  
+  if (userWatches.has(courtId)) {
+    // Unwatch
+    const { error } = await supabase.from('court_watches').delete()
+      .eq('user_id', currentUser.id).eq('court_id', courtId);
+    if (!error) {
+      userWatches.delete(courtId);
+      if (court) { court._watching = false; openSheet(court); }
+      showToast('Stopped watching ' + (court?.name || 'court'));
+    }
+  } else {
+    // Watch
+    const { error } = await supabase.from('court_watches').insert({
+      user_id: currentUser.id, court_id: courtId
+    });
+    if (!error) {
+      userWatches.add(courtId);
+      if (court) { court._watching = true; openSheet(court); }
+      showToast('Watching ' + (court?.name || 'court'));
+    }
+  }
 }
 
 /* ══════════════════════════════
@@ -1963,7 +1975,7 @@ function performCheckout() {
       else if (court.players < 10) court.status = 'active';
       // Remove user from checked-in list
       court.checkedIn = court.checkedIn.filter(p => {
-        const isMe = (currentProfile && p.name === currentProfile.name) || p.name === 'Jason R';
+        const isMe = (currentProfile && p.name === currentProfile.name);
         return !isMe;
       });
     }
@@ -2095,15 +2107,20 @@ async function initApp() {
       updateProfileStats();
     }
 
+    // Load court watches
+    await loadUserWatches();
+
     console.log('AllNet: Connected to Supabase, ' + courts.length + ' courts loaded');
   } catch (err) {
-    console.error('AllNet: Supabase init error, falling back to mock data', err);
+    console.error('AllNet: Supabase init error', err);
   }
 }
 
 // Override openSheet to load real check-ins from Supabase
 const _originalOpenSheet = openSheet;
 openSheet = async function(court) {
+  // Set watching state
+  court._watching = userWatches.has(court.id);
   if (currentUser && court.id && typeof court.id === 'string' && court.id.length > 10) {
     try {
       const { court: freshCourt, checkins } = await fetchCourtWithCheckins(court.id);
@@ -2117,7 +2134,6 @@ openSheet = async function(court) {
         }));
         court.players = checkins.length;
         court.status = checkins.length >= 10 ? 'packed' : checkins.length > 0 ? 'active' : 'quiet';
-        court.detail = checkins.length > 0 ? checkins.length + ' players here' : 'No one here yet';
       }
     } catch (err) { console.error('Failed to load check-ins:', err); }
   }

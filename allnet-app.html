@@ -1074,8 +1074,10 @@ html, body {
   background: transparent;
   border: 1px solid var(--border-light);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1084,6 +1086,8 @@ html, body {
   padding: 0;
   margin-bottom: 6px;
 }
+
+.btn--watch svg { flex-shrink: 0; }
 .btn--watch:hover { border-color: var(--yellow); }
 .btn--watch-active { border-color: var(--yellow); background: rgba(250,204,21,0.1); }
 
@@ -2008,7 +2012,7 @@ function openSheet(court) {
 
   // Watch button
   const isWatching = currentUser && court._watching;
-  const watchBtn = `<button class="btn btn--watch ${isWatching ? 'btn--watch-active' : ''}" onclick="toggleWatch('${court.id}')" title="${isWatching ? 'Stop watching' : 'Watch this court'}">
+  const watchBtn = `<button class="btn--watch ${isWatching ? 'btn--watch-active' : ''}" onclick="toggleWatch('${court.id}')" title="${isWatching ? 'Stop watching' : 'Watch this court'}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="${isWatching ? 'var(--yellow)' : 'none'}" stroke="${isWatching ? 'var(--yellow)' : 'var(--text-secondary)'}" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </button>`;
 

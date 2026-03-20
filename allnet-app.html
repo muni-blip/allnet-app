@@ -1944,8 +1944,18 @@ function checkIn(courtId) {
   const court = courts.find(c => c.id === courtId);
   if (!court) return;
 
-  // Prevent duplicate check-ins
+  // Prevent duplicate check-ins at same court
   if (checkinCourts.has(courtId)) return;
+
+  // Enforce single-court check-in — must check out of current court first
+  if (activeCheckin && activeCheckin.courtId !== courtId) {
+    const oldName = activeCheckin.courtName;
+    if (!confirm(`You're currently checked in at ${oldName}.\n\nCheck out and move to ${court.name}?`)) {
+      return; // User cancelled
+    }
+    // Check out of old court
+    performCheckout();
+  }
 
   // Add user to court's checked-in list
   const userName = currentProfile?.name || 'You';
@@ -2355,6 +2365,19 @@ openSheet = async function(court) {
 const _originalCheckIn = checkIn;
 checkIn = async function(courtId) {
   if (currentUser && courtId && typeof courtId === 'string' && courtId.length > 10) {
+    // Enforce single-court check-in
+    if (activeCheckin && activeCheckin.courtId !== courtId) {
+      const oldName = activeCheckin.courtName;
+      const newCourt = courts.find(c => c.id === courtId);
+      if (!confirm(`You're currently checked in at ${oldName}.\n\nCheck out and move to ${newCourt?.name || 'this court'}?`)) {
+        return;
+      }
+      performCheckout();
+      // Small delay to let checkout DB write complete
+      await new Promise(r => setTimeout(r, 300));
+    }
+    // Prevent duplicate at same court
+    if (checkinCourts.has(courtId)) return;
     try {
       await checkInAtCourt(courtId);
       // Refresh the court data

@@ -103,6 +103,23 @@ html, body {
 
 .top-bar__profile:hover { transform: scale(1.08); }
 
+.top-bar__cta {
+  padding: 8px 18px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  color: white;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.top-bar__cta:hover { transform: scale(1.05); filter: brightness(1.1); }
+
 /* ── Check-in Nudge Banner ── */
 .nudge-banner {
   position: absolute;
@@ -840,6 +857,104 @@ html, body {
   opacity: 0.6;
 }
 
+/* ── Sign-Up Modal ── */
+.signup-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+}
+
+.signup-modal.active { display: flex; }
+
+.signup-modal__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  padding: 36px 28px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+  position: relative;
+}
+
+.signup-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.signup-modal__logo {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--orange);
+  margin-bottom: 12px;
+}
+
+.signup-modal__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.signup-modal__desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+
+.signup-modal__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 10px;
+  border: none;
+}
+
+.signup-modal__btn--google {
+  background: white;
+  color: #333;
+}
+
+.signup-modal__btn--google:hover { background: #f0f0f0; }
+
+.signup-modal__btn--apple {
+  background: #000;
+  color: white;
+  border: 1px solid #333;
+}
+
+.signup-modal__btn--apple:hover { background: #1a1a1a; }
+
+.signup-modal__footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* ── Report Modal ── */
 .report-modal {
   display: none;
@@ -1257,7 +1372,7 @@ html, body {
   <!-- ═══ Top bar ═══ -->
   <div class="top-bar">
     <a href="allnet-landing.html" class="top-bar__logo" style="text-decoration:none;"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a>
-    <div class="top-bar__profile" id="profileBtn" onclick="openProfile()">JR</div>
+    <button class="top-bar__cta" id="profileBtn" onclick="handleProfileClick()">Get Started</button>
   </div>
 
   <!-- ═══ Check-in nudge banner ═══ -->
@@ -1313,6 +1428,25 @@ html, body {
   <div class="toast" id="toast">
     <span class="toast__icon">✅</span>
     <span class="toast__text">Checked in at <span id="toastCourt"></span></span>
+  </div>
+
+  <!-- ═══ Sign-Up Modal ═══ -->
+  <div class="signup-modal" id="signupModal" onclick="if(event.target===this)closeSignUpModal()">
+    <div class="signup-modal__card">
+      <button class="signup-modal__close" onclick="closeSignUpModal()">✕</button>
+      <div class="signup-modal__logo">ALLNET</div>
+      <div class="signup-modal__title">Join the Network</div>
+      <div class="signup-modal__desc">Check in to courts, track your games, and build your basketball reputation.</div>
+      <button class="signup-modal__btn signup-modal__btn--google" onclick="oauthSignIn('google')">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+      <button class="signup-modal__btn signup-modal__btn--apple" onclick="oauthSignIn('apple')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        Continue with Apple
+      </button>
+      <div class="signup-modal__footer">🏅 Sign up now to earn your <strong>Founding Hooper</strong> badge</div>
+    </div>
   </div>
 
   <!-- ═══ Report Modal ═══ -->
@@ -1874,11 +2008,9 @@ function openSheet(court) {
 
   // Watch button
   const isWatching = currentUser && court._watching;
-  const watchBtn = currentUser
-    ? `<button class="btn btn--watch ${isWatching ? 'btn--watch-active' : ''}" onclick="toggleWatch('${court.id}')" title="${isWatching ? 'Stop watching' : 'Watch this court'}">
+  const watchBtn = `<button class="btn btn--watch ${isWatching ? 'btn--watch-active' : ''}" onclick="toggleWatch('${court.id}')" title="${isWatching ? 'Stop watching' : 'Watch this court'}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="${isWatching ? 'var(--yellow)' : 'none'}" stroke="${isWatching ? 'var(--yellow)' : 'var(--text-secondary)'}" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      </button>`
-    : '';
+      </button>`;
 
   document.getElementById('sheetBody').innerHTML = `
     <div class="court-header">
@@ -1944,6 +2076,19 @@ function checkIn(courtId) {
   const court = courts.find(c => c.id === courtId);
   if (!court) return;
 
+  // Auth gate — must be logged in to check in
+  if (!currentUser) {
+    showSignUpModal('checkin');
+    return;
+  }
+
+  // Proximity gate — must be within 0.3 miles
+  const proximity = validateProximity(court);
+  if (!proximity.ok) {
+    handleProximityFailure(proximity, court.name);
+    return;
+  }
+
   // Prevent duplicate check-ins at same court
   if (checkinCourts.has(courtId)) return;
 
@@ -1951,9 +2096,8 @@ function checkIn(courtId) {
   if (activeCheckin && activeCheckin.courtId !== courtId) {
     const oldName = activeCheckin.courtName;
     if (!confirm(`You're currently checked in at ${oldName}.\n\nCheck out and move to ${court.name}?`)) {
-      return; // User cancelled
+      return;
     }
-    // Check out of old court
     performCheckout();
   }
 
@@ -1997,6 +2141,69 @@ function getDirections(lat, lng) {
 }
 
 /* ══════════════════════════════
+   SIGN-UP MODAL
+   ══════════════════════════════ */
+let signupContext = null; // What action triggered the modal
+
+function showSignUpModal(context) {
+  signupContext = context || null;
+  document.getElementById('signupModal').classList.add('active');
+}
+
+function closeSignUpModal() {
+  document.getElementById('signupModal').classList.remove('active');
+  signupContext = null;
+}
+
+async function oauthSignIn(provider) {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: provider,
+      options: { redirectTo: window.location.href }
+    });
+    if (error) {
+      alert('Sign-in failed: ' + error.message);
+    }
+  } catch (err) {
+    alert('Sign-in error: ' + err.message);
+  }
+}
+
+/* ══════════════════════════════
+   PROXIMITY VALIDATION
+   0.3 miles from court to check in
+   ══════════════════════════════ */
+const CHECKIN_RADIUS_MILES = 0.3;
+
+function validateProximity(court) {
+  // If no location available, request it
+  if (userLat === null || userLng === null) {
+    return { ok: false, reason: 'no_location' };
+  }
+
+  const dist = haversineMiles(userLat, userLng, court.lat, court.lng);
+  if (dist > CHECKIN_RADIUS_MILES) {
+    return { ok: false, reason: 'too_far', distance: dist };
+  }
+
+  return { ok: true, distance: dist };
+}
+
+function handleProximityFailure(result, courtName) {
+  if (result.reason === 'no_location') {
+    // Try to get location, then retry
+    requestLocation(() => {
+      alert('Location acquired! Please try checking in again.');
+    });
+    return;
+  }
+  if (result.reason === 'too_far') {
+    alert(`You're ${result.distance.toFixed(1)} miles from ${courtName}.\n\nYou need to be within ${CHECKIN_RADIUS_MILES} miles to check in.`);
+  }
+}
+
+/* ══════════════════════════════
    COURT REPORTING
    ══════════════════════════════ */
 let reportingCourtId = null;
@@ -2004,7 +2211,7 @@ let reportReason = 'no_basketball_court';
 
 function showReportModal(courtId) {
   if (!currentUser) {
-    alert('Please sign in to report a listing.');
+    showSignUpModal('report');
     return;
   }
   reportingCourtId = courtId;
@@ -2075,7 +2282,10 @@ async function loadUserWatches() {
 }
 
 async function toggleWatch(courtId) {
-  if (!currentUser) return;
+  if (!currentUser) {
+    showSignUpModal('watch');
+    return;
+  }
   const court = courts.find(c => c.id === courtId);
   
   if (userWatches.has(courtId)) {
@@ -2206,6 +2416,14 @@ function performCheckout() {
 /* ══════════════════════════════
    PROFILE
    ══════════════════════════════ */
+function handleProfileClick() {
+  if (currentUser) {
+    openProfile();
+  } else {
+    showSignUpModal('profile');
+  }
+}
+
 function openProfile() {
   updateProfileStats();
   renderHistory();
@@ -2296,7 +2514,10 @@ async function initApp() {
 
     currentProfile = await getUserProfile();
     if (currentProfile) {
-      document.getElementById('profileBtn').textContent = currentProfile.initials || 'U';
+      // Swap "Get Started" button to profile avatar
+      const btn = document.getElementById('profileBtn');
+      btn.textContent = currentProfile.initials || 'U';
+      btn.className = 'top-bar__profile';
       const profileCard = document.querySelector('.profile-card__name');
       if (profileCard) profileCard.textContent = currentProfile.name;
       const profileAvatar = document.querySelector('.profile-card__avatar');
@@ -2365,6 +2586,15 @@ openSheet = async function(court) {
 const _originalCheckIn = checkIn;
 checkIn = async function(courtId) {
   if (currentUser && courtId && typeof courtId === 'string' && courtId.length > 10) {
+    // Proximity gate
+    const court = courts.find(c => c.id === courtId);
+    if (court) {
+      const proximity = validateProximity(court);
+      if (!proximity.ok) {
+        handleProximityFailure(proximity, court.name);
+        return;
+      }
+    }
     // Enforce single-court check-in
     if (activeCheckin && activeCheckin.courtId !== courtId) {
       const oldName = activeCheckin.courtName;
@@ -2373,7 +2603,6 @@ checkIn = async function(courtId) {
         return;
       }
       performCheckout();
-      // Small delay to let checkout DB write complete
       await new Promise(r => setTimeout(r, 300));
     }
     // Prevent duplicate at same court

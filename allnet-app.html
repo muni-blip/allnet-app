@@ -816,6 +816,106 @@ html, body {
   gap: 10px;
 }
 
+.court-report {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.court-report__btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  opacity: 0.7;
+  transition: var(--transition);
+}
+
+.court-report__btn:hover { opacity: 1; color: var(--orange); }
+
+.court-report__done {
+  color: var(--text-muted);
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* ── Report Modal ── */
+.report-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+}
+
+.report-modal.active { display: flex; }
+
+.report-modal__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%;
+  max-width: 380px;
+}
+
+.report-modal__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.report-modal__desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.report-modal__options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+
+.report-modal__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.report-modal__option:hover { border-color: var(--orange); }
+.report-modal__option.selected { border-color: var(--orange); background: rgba(255,90,31,0.1); }
+
+.report-modal__note {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-body);
+  resize: none;
+  margin-bottom: 16px;
+}
+
+.report-modal__note::placeholder { color: var(--text-muted); }
+.report-modal__note:focus { outline: none; border-color: var(--orange); }
+
+.report-modal__actions { display: flex; gap: 10px; }
+.report-modal__actions .btn { flex: 1; padding: 12px; font-size: 14px; }
+
 .btn {
   display: flex;
   align-items: center;
@@ -1215,6 +1315,25 @@ html, body {
     <span class="toast__text">Checked in at <span id="toastCourt"></span></span>
   </div>
 
+  <!-- ═══ Report Modal ═══ -->
+  <div class="report-modal" id="reportModal" onclick="if(event.target===this)closeReportModal()">
+    <div class="report-modal__card">
+      <div class="report-modal__title">Report Listing</div>
+      <div class="report-modal__desc">Help us keep AllNet accurate. Why is this listing incorrect?</div>
+      <div class="report-modal__options" id="reportOptions">
+        <button class="report-modal__option selected" data-reason="no_basketball_court" onclick="selectReportReason(this)">🏀 No basketball court here</button>
+        <button class="report-modal__option" data-reason="permanently_closed" onclick="selectReportReason(this)">🚫 Permanently closed</button>
+        <button class="report-modal__option" data-reason="wrong_location" onclick="selectReportReason(this)">📍 Wrong location on map</button>
+        <button class="report-modal__option" data-reason="duplicate" onclick="selectReportReason(this)">📋 Duplicate listing</button>
+      </div>
+      <textarea class="report-modal__note" id="reportNote" rows="2" placeholder="Additional details (optional)"></textarea>
+      <div class="report-modal__actions">
+        <button class="btn btn--secondary" onclick="closeReportModal()">Cancel</button>
+        <button class="btn btn--primary" id="reportSubmitBtn" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ Player card modal ═══ -->
   <div class="player-modal-overlay" id="playerModal" onclick="if(event.target===this)closePlayerCard()">
     <div class="player-modal" style="position:relative;">
@@ -1461,6 +1580,30 @@ async function submitReview(gameId, revieweeId, skillRating, socialRating, relat
 async function getPlayerCard(userId) {
   const { data } = await supabase.from('player_cards').select('*').eq('id', userId).single();
   return data;
+}
+
+// ── Court report helpers ──
+async function reportCourt(courtId, reason, note) {
+  const user = await getUser();
+  if (!user) throw new Error('Not logged in');
+  const { error } = await supabase.from('court_reports').insert({
+    court_id: courtId,
+    user_id: user.id,
+    reason: reason || 'no_basketball_court',
+    note: note || null
+  });
+  if (error) throw error;
+}
+
+async function hasUserReported(courtId) {
+  const user = await getUser();
+  if (!user) return false;
+  const { data } = await supabase.from('court_reports')
+    .select('id')
+    .eq('court_id', courtId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  return !!data;
 }
 
 // ── Realtime subscriptions ──
@@ -1778,6 +1921,11 @@ function openSheet(court) {
         : `<button class="btn btn--primary" onclick="checkIn('${court.id}')">📍 I'm Here</button>`}
       <button class="btn btn--secondary" onclick="getDirections(${court.lat}, ${court.lng})">🧭 Directions</button>
     </div>
+    <div class="court-report" id="courtReportSection">
+      ${court._reported
+        ? '<span class="court-report__done">⚑ You reported this listing</span>'
+        : `<button class="court-report__btn" onclick="showReportModal('${court.id}')">⚑ Report incorrect listing</button>`}
+    </div>
   `;
 
   document.getElementById('sheetOverlay').classList.add('active');
@@ -1836,6 +1984,67 @@ function showToast(courtName) {
 
 function getDirections(lat, lng) {
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+}
+
+/* ══════════════════════════════
+   COURT REPORTING
+   ══════════════════════════════ */
+let reportingCourtId = null;
+let reportReason = 'no_basketball_court';
+
+function showReportModal(courtId) {
+  if (!currentUser) {
+    alert('Please sign in to report a listing.');
+    return;
+  }
+  reportingCourtId = courtId;
+  reportReason = 'no_basketball_court';
+  document.getElementById('reportNote').value = '';
+  // Reset option selection
+  document.querySelectorAll('.report-modal__option').forEach(o => o.classList.remove('selected'));
+  document.querySelector('.report-modal__option[data-reason="no_basketball_court"]').classList.add('selected');
+  document.getElementById('reportSubmitBtn').disabled = false;
+  document.getElementById('reportSubmitBtn').textContent = 'Submit Report';
+  document.getElementById('reportModal').classList.add('active');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.remove('active');
+  reportingCourtId = null;
+}
+
+function selectReportReason(el) {
+  document.querySelectorAll('.report-modal__option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  reportReason = el.dataset.reason;
+}
+
+async function submitReport() {
+  if (!reportingCourtId || !currentUser) return;
+  const btn = document.getElementById('reportSubmitBtn');
+  const note = document.getElementById('reportNote').value.trim();
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  try {
+    await reportCourt(reportingCourtId, reportReason, note);
+    // Mark court as reported locally
+    const court = courts.find(c => c.id === reportingCourtId);
+    if (court) court._reported = true;
+    closeReportModal();
+    // Update the report section in the sheet
+    const section = document.getElementById('courtReportSection');
+    if (section) section.innerHTML = '<span class="court-report__done">⚑ You reported this listing — thank you!</span>';
+    showToast('Report submitted');
+  } catch (err) {
+    if (err.message && err.message.includes('duplicate')) {
+      alert('You have already reported this court.');
+      closeReportModal();
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Submit Report';
+      alert('Failed to submit report: ' + err.message);
+    }
+  }
 }
 
 /* ══════════════════════════════
@@ -2119,7 +2328,11 @@ const _originalOpenSheet = openSheet;
 openSheet = async function(court) {
   // Set watching state
   court._watching = userWatches.has(court.id);
+  // Check report status
   if (currentUser && court.id && typeof court.id === 'string' && court.id.length > 10) {
+    try {
+      court._reported = await hasUserReported(court.id);
+    } catch (err) { court._reported = false; }
     try {
       const { court: freshCourt, checkins } = await fetchCourtWithCheckins(court.id);
       if (checkins) {

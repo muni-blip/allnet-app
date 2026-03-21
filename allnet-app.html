@@ -265,6 +265,12 @@ html, body {
   background: rgba(250, 204, 21, 0.1);
 }
 
+.filter-chip--watching.active {
+  border-color: var(--yellow);
+  color: var(--yellow);
+  background: rgba(250, 204, 21, 0.1);
+}
+
 .radius-select-wrapper {
   position: relative;
 }
@@ -1120,7 +1126,8 @@ html, body {
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
   box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-  white-space: nowrap;
+  max-width: 90%;
+  text-align: center;
 }
 
 .toast.visible {
@@ -1309,6 +1316,74 @@ html, body {
 }
 
 /* Phase 2 teaser */
+.watched-courts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.watched-court-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.watched-court-item:hover { border-color: var(--yellow); }
+
+.watched-court-item__icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.watched-court-item__name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.watched-court-item__type {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.watched-court-item__remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.watched-court-item__remove:hover { color: var(--orange); background: rgba(255,90,31,0.1); }
+
+.watched-courts-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 16px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+}
+
 .phase2-teaser {
   background: var(--bg-card);
   border: 1px dashed var(--border-light);
@@ -1398,6 +1473,9 @@ html, body {
     <button class="filter-chip" data-filter="packed" onclick="setFilter('packed', this)">
       <span class="filter-chip__dot" style="background:var(--orange);"></span> Packed
     </button>
+    <button class="filter-chip filter-chip--watching" id="watchingChip" data-filter="watching" onclick="setFilter('watching', this)" style="display:none;">
+      <span class="filter-chip__dot" style="background:var(--yellow);"></span> Watching
+    </button>
     <div class="radius-select-wrapper" id="radiusWrapper">
       <select class="radius-select" id="radiusSelect" onchange="onRadiusChange(this.value)">
         <option value="0">All Distances</option>
@@ -1431,7 +1509,7 @@ html, body {
   <!-- ═══ Toast ═══ -->
   <div class="toast" id="toast">
     <span class="toast__icon">✅</span>
-    <span class="toast__text">Checked in at <span id="toastCourt"></span></span>
+    <span class="toast__text" id="toastText">Checked in at <span id="toastCourt"></span></span>
   </div>
 
   <!-- ═══ Sign-Up Modal ═══ -->
@@ -1536,6 +1614,9 @@ html, body {
       <div class="history-list" id="historyList">
         <div class="empty-checkins">No check-ins yet. Visit a court and tap "I'm Here" to start building your history.</div>
       </div>
+
+      <div class="profile-section-title" id="watchedCourtsTitle" style="display:none;">// Watched Courts (<span id="watchedCount">0</span>)</div>
+      <div class="watched-courts-list" id="watchedCourtsList"></div>
 
       <div class="profile-section-title">// Coming in Phase 2</div>
       <div class="phase2-teaser">
@@ -1800,7 +1881,12 @@ function renderMarkers() {
   markers = [];
 
   courts.forEach(court => {
-    if (currentFilter !== 'all' && court.status !== currentFilter) return;
+    // Status/watching filter
+    if (currentFilter === 'watching') {
+      if (!userWatches.has(court.id)) return;
+    } else if (currentFilter !== 'all' && court.status !== currentFilter) {
+      return;
+    }
 
     // Distance filter — calculated client-side only, user location never leaves the browser
     if (nearMeActive && userLat !== null && userLng !== null) {
@@ -1809,8 +1895,12 @@ function renderMarkers() {
       court._distance = dist; // Temp property for display, not persisted
     }
 
-    const color = court.status === 'packed' ? '#FF5A1F' : court.status === 'active' ? '#22C55E' : '#3B82F6';
-    const size = court.status === 'quiet' ? 12 : 14 + (court.players / 2.5);
+    const isWatchedView = currentFilter === 'watching';
+    const color = isWatchedView ? '#FACC15'
+      : court.status === 'packed' ? '#FF5A1F' 
+      : court.status === 'active' ? '#22C55E' 
+      : '#3B82F6';
+    const size = isWatchedView ? 16 : (court.status === 'quiet' ? 12 : 14 + (court.players / 2.5));
 
     // Use a simple centered structure — no absolute positioning to avoid zoom jitter
     const el = document.createElement('div');
@@ -1841,8 +1931,13 @@ function renderMarkers() {
    FILTER
    ══════════════════════════════ */
 function setFilter(filter, chipEl) {
+  // Watching filter requires auth
+  if (filter === 'watching' && !currentUser) {
+    showSignUpModal('watch');
+    return;
+  }
   currentFilter = filter;
-  document.querySelectorAll('.filter-chip:not(.filter-chip--nearme)').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
   renderMarkers();
 }
@@ -2130,14 +2225,19 @@ function checkIn(courtId) {
   // Re-render sheet to show "Start a Game" button, keep it open
   renderMarkers();
   openSheet(court);
-  showToast(court.name);
+  showToast(court.name, true);
 }
 
-function showToast(courtName) {
-  document.getElementById('toastCourt').textContent = courtName;
+function showToast(message, isCheckin) {
+  const textEl = document.getElementById('toastText');
+  if (isCheckin) {
+    textEl.innerHTML = 'Checked in at <span style="color:var(--green-live);">' + message + '</span>';
+  } else {
+    textEl.textContent = message;
+  }
   const toast = document.getElementById('toast');
   toast.classList.add('visible');
-  setTimeout(() => toast.classList.remove('visible'), 3000);
+  setTimeout(() => toast.classList.remove('visible'), 3500);
 }
 
 function getDirections(lat, lng) {
@@ -2283,6 +2383,14 @@ async function loadUserWatches() {
   } catch (err) {
     console.error('Failed to load watches:', err);
   }
+  updateWatchingChipVisibility();
+}
+
+function updateWatchingChipVisibility() {
+  const chip = document.getElementById('watchingChip');
+  if (chip) {
+    chip.style.display = (currentUser && userWatches.size > 0) ? 'flex' : 'none';
+  }
 }
 
 async function toggleWatch(courtId) {
@@ -2298,8 +2406,9 @@ async function toggleWatch(courtId) {
       .eq('user_id', currentUser.id).eq('court_id', courtId);
     if (!error) {
       userWatches.delete(courtId);
+      updateWatchingChipVisibility();
       if (court) { court._watching = false; openSheet(court); }
-      showToast('Stopped watching ' + (court?.name || 'court'));
+      showToast('You will no longer be notified when players check into ' + (court?.name || 'this court'));
     }
   } else {
     // Watch
@@ -2308,8 +2417,9 @@ async function toggleWatch(courtId) {
     });
     if (!error) {
       userWatches.add(courtId);
+      updateWatchingChipVisibility();
       if (court) { court._watching = true; openSheet(court); }
-      showToast('Watching ' + (court?.name || 'court'));
+      showToast('You will now be notified when more players check into ' + (court?.name || 'this court'));
     }
   }
 }
@@ -2431,6 +2541,7 @@ function handleProfileClick() {
 function openProfile() {
   updateProfileStats();
   renderHistory();
+  renderWatchedCourts();
   document.getElementById('profileScreen').classList.add('open');
 }
 
@@ -2461,6 +2572,51 @@ function renderHistory() {
       <div class="history-item__time">${timeStr}</div>
     </div>`;
   }).join('');
+}
+
+function renderWatchedCourts() {
+  const titleEl = document.getElementById('watchedCourtsTitle');
+  const countEl = document.getElementById('watchedCount');
+  const listEl = document.getElementById('watchedCourtsList');
+
+  if (!currentUser || userWatches.size === 0) {
+    titleEl.style.display = 'none';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  titleEl.style.display = 'block';
+  countEl.textContent = userWatches.size;
+
+  const watchedCourts = courts.filter(c => userWatches.has(c.id));
+
+  if (watchedCourts.length === 0) {
+    listEl.innerHTML = '<div class="watched-courts-empty">Watch courts from the map to see them here.</div>';
+    return;
+  }
+
+  listEl.innerHTML = watchedCourts.map(c => `
+    <div class="watched-court-item" onclick="closeProfile();openSheet(courts.find(x=>x.id==='${c.id}'))">
+      <div class="watched-court-item__icon">🔔</div>
+      <div class="watched-court-item__name">${c.name}</div>
+      <div class="watched-court-item__type">${c.type || ''}</div>
+      <button class="watched-court-item__remove" onclick="event.stopPropagation();unwatchFromProfile('${c.id}')" title="Stop watching">✕</button>
+    </div>
+  `).join('');
+}
+
+async function unwatchFromProfile(courtId) {
+  if (!currentUser) return;
+  const { error } = await supabase.from('court_watches').delete()
+    .eq('user_id', currentUser.id).eq('court_id', courtId);
+  if (!error) {
+    userWatches.delete(courtId);
+    const court = courts.find(c => c.id === courtId);
+    if (court) court._watching = false;
+    updateWatchingChipVisibility();
+    renderWatchedCourts();
+    showToast('You will no longer be notified when players check into ' + (court?.name || 'this court'));
+  }
 }
 
 function formatTime(date) {
@@ -2626,7 +2782,7 @@ checkIn = async function(courtId) {
       startCheckinTimers(courtId, court?.name || 'Court');
       renderMarkers();
       openSheet(court);
-      showToast(court?.name || 'Court');
+      showToast(court?.name || 'Court', true);
     } catch (err) {
       console.error('Check-in failed:', err);
       alert('Check-in failed: ' + err.message);

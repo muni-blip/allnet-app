@@ -3483,7 +3483,7 @@ async function processAvatar(storagePath) {
     //   Authorization: Bearer <user-token>  — authenticates the user
     //   apikey: <anon-key>                  — identifies the project to the gateway
     // Without 'apikey', the gateway returns 401 before our function code runs at all.
-    const res = await fetch(SUPABASE_URL + '/functions/v1/process-avatar', {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/avatar-process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

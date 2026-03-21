@@ -99,6 +99,7 @@ html, body {
   cursor: pointer;
   border: 2px solid rgba(255,255,255,0.15);
   transition: var(--transition);
+  overflow: hidden;
 }
 
 .top-bar__profile:hover { transform: scale(1.08); }
@@ -641,6 +642,7 @@ html, body {
   font-weight: 700;
   color: white;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .player-modal__name {
@@ -801,6 +803,7 @@ html, body {
   font-weight: 700;
   color: white;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .checkin-player__info { flex: 1; }
@@ -1068,6 +1071,13 @@ html, body {
 
 .btn--primary:active { transform: translateY(0); }
 
+.btn--primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .btn--secondary {
   background: var(--bg-card);
   color: var(--text-primary);
@@ -1197,6 +1207,21 @@ html, body {
   color: white;
   margin: 0 auto 16px;
   border: 3px solid rgba(255,255,255,0.1);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+
+.profile-card__avatar:hover::after {
+  content: '📷';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border-radius: 50%;
 }
 
 .profile-card__name {
@@ -1315,7 +1340,7 @@ html, body {
   font-family: var(--font-mono);
 }
 
-/* Phase 2 teaser */
+/* Watched courts */
 .watched-courts-list {
   display: flex;
   flex-direction: column;
@@ -1384,6 +1409,7 @@ html, body {
   margin-bottom: 20px;
 }
 
+/* Phase 2 teaser */
 .phase2-teaser {
   background: var(--bg-card);
   border: 1px dashed var(--border-light);
@@ -1406,6 +1432,212 @@ html, body {
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════
+   ONBOARDING MODAL (post-OAuth: name + photo)
+   ═══════════════════════════════════════════════ */
+.onboarding-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0,0,0,0.94);
+  backdrop-filter: blur(16px);
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-modal.active { display: flex; }
+
+.onboarding-modal__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 24px;
+  padding: 40px 28px 32px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.onboarding-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.onboarding-modal__logo {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--orange);
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.onboarding-modal__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.15;
+}
+
+.onboarding-modal__desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 28px;
+  max-width: 280px;
+}
+
+.onboarding-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.onboarding-input {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: var(--font-body);
+  text-align: left;
+  transition: var(--transition);
+}
+
+.onboarding-input::placeholder { color: var(--text-muted); }
+.onboarding-input:focus {
+  outline: none;
+  border-color: var(--orange);
+  background: rgba(255,90,31,0.04);
+}
+
+.onboarding-error {
+  color: var(--red);
+  font-size: 12px;
+  min-height: 18px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.onboarding-modal__footer {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Avatar upload area */
+.onboarding-avatar-upload {
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.onboarding-avatar-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0 auto 12px;
+  border: 2px dashed var(--border-light);
+  overflow: hidden;
+  position: relative;
+  transition: var(--transition);
+}
+
+.onboarding-avatar-upload:hover .onboarding-avatar-preview {
+  border-color: var(--orange);
+  transform: scale(1.03);
+}
+
+.onboarding-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.onboarding-avatar-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.onboarding-avatar-upload:hover .onboarding-avatar-label {
+  color: var(--orange);
+}
+
+/* ═══════════════════════════════════════════════
+   PHOTO PROMPT MODAL (before starting a game)
+   ═══════════════════════════════════════════════ */
+.photo-prompt-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: blur(10px);
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-prompt-modal.active { display: flex; }
+
+.photo-prompt-modal__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 24px;
+  padding: 36px 28px 28px;
+  width: 90%;
+  max-width: 340px;
+  text-align: center;
+}
+
+.photo-prompt-modal__icon {
+  font-size: 42px;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.photo-prompt-modal__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.photo-prompt-modal__desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 4px;
+}
+
+/* Avatar image utility */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 /* ═══════════════════════════════════════════════
@@ -1589,7 +1821,8 @@ html, body {
     <button class="profile-back" onclick="closeProfile()">← Back to Map</button>
     <div class="profile-content">
       <div class="profile-card">
-        <div class="profile-card__avatar">U</div>
+        <div class="profile-card__avatar" id="profileCardAvatar" onclick="triggerProfileAvatarUpload()">U</div>
+        <input type="file" id="profileAvatarInput" accept="image/*" capture="user" style="display:none;" onchange="handleProfileAvatarChange(this)">
         <div class="profile-card__name">Your Profile</div>
         <div class="profile-card__location">📍 OC/LA</div>
         <div class="profile-card__founding-badge">🏅 Founding Hooper</div>
@@ -1625,6 +1858,67 @@ html, body {
       </div>
     </div>
   </div>
+
+  <!-- ═══ Onboarding Modal (post-OAuth: name + photo) ═══ -->
+  <div class="onboarding-modal" id="onboardingModal">
+    <div class="onboarding-modal__card">
+
+      <!-- Step 1: Real name -->
+      <div class="onboarding-step" id="onboardStep1">
+        <div class="onboarding-modal__logo">ALLNET</div>
+        <div class="onboarding-modal__title">What's your name?</div>
+        <div class="onboarding-modal__desc">AllNet uses real names. Your full name is your basketball identity on the platform.</div>
+        <div class="onboarding-field-group">
+          <input type="text" class="onboarding-input" id="onboardFirstName" placeholder="First name" maxlength="30" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('onboardLastName').focus()">
+          <input type="text" class="onboarding-input" id="onboardLastName" placeholder="Last name" maxlength="30" autocomplete="family-name" onkeydown="if(event.key==='Enter')submitOnboardingName()">
+        </div>
+        <div class="onboarding-error" id="onboardNameError"></div>
+        <button class="btn btn--primary" id="onboardNameBtn" onclick="submitOnboardingName()" style="width:100%;margin-top:6px;">Continue →</button>
+        <div class="onboarding-modal__footer">Your name will be visible to other players on AllNet</div>
+      </div>
+
+      <!-- Step 2: Profile photo (skippable) -->
+      <div class="onboarding-step" id="onboardStep2" style="display:none;">
+        <div class="onboarding-modal__logo">ALLNET</div>
+        <div class="onboarding-modal__title">Add a photo</div>
+        <div class="onboarding-modal__desc">Help other players recognize you at the court. Required to join rated games.</div>
+        <div class="onboarding-avatar-upload" onclick="document.getElementById('onboardAvatarInput').click()">
+          <div class="onboarding-avatar-preview" id="onboardAvatarPreview">
+            <span id="onboardAvatarInitials">?</span>
+            <img id="onboardAvatarImg" style="display:none;" alt="Preview">
+          </div>
+          <div class="onboarding-avatar-label" id="onboardAvatarLabel">Tap to upload a photo</div>
+        </div>
+        <input type="file" id="onboardAvatarInput" accept="image/*" capture="user" style="display:none;" onchange="previewOnboardAvatar(this)">
+        <div class="onboarding-error" id="onboardPhotoError"></div>
+        <button class="btn btn--primary" id="onboardPhotoBtn" onclick="submitOnboardAvatar()" style="width:100%;margin-top:10px;" disabled>Upload Photo</button>
+        <button class="btn btn--secondary" onclick="skipAvatarUpload()" style="width:100%;margin-top:10px;flex:none;">Skip for now</button>
+        <div class="onboarding-modal__footer">You can add your photo anytime from your profile</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ Photo Prompt Modal (gate before starting a game) ═══ -->
+  <div class="photo-prompt-modal" id="photoPromptModal" onclick="if(event.target===this)closePhotoPromptModal()">
+    <div class="photo-prompt-modal__card">
+      <span class="photo-prompt-modal__icon">📸</span>
+      <div class="photo-prompt-modal__title">Add Your Photo</div>
+      <div class="photo-prompt-modal__desc">A profile photo is required to join games so other players can recognize you at the court.</div>
+      <div class="onboarding-avatar-upload" onclick="document.getElementById('promptAvatarInput').click()" style="margin:20px auto;display:block;width:fit-content;">
+        <div class="onboarding-avatar-preview" id="promptAvatarPreview" style="margin:0 auto;">
+          <span id="promptAvatarInitials">?</span>
+          <img id="promptAvatarImg" style="display:none;" alt="Preview">
+        </div>
+        <div class="onboarding-avatar-label" id="promptAvatarLabel">Tap to upload a photo</div>
+      </div>
+      <input type="file" id="promptAvatarInput" accept="image/*" capture="user" style="display:none;" onchange="previewPromptAvatar(this)">
+      <div class="onboarding-error" id="promptPhotoError"></div>
+      <button class="btn btn--primary" id="promptPhotoBtn" onclick="submitPromptAvatar()" style="width:100%;margin-bottom:10px;flex:none;" disabled>Upload & Start Game</button>
+      <button class="btn btn--secondary" onclick="closePhotoPromptModal()" style="width:100%;flex:none;">Not now</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- ═══════════════ JAVASCRIPT ═══════════════ -->
@@ -1632,8 +1926,13 @@ html, body {
 <script>
 // ═══════════════════════════════════════════════
 // AllNet — Supabase Client Configuration
-// AllNet Supabase Client
 // ═══════════════════════════════════════════════
+// SQL MIGRATION — run once in Supabase SQL editor:
+// ALTER TABLE profiles ADD COLUMN IF NOT EXISTS first_name text;
+// ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_name text;
+// ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url text;
+// -- Create avatars storage bucket (in Supabase Dashboard > Storage):
+// -- Bucket name: avatars, Public: true
 
 var SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
@@ -1667,7 +1966,6 @@ async function signUp(email, password, name, location) {
     options: { data: { name, location } }
   });
   if (error) throw error;
-  // Update profile with location after auto-creation
   if (data.user) {
     await supabase.from('profiles').update({ location, name, initials: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }).eq('id', data.user.id);
   }
@@ -1695,7 +1993,7 @@ async function fetchCourtWithCheckins(courtId) {
   const { data: court } = await supabase.from('courts').select('*').eq('id', courtId).single();
   const { data: checkins } = await supabase
     .from('checkins')
-    .select('*, profiles(name, initials, is_founding_hooper)')
+    .select('*, profiles(name, initials, is_founding_hooper, avatar_url)')
     .eq('court_id', courtId)
     .gte('checked_in_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
     .is('checked_out_at', null)
@@ -1736,21 +2034,17 @@ async function createGameSession(courtId, format, teamSize, codeA, codeB) {
     status: 'lobby'
   }).select().single();
   if (error) throw error;
-  // Add creator to team A
   await supabase.from('game_players').insert({ game_id: data.id, user_id: user.id, team: 'a' });
   return data;
 }
 
 async function joinGameByCode(code) {
-  // Find game by either code
   const { data: gameA } = await supabase.from('game_sessions')
     .select('*').eq('code_a', code).in('status', ['lobby', 'active']).single();
   const { data: gameB } = await supabase.from('game_sessions')
     .select('*').eq('code_b', code).in('status', ['lobby', 'active']).single();
-  
   const game = gameA || gameB;
   if (!game) throw new Error('Game not found');
-  
   const team = gameA ? 'a' : 'b';
   const user = await getUser();
   await supabase.from('game_players').insert({ game_id: game.id, user_id: user.id, team });
@@ -1852,7 +2146,6 @@ let userCheckins = [];
 let checkinCourts = new Set();
 
 function showPlayerCard(name, userId) {
-  // Only works with Supabase data — handled by override below
   console.log('Player card: no mock data, requires Supabase');
 }
 
@@ -1876,39 +2169,35 @@ const map = new mapboxgl.Map({
 map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
 function renderMarkers() {
-  // Remove existing
   markers.forEach(m => m.remove());
   markers = [];
 
   courts.forEach(court => {
-    // Status/watching filter
     if (currentFilter === 'watching') {
       if (!userWatches.has(court.id)) return;
     } else if (currentFilter !== 'all' && court.status !== currentFilter) {
       return;
     }
 
-    // Distance filter — calculated client-side only, user location never leaves the browser
     if (nearMeActive && userLat !== null && userLng !== null) {
       const dist = haversineMiles(userLat, userLng, court.lat, court.lng);
       if (dist > radiusMiles) return;
-      court._distance = dist; // Temp property for display, not persisted
+      court._distance = dist;
     }
 
     const isWatchedView = currentFilter === 'watching';
     const color = isWatchedView ? '#FACC15'
-      : court.status === 'packed' ? '#FF5A1F' 
-      : court.status === 'active' ? '#22C55E' 
+      : court.status === 'packed' ? '#FF5A1F'
+      : court.status === 'active' ? '#22C55E'
       : '#3B82F6';
     const size = isWatchedView ? 16 : (court.status === 'quiet' ? 12 : 14 + (court.players / 2.5));
 
-    // Use a simple centered structure — no absolute positioning to avoid zoom jitter
     const el = document.createElement('div');
     el.style.cssText = 'display:flex;align-items:center;justify-content:center;cursor:pointer;';
 
     const dot = document.createElement('div');
     dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);transition:transform 0.15s ease;`;
-    
+
     if (court.status !== 'quiet') {
       dot.style.boxShadow = `0 0 ${size}px ${Math.round(size/2)}px ${color}40`;
     }
@@ -1931,7 +2220,6 @@ function renderMarkers() {
    FILTER
    ══════════════════════════════ */
 function setFilter(filter, chipEl) {
-  // Watching filter requires auth
   if (filter === 'watching' && !currentUser) {
     showSignUpModal('watch');
     return;
@@ -1946,14 +2234,13 @@ function setFilter(filter, chipEl) {
    RADIUS FILTER — LOCATION-BASED
    Location stays client-side only. Never sent to server.
    ══════════════════════════════ */
-let radiusMiles = 10;  // Default radius
+let radiusMiles = 10;
 let nearMeActive = false;
 let userLat = null;
 let userLng = null;
 
-// Haversine formula — calculates distance in miles between two lat/lng points
 function haversineMiles(lat1, lng1, lat2, lng2) {
-  const R = 3958.8; // Earth radius in miles
+  const R = 3958.8;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -1967,7 +2254,6 @@ function onRadiusChange(value) {
   const sel = document.getElementById('radiusSelect');
 
   if (radiusMiles === 0) {
-    // "All Distances" — disable radius filtering
     nearMeActive = false;
     sel.classList.remove('active');
     renderMarkers();
@@ -1975,13 +2261,11 @@ function onRadiusChange(value) {
     return;
   }
 
-  // Need location — request if we don't have it yet
   if (userLat === null || userLng === null) {
     requestLocation(() => {
       nearMeActive = true;
       sel.classList.add('active');
       renderMarkers();
-      // Zoom level based on radius
       const zoom = radiusMiles <= 5 ? 13 : radiusMiles <= 10 ? 12 : radiusMiles <= 15 ? 11 : 10;
       map.flyTo({ center: [userLng, userLat], zoom, duration: 800 });
     });
@@ -2001,7 +2285,6 @@ function requestLocation(onSuccess) {
   }
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      // Location stays in memory only — never sent to server
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
       console.log('Location acquired (client-side only)');
@@ -2013,7 +2296,6 @@ function requestLocation(onSuccess) {
       } else {
         alert('Could not get your location. Please try again.');
       }
-      // Reset dropdown to "All Distances"
       document.getElementById('radiusSelect').value = '0';
       document.getElementById('radiusSelect').classList.remove('active');
       nearMeActive = false;
@@ -2022,7 +2304,6 @@ function requestLocation(onSuccess) {
   );
 }
 
-// Auto-request location on page load to enable radius filter immediately
 function autoRequestLocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -2030,7 +2311,6 @@ function autoRequestLocation() {
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         console.log('Auto-location acquired (client-side only)');
-        // Auto-activate 10mi radius
         nearMeActive = true;
         document.getElementById('radiusSelect').value = '10';
         document.getElementById('radiusSelect').classList.add('active');
@@ -2038,7 +2318,6 @@ function autoRequestLocation() {
         map.flyTo({ center: [userLng, userLat], zoom: 12, duration: 800 });
       },
       (err) => {
-        // User denied or error — just show all courts
         console.log('Auto-location denied or failed, showing all courts');
         document.getElementById('radiusSelect').value = '0';
       },
@@ -2047,10 +2326,9 @@ function autoRequestLocation() {
   }
 }
 
-// Fire auto-location after map loads
 map.on('load', () => {
   renderMarkers();
-  setTimeout(autoRequestLocation, 1000); // Slight delay so map renders first
+  setTimeout(autoRequestLocation, 1000);
 });
 
 /* ══════════════════════════════
@@ -2068,7 +2346,6 @@ function centerMap() {
    BOTTOM SHEET — COURT DETAIL
    ══════════════════════════════ */
 function openSheet(court) {
-  // Calculate distance if user location available
   if (userLat !== null && userLng !== null) {
     court._distance = haversineMiles(userLat, userLng, court.lat, court.lng);
   }
@@ -2078,7 +2355,6 @@ function openSheet(court) {
     ? '<span class="court-tag court-tag--indoor">Indoor</span>'
     : '<span class="court-tag court-tag--outdoor">Outdoor</span>';
 
-  // Forecast bars
   const maxForecast = Math.max(...court.forecast, 1);
   const today = new Date().getDay();
   const todayIdx = today === 0 ? 6 : today - 1;
@@ -2092,20 +2368,22 @@ function openSheet(court) {
     </div>`;
   }).join('');
 
-  // Checked-in players
   const checkinHTML = court.checkedIn.length > 0
-    ? court.checkedIn.map(p => `
-      <div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,\'${p.userId}\'` : ''})`}">
-        <div class="checkin-player__avatar">${p.initials}</div>
-        <div class="checkin-player__info">
-          <div class="checkin-player__name">${p.name}</div>
-          <div class="checkin-player__meta">${p.time}</div>
-        </div>
-        ${p.badge ? '<span class="checkin-player__badge">Founding</span>' : ''}
-      </div>`).join('')
+    ? court.checkedIn.map(p => {
+        const avatarContent = p.avatarUrl
+          ? `<img src="${p.avatarUrl}" class="avatar-img" alt="${p.name}">`
+          : p.initials;
+        return `<div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,'${p.userId}'` : ''})`}">
+          <div class="checkin-player__avatar">${avatarContent}</div>
+          <div class="checkin-player__info">
+            <div class="checkin-player__name">${p.name}</div>
+            <div class="checkin-player__meta">${p.time}</div>
+          </div>
+          ${p.badge ? '<span class="checkin-player__badge">Founding</span>' : ''}
+        </div>`;
+      }).join('')
     : '<div class="empty-checkins">No one checked in yet. Be the first!</div>';
 
-  // Watch button
   const isWatching = currentUser && court._watching;
   const watchBtn = `<button class="btn--watch ${isWatching ? 'btn--watch-active' : ''}" onclick="toggleWatch('${court.id}')" title="${isWatching ? 'Stop watching' : 'Watch this court'}">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="${isWatching ? 'var(--yellow)' : 'none'}" stroke="${isWatching ? 'var(--yellow)' : 'var(--text-secondary)'}" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -2127,7 +2405,7 @@ function openSheet(court) {
 
     <div class="pulse-stats" style="grid-template-columns:1fr 1fr;">
       <div class="pulse-stat">
-        <div class="pulse-stat__value" style="color:${court.status === 'packed' ? 'var(--orange)' : court.status === 'active' ? 'var(--green-live)' : 'var(--text-muted)'};">${court.players}</div>
+        <div class="pulse-stat__value" style="color:${court.status === 'packed' ? 'var(--orange)' : court.status === 'active' ? 'var(--green-live)' : 'var(--text-muted)'}">${court.players}</div>
         <div class="pulse-stat__label">Players Now</div>
       </div>
       <div class="pulse-stat">
@@ -2148,7 +2426,7 @@ function openSheet(court) {
 
     <div class="court-actions">
       ${checkinCourts.has(court.id)
-        ? `<a href="allnet-phase2.html?court=${encodeURIComponent(court.name)}" class="btn btn--success" style="text-decoration:none;">🏀 Start a Game</a>`
+        ? `<button class="btn btn--success" onclick="startGame('${court.name.replace(/'/g, "\\'")}')">🏀 Start a Game</button>`
         : `<button class="btn btn--primary" onclick="checkIn('${court.id}')">📍 I'm Here</button>`}
       <button class="btn btn--secondary" onclick="getDirections(${court.lat}, ${court.lng})">🧭 Directions</button>
     </div>
@@ -2175,23 +2453,19 @@ function checkIn(courtId) {
   const court = courts.find(c => c.id === courtId);
   if (!court) return;
 
-  // Auth gate — must be logged in to check in
   if (!currentUser) {
     showSignUpModal('checkin');
     return;
   }
 
-  // Proximity gate — must be within 0.3 miles
   const proximity = validateProximity(court);
   if (!proximity.ok) {
     handleProximityFailure(proximity, court.name);
     return;
   }
 
-  // Prevent duplicate check-ins at same court
   if (checkinCourts.has(courtId)) return;
 
-  // Enforce single-court check-in — must check out of current court first
   if (activeCheckin && activeCheckin.courtId !== courtId) {
     const oldName = activeCheckin.courtName;
     if (!confirm(`You're currently checked in at ${oldName}.\n\nCheck out and move to ${court.name}?`)) {
@@ -2200,29 +2474,22 @@ function checkIn(courtId) {
     performCheckout();
   }
 
-  // Add user to court's checked-in list
   const userName = currentProfile?.name || 'You';
   const userInitials = currentProfile?.initials || 'U';
   const isFounding = currentProfile?.is_founding_hooper || false;
-  court.checkedIn.unshift({ name: userName, initials: userInitials, time: 'Just now', badge: isFounding });
+  const userAvatar = currentProfile?.avatar_url || null;
+  court.checkedIn.unshift({ name: userName, initials: userInitials, time: 'Just now', badge: isFounding, avatarUrl: userAvatar });
   court.players += 1;
 
-  // Update status if needed
   if (court.players >= 10 && court.status !== 'packed') court.status = 'packed';
   else if (court.players > 0 && court.status === 'quiet') court.status = 'active';
 
-  // Track user check-in
   const timestamp = new Date();
   userCheckins.unshift({ courtId: court.id, courtName: court.name, time: timestamp });
   checkinCourts.add(court.id);
 
-  // Update profile stats
   updateProfileStats();
-
-  // Start checkout timers (nudge at 90 min, expire at 120 min)
   startCheckinTimers(court.id, court.name);
-
-  // Re-render sheet to show "Start a Game" button, keep it open
   renderMarkers();
   openSheet(court);
   showToast(court.name, true);
@@ -2247,7 +2514,7 @@ function getDirections(lat, lng) {
 /* ══════════════════════════════
    SIGN-UP MODAL
    ══════════════════════════════ */
-let signupContext = null; // What action triggered the modal
+let signupContext = null;
 
 function showSignUpModal(context) {
   signupContext = context || null;
@@ -2276,27 +2543,22 @@ async function oauthSignIn(provider) {
 
 /* ══════════════════════════════
    PROXIMITY VALIDATION
-   0.3 miles from court to check in
    ══════════════════════════════ */
 const CHECKIN_RADIUS_MILES = 0.3;
 
 function validateProximity(court) {
-  // If no location available, request it
   if (userLat === null || userLng === null) {
     return { ok: false, reason: 'no_location' };
   }
-
   const dist = haversineMiles(userLat, userLng, court.lat, court.lng);
   if (dist > CHECKIN_RADIUS_MILES) {
     return { ok: false, reason: 'too_far', distance: dist };
   }
-
   return { ok: true, distance: dist };
 }
 
 function handleProximityFailure(result, courtName) {
   if (result.reason === 'no_location') {
-    // Try to get location, then retry
     requestLocation(() => {
       alert('Location acquired! Please try checking in again.');
     });
@@ -2321,7 +2583,6 @@ function showReportModal(courtId) {
   reportingCourtId = courtId;
   reportReason = 'no_basketball_court';
   document.getElementById('reportNote').value = '';
-  // Reset option selection
   document.querySelectorAll('.report-modal__option').forEach(o => o.classList.remove('selected'));
   document.querySelector('.report-modal__option[data-reason="no_basketball_court"]').classList.add('selected');
   document.getElementById('reportSubmitBtn').disabled = false;
@@ -2348,11 +2609,9 @@ async function submitReport() {
   btn.textContent = 'Submitting...';
   try {
     await reportCourt(reportingCourtId, reportReason, note);
-    // Mark court as reported locally
     const court = courts.find(c => c.id === reportingCourtId);
     if (court) court._reported = true;
     closeReportModal();
-    // Update the report section in the sheet
     const section = document.getElementById('courtReportSection');
     if (section) section.innerHTML = '<span class="court-report__done">⚑ You reported this listing — thank you!</span>';
     showToast('Report submitted');
@@ -2371,7 +2630,7 @@ async function submitReport() {
 /* ══════════════════════════════
    COURT WATCHING
    ══════════════════════════════ */
-let userWatches = new Set(); // Set of court IDs being watched
+let userWatches = new Set();
 
 async function loadUserWatches() {
   if (!currentUser) return;
@@ -2399,15 +2658,13 @@ async function toggleWatch(courtId) {
     return;
   }
   const court = courts.find(c => c.id === courtId);
-  
+
   if (userWatches.has(courtId)) {
-    // Unwatch
     const { error } = await supabase.from('court_watches').delete()
       .eq('user_id', currentUser.id).eq('court_id', courtId);
     if (!error) {
       userWatches.delete(courtId);
       updateWatchingChipVisibility();
-      // If viewing Watching filter and no more watches, reset to All Courts
       if (currentFilter === 'watching' && userWatches.size === 0) {
         currentFilter = 'all';
         document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -2418,7 +2675,6 @@ async function toggleWatch(courtId) {
       showToast('You will no longer be notified when players check into ' + (court?.name || 'this court'));
     }
   } else {
-    // Watch
     const { error } = await supabase.from('court_watches').insert({
       user_id: currentUser.id, court_id: courtId
     });
@@ -2435,28 +2691,18 @@ async function toggleWatch(courtId) {
 /* ══════════════════════════════
    CHECK-IN TIMER & CHECKOUT
    ══════════════════════════════ */
-const NUDGE_MS = 90 * 60 * 1000;   // 90 minutes
-const EXPIRE_MS = 120 * 60 * 1000; // 120 minutes
+const NUDGE_MS = 90 * 60 * 1000;
+const EXPIRE_MS = 120 * 60 * 1000;
 
-let activeCheckin = null;  // { courtId, courtName, time, checkinId }
+let activeCheckin = null;
 let nudgeTimer = null;
 let expireTimer = null;
 
 function startCheckinTimers(courtId, courtName) {
-  // Clear any existing timers
   clearCheckinTimers();
-
   activeCheckin = { courtId, courtName, time: Date.now(), checkinId: null };
-
-  // Timer 1: Show nudge banner at 90 min
-  nudgeTimer = setTimeout(() => {
-    showNudgeBanner(courtName);
-  }, NUDGE_MS);
-
-  // Timer 2: Auto-expire at 120 min
-  expireTimer = setTimeout(() => {
-    autoCheckout();
-  }, EXPIRE_MS);
+  nudgeTimer = setTimeout(() => { showNudgeBanner(courtName); }, NUDGE_MS);
+  expireTimer = setTimeout(() => { autoCheckout(); }, EXPIRE_MS);
 }
 
 function clearCheckinTimers() {
@@ -2474,12 +2720,9 @@ function hideNudgeBanner() {
 }
 
 function extendCheckin() {
-  // "Still Here" — create a new check-in, reset timers
   hideNudgeBanner();
   if (activeCheckin) {
-    const court = courts.find(c => c.id === activeCheckin.courtId);
     if (currentUser && activeCheckin.courtId && typeof activeCheckin.courtId === 'string' && activeCheckin.courtId.length > 10) {
-      // Real Supabase check-in
       checkInAtCourt(activeCheckin.courtId).catch(err => console.error('Extend check-in failed:', err));
     }
     startCheckinTimers(activeCheckin.courtId, activeCheckin.courtName);
@@ -2488,13 +2731,11 @@ function extendCheckin() {
 }
 
 function manualCheckout() {
-  // "I Left" — checkout and clean up
   performCheckout();
   showToast('Checked out');
 }
 
 function autoCheckout() {
-  // Timer expired — silent checkout
   performCheckout();
   showToast('Check-in expired');
 }
@@ -2506,7 +2747,6 @@ function performCheckout() {
   if (activeCheckin) {
     const courtId = activeCheckin.courtId;
 
-    // Update Supabase if logged in
     if (currentUser && courtId && typeof courtId === 'string' && courtId.length > 10) {
       supabase.from('checkins')
         .update({ checked_out_at: new Date().toISOString() })
@@ -2517,14 +2757,12 @@ function performCheckout() {
         .catch(err => console.error('Checkout failed:', err));
     }
 
-    // Update local state
     checkinCourts.delete(courtId);
     const court = courts.find(c => c.id === courtId);
     if (court) {
       court.players = Math.max(0, court.players - 1);
       if (court.players === 0) court.status = 'quiet';
       else if (court.players < 10) court.status = 'active';
-      // Remove user from checked-in list
       court.checkedIn = court.checkedIn.filter(p => {
         const isMe = (currentProfile && p.name === currentProfile.name);
         return !isMe;
@@ -2622,7 +2860,6 @@ async function unwatchFromProfile(courtId) {
     const court = courts.find(c => c.id === courtId);
     if (court) court._watching = false;
     updateWatchingChipVisibility();
-    // If viewing Watching filter and no more watches, reset to All Courts
     if (currentFilter === 'watching' && userWatches.size === 0) {
       currentFilter = 'all';
       document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -2643,8 +2880,315 @@ function formatTime(date) {
 }
 
 /* ══════════════════════════════
+   PROFILE AVATAR — change from profile screen
+   ══════════════════════════════ */
+function triggerProfileAvatarUpload() {
+  if (!currentUser) return;
+  document.getElementById('profileAvatarInput').click();
+}
+
+async function handleProfileAvatarChange(input) {
+  const file = input.files[0];
+  if (!file || !currentUser) return;
+  const avatarEl = document.getElementById('profileCardAvatar');
+  avatarEl.innerHTML = '<span style="font-size:13px;color:var(--text-muted);">Uploading...</span>';
+  try {
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const path = currentUser.id + '/avatar.' + ext;
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) throw uploadError;
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+    currentProfile.avatar_url = publicUrl;
+    updateAvatarDisplays(publicUrl);
+    showToast('Profile photo updated 🏀');
+  } catch (err) {
+    console.error('Profile avatar upload failed:', err);
+    avatarEl.textContent = currentProfile?.initials || 'U';
+    showToast('Photo upload failed. Please try again.');
+  }
+  input.value = '';
+}
+
+/* ══════════════════════════════
+   ONBOARDING — Name + Photo
+   Triggered post-OAuth for new users
+   ══════════════════════════════ */
+function checkOnboarding() {
+  if (!currentUser || !currentProfile) return;
+  // Show onboarding if first_name not set yet
+  if (!currentProfile.first_name) {
+    // Try to pre-fill from OAuth display name
+    const fullName = (currentProfile.name || '').trim();
+    const parts = fullName.split(/\s+/);
+    if (parts.length >= 2) {
+      document.getElementById('onboardFirstName').value = parts[0];
+      document.getElementById('onboardLastName').value = parts.slice(1).join(' ');
+    } else if (parts.length === 1 && parts[0]) {
+      document.getElementById('onboardFirstName').value = parts[0];
+    }
+    document.getElementById('onboardingModal').classList.add('active');
+    // Focus first empty field
+    setTimeout(() => {
+      const fn = document.getElementById('onboardFirstName');
+      const ln = document.getElementById('onboardLastName');
+      if (!fn.value) fn.focus();
+      else if (!ln.value) ln.focus();
+    }, 300);
+  }
+}
+
+async function submitOnboardingName() {
+  const firstName = document.getElementById('onboardFirstName').value.trim();
+  const lastName = document.getElementById('onboardLastName').value.trim();
+  const errorEl = document.getElementById('onboardNameError');
+
+  // Validate
+  if (!firstName || firstName.length < 2) {
+    errorEl.textContent = 'Please enter your first name (at least 2 characters)';
+    document.getElementById('onboardFirstName').focus();
+    return;
+  }
+  if (!lastName || lastName.length < 2) {
+    errorEl.textContent = 'Please enter your last name (at least 2 characters)';
+    document.getElementById('onboardLastName').focus();
+    return;
+  }
+  if (/\d/.test(firstName) || /\d/.test(lastName)) {
+    errorEl.textContent = 'Names cannot contain numbers';
+    return;
+  }
+  if (/[^a-zA-Z\s\-\']/.test(firstName) || /[^a-zA-Z\s\-\']/.test(lastName)) {
+    errorEl.textContent = 'Please use letters only';
+    return;
+  }
+
+  errorEl.textContent = '';
+  const btn = document.getElementById('onboardNameBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const fullName = firstName + ' ' + lastName;
+    const initials = (firstName[0] + lastName[0]).toUpperCase();
+
+    const { error } = await supabase.from('profiles').update({
+      first_name: firstName,
+      last_name: lastName,
+      name: fullName,
+      initials: initials
+    }).eq('id', currentUser.id);
+
+    if (error) throw error;
+
+    // Update local profile
+    currentProfile.first_name = firstName;
+    currentProfile.last_name = lastName;
+    currentProfile.name = fullName;
+    currentProfile.initials = initials;
+
+    // Update all name/initials displays
+    const profileBtn = document.getElementById('profileBtn');
+    if (profileBtn.classList.contains('top-bar__profile') && !profileBtn.querySelector('img')) {
+      profileBtn.textContent = initials;
+    }
+    const profileNameEl = document.querySelector('.profile-card__name');
+    if (profileNameEl) profileNameEl.textContent = fullName;
+    const profileAvatarEl = document.getElementById('profileCardAvatar');
+    if (profileAvatarEl && !profileAvatarEl.querySelector('img')) {
+      profileAvatarEl.textContent = initials;
+    }
+
+    // Advance to step 2
+    document.getElementById('onboardStep1').style.display = 'none';
+    document.getElementById('onboardStep2').style.display = 'flex';
+    document.getElementById('onboardAvatarInitials').textContent = initials;
+
+  } catch (err) {
+    console.error('Failed to save name:', err);
+    errorEl.textContent = 'Failed to save. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Continue →';
+  }
+}
+
+function previewOnboardAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = document.getElementById('onboardAvatarImg');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('onboardAvatarInitials').style.display = 'none';
+    document.getElementById('onboardAvatarLabel').textContent = 'Tap to change photo';
+    document.getElementById('onboardPhotoBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitOnboardAvatar() {
+  const file = document.getElementById('onboardAvatarInput').files[0];
+  if (!file || !currentUser) return;
+
+  const btn = document.getElementById('onboardPhotoBtn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+  const errorEl = document.getElementById('onboardPhotoError');
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const path = currentUser.id + '/avatar.' + ext;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+
+    const { error: updateError } = await supabase.from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', currentUser.id);
+
+    if (updateError) throw updateError;
+
+    currentProfile.avatar_url = publicUrl;
+    updateAvatarDisplays(publicUrl);
+    closeOnboarding();
+    showToast('Welcome to AllNet, ' + currentProfile.first_name + '! 🏀');
+
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    errorEl.textContent = 'Upload failed. Try a smaller photo or try again.';
+    btn.disabled = false;
+    btn.textContent = 'Upload Photo';
+  }
+}
+
+function skipAvatarUpload() {
+  closeOnboarding();
+  showToast('Welcome to AllNet, ' + (currentProfile?.first_name || '') + '! Add a photo anytime from your profile 🏀');
+}
+
+function closeOnboarding() {
+  document.getElementById('onboardingModal').classList.remove('active');
+  // Reset for potential future re-open
+  document.getElementById('onboardStep1').style.display = 'flex';
+  document.getElementById('onboardStep2').style.display = 'none';
+  const nameBtn = document.getElementById('onboardNameBtn');
+  nameBtn.disabled = false;
+  nameBtn.textContent = 'Continue →';
+}
+
+/* ══════════════════════════════
+   AVATAR DISPLAY — update all instances
+   ══════════════════════════════ */
+function updateAvatarDisplays(url) {
+  // Top bar profile button
+  const profileBtn = document.getElementById('profileBtn');
+  if (profileBtn && profileBtn.classList.contains('top-bar__profile')) {
+    profileBtn.innerHTML = `<img src="${url}" class="avatar-img" alt="Profile" onerror="this.style.display='none'">`;
+  }
+  // Profile screen avatar
+  const profileAvatar = document.getElementById('profileCardAvatar');
+  if (profileAvatar) {
+    profileAvatar.innerHTML = `<img src="${url}" class="avatar-img" alt="Profile" onerror="this.parentElement.textContent='${currentProfile?.initials || 'U'}'">`;
+  }
+}
+
+/* ══════════════════════════════
+   GAME START — photo gate
+   Checks for profile photo before
+   navigating to allnet-phase2.html
+   ══════════════════════════════ */
+let pendingGameCourt = null;
+
+function startGame(courtName) {
+  if (!currentProfile) return;
+
+  if (!currentProfile.avatar_url) {
+    // Gate: require photo before joining a game
+    pendingGameCourt = courtName;
+    const initials = currentProfile.initials || 'U';
+    document.getElementById('promptAvatarInitials').textContent = initials;
+    document.getElementById('promptAvatarInitials').style.display = 'block';
+    document.getElementById('promptAvatarImg').style.display = 'none';
+    document.getElementById('promptAvatarImg').src = '';
+    document.getElementById('promptPhotoBtn').disabled = true;
+    document.getElementById('promptPhotoBtn').textContent = 'Upload & Start Game';
+    document.getElementById('promptPhotoError').textContent = '';
+    document.getElementById('promptAvatarLabel').textContent = 'Tap to upload a photo';
+    document.getElementById('photoPromptModal').classList.add('active');
+  } else {
+    window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(courtName);
+  }
+}
+
+function closePhotoPromptModal() {
+  document.getElementById('photoPromptModal').classList.remove('active');
+  pendingGameCourt = null;
+}
+
+function previewPromptAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = document.getElementById('promptAvatarImg');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('promptAvatarInitials').style.display = 'none';
+    document.getElementById('promptAvatarLabel').textContent = 'Tap to change photo';
+    document.getElementById('promptPhotoBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitPromptAvatar() {
+  const file = document.getElementById('promptAvatarInput').files[0];
+  if (!file || !currentUser) return;
+
+  const btn = document.getElementById('promptPhotoBtn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+  const errorEl = document.getElementById('promptPhotoError');
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const path = currentUser.id + '/avatar.' + ext;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+    currentProfile.avatar_url = publicUrl;
+    updateAvatarDisplays(publicUrl);
+
+    closePhotoPromptModal();
+
+    if (pendingGameCourt) {
+      window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(pendingGameCourt);
+    }
+
+  } catch (err) {
+    console.error('Prompt avatar upload error:', err);
+    errorEl.textContent = 'Upload failed. Try a smaller photo or try again.';
+    btn.disabled = false;
+    btn.textContent = 'Upload & Start Game';
+  }
+}
+
+/* ══════════════════════════════
    SUPABASE INTEGRATION LAYER
-   Falls back to mock data if not authenticated
    ══════════════════════════════ */
 let currentUser = null;
 let currentProfile = null;
@@ -2657,7 +3201,7 @@ async function initApp() {
   }
 
   try {
-    // ALWAYS load courts — no auth needed, public data
+    // Always load courts — no auth needed
     const courtData = await fetchCourts();
     if (courtData && courtData.length > 0) {
       dbCourts = courtData;
@@ -2689,16 +3233,31 @@ async function initApp() {
 
     currentProfile = await getUserProfile();
     if (currentProfile) {
-      // Swap "Get Started" button to profile avatar
+      // Swap "Get Started" to profile avatar/initials
       const btn = document.getElementById('profileBtn');
-      btn.textContent = currentProfile.initials || 'U';
-      btn.className = 'top-bar__profile';
-      const profileCard = document.querySelector('.profile-card__name');
-      if (profileCard) profileCard.textContent = currentProfile.name;
-      const profileAvatar = document.querySelector('.profile-card__avatar');
-      if (profileAvatar) profileAvatar.textContent = currentProfile.initials || 'U';
+      if (currentProfile.avatar_url) {
+        btn.innerHTML = `<img src="${currentProfile.avatar_url}" class="avatar-img" alt="Profile" onerror="this.parentElement.textContent='${currentProfile.initials || 'U'}'">`;
+        btn.className = 'top-bar__profile';
+      } else {
+        btn.textContent = currentProfile.initials || 'U';
+        btn.className = 'top-bar__profile';
+      }
+
+      const profileName = document.querySelector('.profile-card__name');
+      if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
+
+      const profileAvatar = document.getElementById('profileCardAvatar');
+      if (profileAvatar) {
+        if (currentProfile.avatar_url) {
+          profileAvatar.innerHTML = `<img src="${currentProfile.avatar_url}" class="avatar-img" alt="Profile">`;
+        } else {
+          profileAvatar.textContent = currentProfile.initials || 'U';
+        }
+      }
+
       const profileLocation = document.querySelector('.profile-card__location');
       if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
+
       const profileDays = document.getElementById('profileDays');
       if (profileDays) {
         const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
@@ -2706,6 +3265,9 @@ async function initApp() {
       }
       document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
       document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
+
+      // Check if onboarding is needed (new user without first_name)
+      checkOnboarding();
     }
 
     // Load user check-in history
@@ -2732,9 +3294,7 @@ async function initApp() {
 // Override openSheet to load real check-ins from Supabase
 const _originalOpenSheet = openSheet;
 openSheet = async function(court) {
-  // Set watching state
   court._watching = userWatches.has(court.id);
-  // Check report status
   if (currentUser && court.id && typeof court.id === 'string' && court.id.length > 10) {
     try {
       court._reported = await hasUserReported(court.id);
@@ -2747,7 +3307,8 @@ openSheet = async function(court) {
           initials: c.profiles?.initials || '??',
           time: timeAgo(new Date(c.checked_in_at)),
           badge: c.profiles?.is_founding_hooper || false,
-          userId: c.user_id
+          userId: c.user_id,
+          avatarUrl: c.profiles?.avatar_url || null
         }));
         court.players = checkins.length;
         court.status = checkins.length >= 10 ? 'packed' : checkins.length > 0 ? 'active' : 'quiet';
@@ -2761,7 +3322,6 @@ openSheet = async function(court) {
 const _originalCheckIn = checkIn;
 checkIn = async function(courtId) {
   if (currentUser && courtId && typeof courtId === 'string' && courtId.length > 10) {
-    // Proximity gate
     const court = courts.find(c => c.id === courtId);
     if (court) {
       const proximity = validateProximity(court);
@@ -2770,7 +3330,6 @@ checkIn = async function(courtId) {
         return;
       }
     }
-    // Enforce single-court check-in
     if (activeCheckin && activeCheckin.courtId !== courtId) {
       const oldName = activeCheckin.courtName;
       const newCourt = courts.find(c => c.id === courtId);
@@ -2780,11 +3339,9 @@ checkIn = async function(courtId) {
       performCheckout();
       await new Promise(r => setTimeout(r, 300));
     }
-    // Prevent duplicate at same court
     if (checkinCourts.has(courtId)) return;
     try {
       await checkInAtCourt(courtId);
-      // Refresh the court data
       const court = courts.find(c => c.id === courtId);
       if (court) {
         court.players++;
@@ -2807,14 +3364,19 @@ checkIn = async function(courtId) {
   }
 };
 
-// Override showPlayerCard to try Supabase first
+// Override showPlayerCard to use Supabase
 const _originalShowPlayerCard = showPlayerCard;
 showPlayerCard = async function(name, userId) {
   if (currentUser && userId) {
     try {
       const card = await getPlayerCard(userId);
       if (card) {
-        document.getElementById('pmAvatar').textContent = card.initials || '??';
+        const avatarEl = document.getElementById('pmAvatar');
+        if (card.avatar_url) {
+          avatarEl.innerHTML = `<img src="${card.avatar_url}" class="avatar-img" alt="${card.name}">`;
+        } else {
+          avatarEl.textContent = card.initials || '??';
+        }
         document.getElementById('pmName').textContent = card.name;
         document.getElementById('pmMeta').textContent = '📍 ' + (card.location || 'OC/LA');
         document.getElementById('pmBadge').style.display = card.is_founding_hooper ? 'inline-block' : 'none';
@@ -2843,9 +3405,6 @@ function timeAgo(date) {
   if (s < 86400) return Math.floor(s / 3600) + 'h ago';
   return Math.floor(s / 86400) + 'd ago';
 }
-
-// Update checkin-player onclick to pass userId when available
-const _originalCheckinHTML = '__patched__';
 
 // Init on load
 initApp();

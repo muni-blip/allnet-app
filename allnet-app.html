@@ -3467,31 +3467,49 @@ function showCareerCardProcessing() {
 async function processAvatar(storagePath) {
   showCareerCardProcessing();
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error('Not authenticated');
+    // FIX 1: getSession() can return null after OAuth redirect.
+    // Refresh session to guarantee a valid token before calling the edge function.
+    let token = null;
+    const { data: sessionData } = await supabase.auth.getSession();
+    token = sessionData?.session?.access_token;
 
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/process-avatar`, {
+    if (!token) {
+      const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
+      if (refreshErr || !refreshData?.session) throw new Error('Could not get auth session');
+      token = refreshData.session.access_token;
+    }
+
+    // FIX 2: Supabase Edge Functions require BOTH headers:
+    //   Authorization: Bearer <user-token>  — authenticates the user
+    //   apikey: <anon-key>                  — identifies the project to the gateway
+    // Without 'apikey', the gateway returns 401 before our function code runs at all.
+    const res = await fetch(SUPABASE_URL + '/functions/v1/process-avatar', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': 'Bearer ' + token,
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({ imagePath: storagePath })
     });
 
     const result = await res.json();
-    if (!res.ok) throw new Error(result.error || 'Background removal failed');
+    if (!res.ok) {
+      console.error('process-avatar response:', res.status, result);
+      throw new Error(result.error || ('Server error ' + res.status));
+    }
 
-    // Update local profile with new cutout URL + default cover
     currentProfile.avatar_cutout_url = result.cutoutUrl;
     if (!currentProfile.selected_cover) currentProfile.selected_cover = 'crossover';
 
     renderCareerCard();
     return result.cutoutUrl;
+
   } catch (err) {
+    // FIX 3 & 4: Show visible toast and always reset card — never leave stuck on spinner
     console.error('processAvatar error:', err);
-    renderCareerCard(); // Render placeholder — non-fatal
+    renderCareerCard();
+    showToast('Career card processing failed — try re-uploading your photo');
     return null;
   }
 }

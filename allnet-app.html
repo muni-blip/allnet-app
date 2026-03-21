@@ -1435,6 +1435,240 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════
+   CAREER CARD
+   CSS-composited: cover bg + cutout PNG overlay
+   ═══════════════════════════════════════════════ */
+.career-card-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.career-card {
+  width: 100%;
+  max-width: 343px;
+  aspect-ratio: 343 / 578;
+  border-radius: 16px;
+  border: 1px solid #F74501;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.9);
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Cover background layer */
+.career-card__cover {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.85;
+}
+
+/* Dark gradient overlay — fades bottom to black for text readability */
+.career-card__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.97) 0%,
+    rgba(0,0,0,0.7) 38%,
+    rgba(0,0,0,0.15) 65%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+/* Player cutout — sits on top of gradient */
+.career-card__cutout {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 82%;
+  width: auto;
+  object-fit: contain;
+  object-position: bottom center;
+  z-index: 2;
+  /* Soft fade into black at bottom so feet blend */
+  -webkit-mask-image: linear-gradient(to top, transparent 0%, black 14%);
+  mask-image: linear-gradient(to top, transparent 0%, black 14%);
+}
+
+/* Name block — top of card, split layout */
+.career-card__name-block {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+}
+
+.career-card__name-row {
+  display: flex;
+  align-items: center;
+}
+
+.career-card__name-row--first {
+  justify-content: flex-start;
+  padding: 14px 0 0 0;
+}
+
+.career-card__name-row--last {
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.career-card__name-text {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 8vw, 38px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  line-height: 1;
+  padding: 4px 14px;
+}
+
+.career-card__name-accent {
+  height: 8px;
+  flex: 1;
+  max-width: 80px;
+}
+
+.career-card__name-accent--orange { background: #F74501; }
+.career-card__name-accent--blue   { background: #3B82F6; }
+
+/* Bottom stats block */
+.career-card__bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  padding: 0 14px 14px;
+}
+
+/* W / L / D row */
+.career-card__wld {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 10px;
+}
+
+.career-card__wld-col {
+  text-align: center;
+}
+
+.career-card__wld-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.12em;
+  display: block;
+}
+
+.career-card__wld-value {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 9vw, 44px);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  display: block;
+}
+
+/* Rating rows */
+.career-card__ratings {
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.career-card__rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.career-card__rating-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.7);
+}
+
+.career-card__rating-value {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.career-card__rating-value--skill { color: #F74501; }
+.career-card__rating-value--social { color: var(--yellow); }
+
+/* Placeholder / processing states */
+.career-card__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(20,20,20,0.9);
+}
+
+.career-card__placeholder-icon {
+  font-size: 36px;
+  opacity: 0.5;
+}
+
+.career-card__placeholder-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.career-card__processing {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(0,0,0,0.88);
+  z-index: 10;
+}
+
+.career-card__processing-spinner {
+  font-size: 32px;
+  animation: spin-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes spin-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.6; }
+}
+
+.career-card__processing-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════
    ONBOARDING MODAL (post-OAuth: name + photo)
    ═══════════════════════════════════════════════ */
 .onboarding-modal {
@@ -1840,6 +2074,17 @@ html, body {
         <div class="profile-stat">
           <div class="profile-stat__value" id="profileCourts">0</div>
           <div class="profile-stat__label">Courts</div>
+        </div>
+      </div>
+
+      <!-- Career Card -->
+      <div class="profile-section-title" id="careerCardSectionTitle">// Career Card</div>
+      <div class="career-card-wrapper">
+        <div class="career-card" id="careerCard">
+          <div class="career-card__placeholder">
+            <div class="career-card__placeholder-icon">🏀</div>
+            <div class="career-card__placeholder-text">Upload a photo to generate your career card</div>
+          </div>
         </div>
       </div>
 
@@ -2788,6 +3033,7 @@ function openProfile() {
   updateProfileStats();
   renderHistory();
   renderWatchedCourts();
+  renderCareerCard();
   document.getElementById('profileScreen').classList.add('open');
 }
 
@@ -2903,7 +3149,11 @@ async function handleProfileAvatarChange(input) {
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
     currentProfile.avatar_url = publicUrl;
     updateAvatarDisplays(publicUrl);
-    showToast('Profile photo updated 🏀');
+    showToast('Profile photo updated — removing background... ⚡');
+    // Process avatar in background — card will update when done
+    processAvatar(path).then(() => {
+      showToast('Career card updated 🏀');
+    }).catch(err => console.error('processAvatar failed (non-fatal):', err));
   } catch (err) {
     console.error('Profile avatar upload failed:', err);
     avatarEl.textContent = currentProfile?.initials || 'U';
@@ -3061,6 +3311,9 @@ async function submitOnboardAvatar() {
     closeOnboarding();
     showToast('Welcome to AllNet, ' + currentProfile.first_name + '! 🏀');
 
+    // Kick off background removal after onboarding closes — non-blocking
+    processAvatar(path).catch(err => console.error('processAvatar failed (non-fatal):', err));
+
   } catch (err) {
     console.error('Avatar upload error:', err);
     errorEl.textContent = 'Upload failed. Try a smaller photo or try again.';
@@ -3097,6 +3350,146 @@ function updateAvatarDisplays(url) {
   const profileAvatar = document.getElementById('profileCardAvatar');
   if (profileAvatar) {
     profileAvatar.innerHTML = `<img src="${url}" class="avatar-img" alt="Profile" onerror="this.parentElement.textContent='${currentProfile?.initials || 'U'}'">`;
+  }
+}
+
+/* ══════════════════════════════
+   COVERS CATALOG
+   Static asset paths — files must be
+   pushed to GitHub repo root alongside HTML
+   ══════════════════════════════ */
+const COVERS = {
+  crossover: 'Crossover.png',
+  rally:     'Rally.png',
+  flowstate: 'Flowstate.png'
+};
+
+/* ══════════════════════════════
+   RENDER CAREER CARD
+   CSS-composited: cover bg + cutout PNG
+   ══════════════════════════════ */
+function renderCareerCard() {
+  const cardEl = document.getElementById('careerCard');
+  if (!cardEl) return;
+
+  const cutoutUrl   = currentProfile?.avatar_cutout_url;
+  const cover       = currentProfile?.selected_cover || 'crossover';
+  const coverFile   = COVERS[cover] || COVERS.crossover;
+  const firstName   = (currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '').toUpperCase();
+  const lastName    = (currentProfile?.last_name  || currentProfile?.name?.split(' ').slice(1).join(' ') || '').toUpperCase();
+  const wins        = currentProfile?.wins   || 0;
+  const losses      = currentProfile?.losses || 0;
+  const draws       = currentProfile?.draws  || 0;
+  const skillRating = currentProfile?.skill_rating  ? Number(currentProfile.skill_rating).toFixed(1)  : '—';
+  const socialRating= currentProfile?.social_rating ? Number(currentProfile.social_rating).toFixed(1) : '—';
+
+  if (!cutoutUrl) {
+    cardEl.innerHTML = `
+      <div class="career-card__cover" style="background-image:url('${coverFile}')"></div>
+      <div class="career-card__gradient"></div>
+      <div class="career-card__placeholder">
+        <div class="career-card__placeholder-icon">📷</div>
+        <div class="career-card__placeholder-text">Upload a photo to generate your career card</div>
+      </div>`;
+    return;
+  }
+
+  cardEl.innerHTML = `
+    <div class="career-card__cover" style="background-image:url('${coverFile}')"></div>
+    <div class="career-card__gradient"></div>
+    <img class="career-card__cutout" src="${cutoutUrl}" alt="${firstName} ${lastName}" onerror="this.style.display='none'">
+
+    <div class="career-card__name-block">
+      <div class="career-card__name-row career-card__name-row--first">
+        <div class="career-card__name-text">${firstName}</div>
+        <div class="career-card__name-accent career-card__name-accent--orange"></div>
+      </div>
+      <div class="career-card__name-row career-card__name-row--last">
+        <div class="career-card__name-accent career-card__name-accent--blue"></div>
+        <div class="career-card__name-text">${lastName}</div>
+      </div>
+    </div>
+
+    <div class="career-card__bottom">
+      <div class="career-card__wld">
+        <div class="career-card__wld-col">
+          <span class="career-card__wld-label">W</span>
+          <span class="career-card__wld-value">${wins}</span>
+        </div>
+        <div class="career-card__wld-col">
+          <span class="career-card__wld-label">L</span>
+          <span class="career-card__wld-value">${losses}</span>
+        </div>
+        <div class="career-card__wld-col">
+          <span class="career-card__wld-label">D</span>
+          <span class="career-card__wld-value">${draws}</span>
+        </div>
+      </div>
+      <div class="career-card__ratings">
+        <div class="career-card__rating-row">
+          <span class="career-card__rating-label">SKILL RATING</span>
+          <span class="career-card__rating-value career-card__rating-value--skill">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="#F74501"><rect x="0" y="0" width="6" height="14" rx="1"/><rect x="8" y="0" width="6" height="14" rx="1"/></svg>
+            ${skillRating}
+          </span>
+        </div>
+        <div class="career-card__rating-row">
+          <span class="career-card__rating-label">SOCIAL RATING</span>
+          <span class="career-card__rating-value career-card__rating-value--social">
+            ★ ${socialRating}
+          </span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function showCareerCardProcessing() {
+  const cardEl = document.getElementById('careerCard');
+  if (!cardEl) return;
+  const cover = currentProfile?.selected_cover || 'crossover';
+  cardEl.innerHTML = `
+    <div class="career-card__cover" style="background-image:url('${COVERS[cover] || COVERS.crossover}')"></div>
+    <div class="career-card__gradient"></div>
+    <div class="career-card__processing">
+      <div class="career-card__processing-spinner">⚡</div>
+      <div class="career-card__processing-label">Removing background...</div>
+    </div>`;
+}
+
+/* ══════════════════════════════
+   PROCESS AVATAR via Edge Function
+   Calls remove.bg, saves cutout,
+   updates profile + re-renders card
+   ══════════════════════════════ */
+async function processAvatar(storagePath) {
+  showCareerCardProcessing();
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error('Not authenticated');
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/process-avatar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ imagePath: storagePath })
+    });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Background removal failed');
+
+    // Update local profile with new cutout URL + default cover
+    currentProfile.avatar_cutout_url = result.cutoutUrl;
+    if (!currentProfile.selected_cover) currentProfile.selected_cover = 'crossover';
+
+    renderCareerCard();
+    return result.cutoutUrl;
+  } catch (err) {
+    console.error('processAvatar error:', err);
+    renderCareerCard(); // Render placeholder — non-fatal
+    return null;
   }
 }
 
@@ -3174,6 +3567,9 @@ async function submitPromptAvatar() {
     updateAvatarDisplays(publicUrl);
 
     closePhotoPromptModal();
+
+    // Kick off background removal — non-blocking, navigates to game after
+    processAvatar(path).catch(err => console.error('processAvatar failed (non-fatal):', err));
 
     if (pendingGameCourt) {
       window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(pendingGameCourt);
@@ -3265,6 +3661,9 @@ async function initApp() {
       }
       document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
       document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
+
+      // Render career card with loaded profile data
+      renderCareerCard();
 
       // Check if onboarding is needed (new user without first_name)
       checkOnboarding();

@@ -3355,13 +3355,16 @@ function updateAvatarDisplays(url) {
 
 /* ══════════════════════════════
    COVERS CATALOG
-   Static asset paths — files must be
-   pushed to GitHub repo root alongside HTML
+   Served from Supabase Storage public bucket.
+   To add a new cover: upload to the 'covers' bucket
+   and add an entry here — no code deploy needed.
    ══════════════════════════════ */
+const SUPABASE_COVERS_URL = 'https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
+
 const COVERS = {
-  crossover: 'Crossover.png',
-  rally:     'Rally.png',
-  flowstate: 'Flowstate.png'
+  crossover: SUPABASE_COVERS_URL + '/Crossover.png',
+  rally:     SUPABASE_COVERS_URL + '/Rally.png',
+  flowstate: SUPABASE_COVERS_URL + '/Flowstate.png'
 };
 
 /* ══════════════════════════════

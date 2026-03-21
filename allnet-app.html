@@ -2407,6 +2407,13 @@ async function toggleWatch(courtId) {
     if (!error) {
       userWatches.delete(courtId);
       updateWatchingChipVisibility();
+      // If viewing Watching filter and no more watches, reset to All Courts
+      if (currentFilter === 'watching' && userWatches.size === 0) {
+        currentFilter = 'all';
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+      }
+      renderMarkers();
       if (court) { court._watching = false; openSheet(court); }
       showToast('You will no longer be notified when players check into ' + (court?.name || 'this court'));
     }
@@ -2418,6 +2425,7 @@ async function toggleWatch(courtId) {
     if (!error) {
       userWatches.add(courtId);
       updateWatchingChipVisibility();
+      renderMarkers();
       if (court) { court._watching = true; openSheet(court); }
       showToast('You will now be notified when more players check into ' + (court?.name || 'this court'));
     }
@@ -2614,6 +2622,13 @@ async function unwatchFromProfile(courtId) {
     const court = courts.find(c => c.id === courtId);
     if (court) court._watching = false;
     updateWatchingChipVisibility();
+    // If viewing Watching filter and no more watches, reset to All Courts
+    if (currentFilter === 'watching' && userWatches.size === 0) {
+      currentFilter = 'all';
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+    }
+    renderMarkers();
     renderWatchedCourts();
     showToast('You will no longer be notified when players check into ' + (court?.name || 'this court'));
   }

@@ -3879,6 +3879,70 @@ function timeAgo(date) {
 // Init on load
 initApp();
 
+// ── Auth state listener ──
+// Catches OAuth redirects where the session token arrives in the URL hash
+// AFTER initApp() already ran and found no user. Without this, users who
+// just signed in via Google/Apple still see "Get Started" until they reload.
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session && !currentUser) {
+    // User just signed in (OAuth redirect) — run the user-specific setup
+    console.log('AllNet: Auth state SIGNED_IN — loading user profile');
+    currentUser = session.user;
+    try {
+      currentProfile = await getUserProfile();
+      if (currentProfile) {
+        const btn = document.getElementById('profileBtn');
+        btn.className = 'top-bar__profile';
+        btn.innerHTML = buildCompositeAvatar();
+
+        const profileName = document.querySelector('.profile-card__name');
+        if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
+
+        const profileAvatar = document.getElementById('profileCardAvatar');
+        if (profileAvatar) profileAvatar.innerHTML = buildCompositeAvatar();
+
+        const profileLocation = document.querySelector('.profile-card__location');
+        if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
+
+        const profileDays = document.getElementById('profileDays');
+        if (profileDays) {
+          const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
+          profileDays.textContent = daysSince || 1;
+        }
+        document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
+        document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
+
+        renderCareerCard();
+        checkOnboarding();
+      }
+
+      const myCheckins = await getUserCheckins(currentUser.id);
+      if (myCheckins) {
+        userCheckins = myCheckins.map(c => ({
+          courtId: c.court_id,
+          courtName: c.courts?.name || 'Unknown',
+          time: new Date(c.checked_in_at)
+        }));
+        myCheckins.forEach(c => checkinCourts.add(c.court_id));
+        updateProfileStats();
+      }
+
+      await loadUserWatches();
+      console.log('AllNet: User profile loaded via auth state change — ' + currentProfile?.name);
+    } catch (err) {
+      console.error('AllNet: Failed to load profile on auth state change', err);
+    }
+  }
+
+  if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    currentProfile = null;
+    const btn = document.getElementById('profileBtn');
+    btn.className = 'top-bar__cta';
+    btn.textContent = 'Get Started';
+  }
+});
+
 </script>
 
 </body>

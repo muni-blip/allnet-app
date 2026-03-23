@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<style>
+/* ═══ Stars Page Specific Styles ═══ */
+html, body { height: auto; overflow: auto; }
+
+.stars-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 40px;
+}
+
+.stars-topbar {
+  position: sticky; top: 0; z-index: 100;
+  padding: 14px 16px;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(16px);
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.stars-topbar__back {
+  background: none; border: none; color: var(--text-secondary);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-body); display: flex; align-items: center; gap: 6px;
+}
+
+.stars-topbar__back:hover { color: var(--text-primary); }
+
+.stars-topbar__title {
+  flex: 1; font-family: var(--font-display); font-size: 18px;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+.stars-topbar__balance {
+  font-family: var(--font-display); font-size: 16px; font-weight: 700;
+  color: var(--yellow); display: flex; align-items: center; gap: 5px;
+}
+
+/* Balance Hero */
+.balance-hero {
+  text-align: center; padding: 40px 20px 32px;
+  background: linear-gradient(180deg, rgba(250,204,21,0.06) 0%, transparent 100%);
+}
+
+.balance-hero__label {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.balance-hero__amount {
+  font-family: var(--font-display); font-size: 56px; font-weight: 700;
+  color: var(--yellow); line-height: 1; margin-bottom: 6px;
+}
+
+.balance-hero__stars-label {
+  font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+}
+
+/* Tabs */
+.stars-tabs {
+  display: flex; gap: 0; padding: 0 16px;
+  border-bottom: 1px solid var(--border); margin-bottom: 0;
+}
+
+.stars-tab {
+  flex: 1; padding: 12px 8px; text-align: center;
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; transition: var(--transition);
+}
+
+.stars-tab:hover { color: var(--text-secondary); }
+
+.stars-tab.active {
+  color: var(--yellow); border-bottom-color: var(--yellow);
+}
+
+.stars-tab--disabled {
+  opacity: 0.35; cursor: not-allowed;
+}
+
+/* Tab Panels */
+.tab-panel { display: none; padding: 20px 16px; }
+.tab-panel.active { display: block; }
+
+/* Transaction List */
+.tx-list { display: flex; flex-direction: column; gap: 8px; }
+
+.tx-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+
+.tx-item__icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+
+.tx-item__icon--earn { background: rgba(250,204,21,0.1); }
+.tx-item__icon--spend { background: rgba(239,68,68,0.1); }
+
+.tx-item__info { flex: 1; }
+
+.tx-item__desc { font-size: 14px; font-weight: 600; }
+
+.tx-item__meta {
+  font-size: 11px; color: var(--text-muted);
+  font-family: var(--font-mono); margin-top: 2px;
+}
+
+.tx-item__amount {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tx-item__amount--positive { color: var(--yellow); }
+.tx-item__amount--negative { color: var(--red); }
+
+.tx-empty {
+  text-align: center; padding: 40px 20px; color: var(--text-muted);
+  font-size: 14px; line-height: 1.6;
+}
+
+/* Covers Grid */
+.covers-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.cover-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: var(--transition); position: relative;
+}
+
+.cover-card:hover { border-color: var(--border-light); }
+.cover-card.owned { border-color: var(--green-live); }
+.cover-card.equipped { border-color: var(--yellow); box-shadow: 0 0 12px rgba(250,204,21,0.15); }
+
+.cover-card__preview {
+  width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+}
+
+.cover-card__info { padding: 12px; }
+
+.cover-card__name {
+  font-family: var(--font-display); font-size: 15px; font-weight: 700;
+  text-transform: uppercase; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.cover-card__rarity {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 2px 6px; border-radius: 100px;
+}
+
+.cover-card__rarity--common { background: rgba(107,107,107,0.2); color: var(--text-muted); }
+.cover-card__rarity--rare { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.cover-card__rarity--legendary { background: rgba(255,90,31,0.15); color: var(--orange); }
+
+.cover-card__price {
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 4px; margin-bottom: 10px;
+}
+
+.cover-card__price--free { color: var(--green-live); }
+
+.cover-card__btn {
+  width: 100%; padding: 8px; border-radius: var(--radius-sm);
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; border: none; transition: var(--transition);
+}
+
+.cover-card__btn--buy {
+  background: var(--yellow); color: #000;
+}
+
+.cover-card__btn--buy:hover { filter: brightness(1.1); }
+
+.cover-card__btn--buy:disabled {
+  background: var(--border-light); color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.cover-card__btn--equip {
+  background: transparent; color: var(--green-live);
+  border: 1px solid var(--green-live);
+}
+
+.cover-card__btn--equip:hover { background: rgba(34,197,94,0.1); }
+
+.cover-card__btn--equipped {
+  background: transparent; color: var(--yellow);
+  border: 1px solid var(--yellow); cursor: default;
+}
+
+.cover-card__badge {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 4px 8px; border-radius: 100px;
+  backdrop-filter: blur(8px);
+}
+
+.cover-card__badge--owned {
+  background: rgba(34,197,94,0.2); color: var(--green-live);
+  border: 1px solid rgba(34,197,94,0.3);
+}
+
+.cover-card__badge--equipped {
+  background: rgba(250,204,21,0.2); color: var(--yellow);
+  border: 1px solid rgba(250,204,21,0.3);
+}
+
+/* Coming Soon Panel */
+.coming-soon {
+  text-align: center; padding: 60px 20px;
+}
+
+.coming-soon__icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+
+.coming-soon__title {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  text-transform: uppercase; margin-bottom: 8px; color: var(--text-secondary);
+}
+
+.coming-soon__desc {
+  font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 280px;
+  margin: 0 auto;
+}
+
+/* How to earn section */
+.earn-section {
+  margin-top: 24px; padding: 20px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.earn-section__title {
+  font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-secondary); margin-bottom: 14px;
+}
+
+.earn-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+
+.earn-row:last-child { border-bottom: none; }
+
+.earn-row__label { font-size: 14px; color: var(--text-secondary); }
+
+.earn-row__amount {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  color: var(--yellow);
+}
+
+.earn-row__amount--coming {
+  color: var(--text-muted); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+/* Loading state */
+.stars-loading {
+  text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px;
+}
+
+/* Alert modal (reuse from app) */
+.alert-modal {
+  display: none; position: fixed; inset: 0; z-index: 2500;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 24px;
+}
+.alert-modal.active { display: flex; }
+.alert-modal__card {
+  background: var(--bg-card); border: 1px solid var(--border-light);
+  border-radius: 20px; padding: 36px 28px 28px; width: 90%; max-width: 340px;
+  text-align: center; animation: alertSlideUp 0.25s ease forwards;
+}
+@keyframes alertSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.alert-modal__icon { font-size: 36px; margin-bottom: 14px; }
+.alert-modal__title {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.alert-modal__message {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px;
+}
+</style>
+</head>
+<body>
+
+<div class="stars-page" id="starsPage">
+  <!-- Top Bar -->
+  <div class="stars-topbar">
+    <button class="stars-topbar__back" onclick="window.location.href='allnet-app.html'">← Back</button>
+    <div class="stars-topbar__title">Stars</div>
+    <div class="stars-topbar__balance" id="topBalance">⭐ —</div>
+  </div>
+
+  <!-- Balance Hero -->
+  <div class="balance-hero">
+    <div class="balance-hero__label">Your Balance</div>
+    <div class="balance-hero__amount" id="heroBalance">—</div>
+    <div class="balance-hero__stars-label">⭐ Stars</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="stars-tabs">
+    <button class="stars-tab active" data-tab="overview" onclick="switchTab('overview', this)">Overview</button>
+    <button class="stars-tab" data-tab="covers" onclick="switchTab('covers', this)">Covers</button>
+    <button class="stars-tab stars-tab--disabled" data-tab="sprays" onclick="return false">Sprays</button>
+    <button class="stars-tab stars-tab--disabled" data-tab="cashout" onclick="return false">Cash Out</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div class="tab-panel active" id="panel-overview">
+    <div class="earn-section">
+      <div class="earn-section__title">// How to Earn</div>
+      <div class="earn-row">
+        <span class="earn-row__label">🏀 Welcome bonus</span>
+        <span class="earn-row__amount">+750 ⭐</span>
+      </div>
+      <div class="earn-row">
+        <span class="earn-row__label">🏆 Win a game</span>
+        <span class="earn-row__amount earn-row__amount--coming">Coming Soon</span>
+      </div>
+      <div class="earn-row">
+        <span class="earn-row__label">🤝 Lose a game</span>
+        <span class="earn-row__amount earn-row__amount--coming">Coming Soon</span>
+      </div>
+      <div class="earn-row">
+        <span class="earn-row__label">🔥 Win streak bonus</span>
+        <span class="earn-row__amount earn-row__amount--coming">Coming Soon</span>
+      </div>
+      <div class="earn-row">
+        <span class="earn-row__label">📨 Refer a friend</span>
+        <span class="earn-row__amount earn-row__amount--coming">Coming Soon</span>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <div class="earn-section__title" style="padding:0 0 14px;">// Transaction History</div>
+      <div class="tx-list" id="txList">
+        <div class="stars-loading">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Covers Tab -->
+  <div class="tab-panel" id="panel-covers">
+    <div class="covers-grid" id="coversGrid">
+      <div class="stars-loading">Loading covers...</div>
+    </div>
+  </div>
+
+  <!-- Sprays Tab -->
+  <div class="tab-panel" id="panel-sprays">
+    <div class="coming-soon">
+      <div class="coming-soon__icon">🎨</div>
+      <div class="coming-soon__title">Sprays Coming Soon</div>
+      <div class="coming-soon__desc">React to match results with custom spray animations. Earn stars from games to unlock them.</div>
+    </div>
+  </div>
+
+  <!-- Cash Out Tab -->
+  <div class="tab-panel" id="panel-cashout">
+    <div class="coming-soon">
+      <div class="coming-soon__icon">💰</div>
+      <div class="coming-soon__title">Cash Out Coming Soon</div>
+      <div class="coming-soon__desc">Convert your stars to real money. 1,000 stars = $1. Play more games to stack up.</div>
+    </div>
+  </div>
+
+  <!-- Alert Modal -->
+  <div class="alert-modal" id="alertModal" onclick="if(event.target===this)closeAlertModal()">
+    <div class="alert-modal__card">
+      <div class="alert-modal__icon" id="alertIcon">⭐</div>
+      <div class="alert-modal__title" id="alertTitle"></div>
+      <div class="alert-modal__message" id="alertMessage"></div>
+      <button class="btn btn--primary" id="alertBtn" onclick="closeAlertModal()" style="width:100%;flex:none;">Got It</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-helpers.js"></script>
+<script>
+/* ══════════════════════════════
+   STARS PAGE — AllNet
+   ══════════════════════════════ */
+let currentUser = null;
+let currentProfile = null;
+let starsBalance = 0;
+let userPurchases = new Set();
+let storeItems = [];
+
+// ── Alert Modal ──
+function showAlert(title, message, opts = {}) {
+  document.getElementById('alertIcon').textContent = opts.icon || '⭐';
+  document.getElementById('alertTitle').textContent = title;
+  document.getElementById('alertMessage').textContent = message;
+  document.getElementById('alertBtn').textContent = opts.btnText || 'Got It';
+  document.getElementById('alertModal').classList.add('active');
+}
+
+function closeAlertModal() {
+  document.getElementById('alertModal').classList.remove('active');
+}
+
+// ── Tab Switching ──
+function switchTab(tab, el) {
+  if (el.classList.contains('stars-tab--disabled')) return;
+  document.querySelectorAll('.stars-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ── Update Balance Displays ──
+function updateBalanceDisplay() {
+  document.getElementById('heroBalance').textContent = starsBalance.toLocaleString();
+  document.getElementById('topBalance').textContent = '⭐ ' + starsBalance.toLocaleString();
+}
+
+// ── Load Transactions ──
+async function loadTransactions() {
+  const { data, error } = await supabase
+    .from('stars_transactions')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('status', 'confirmed')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const list = document.getElementById('txList');
+
+  if (error || !data || data.length === 0) {
+    list.innerHTML = '<div class="tx-empty">No transactions yet. Your welcome bonus should appear shortly!</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(tx => {
+    const isEarn = tx.amount > 0;
+    const icon = tx.type === 'welcome_bonus' ? '🎁'
+      : tx.type === 'match_win' ? '🏆'
+      : tx.type === 'match_loss' ? '🤝'
+      : tx.type === 'purchase' ? '🛒'
+      : tx.type === 'referral' ? '📨'
+      : tx.type === 'streak' ? '🔥' : '⭐';
+    const timeStr = timeAgo(new Date(tx.created_at));
+    return `<div class="tx-item">
+      <div class="tx-item__icon tx-item__icon--${isEarn ? 'earn' : 'spend'}">${icon}</div>
+      <div class="tx-item__info">
+        <div class="tx-item__desc">${tx.description || tx.type.replace(/_/g, ' ')}</div>
+        <div class="tx-item__meta">${timeStr}</div>
+      </div>
+      <div class="tx-item__amount tx-item__amount--${isEarn ? 'positive' : 'negative'}">
+        ${isEarn ? '+' : ''}${tx.amount} ⭐
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Load Store & Purchases ──
+async function loadCoversStore() {
+  // Load store items
+  const { data: items } = await supabase
+    .from('store_items')
+    .select('*')
+    .eq('type', 'cover')
+    .order('price_stars', { ascending: true });
+
+  if (!items) return;
+  storeItems = items;
+
+  // Load user purchases
+  const { data: purchases } = await supabase
+    .from('user_purchases')
+    .select('item_id')
+    .eq('user_id', currentUser.id);
+
+  if (purchases) {
+    userPurchases = new Set(purchases.map(p => p.item_id));
+  }
+
+  // Free covers are always "owned"
+  items.forEach(item => {
+    if (item.price_stars === 0) userPurchases.add(item.id);
+  });
+
+  renderCoversGrid();
+}
+
+function renderCoversGrid() {
+  const grid = document.getElementById('coversGrid');
+  const equippedCover = currentProfile?.selected_cover || 'crossover';
+
+  grid.innerHTML = storeItems.map(item => {
+    const owned = userPurchases.has(item.id);
+    const equipped = equippedCover === item.slug;
+    const canAfford = starsBalance >= item.price_stars;
+    const isFree = item.price_stars === 0;
+
+    let btnHtml;
+    if (equipped) {
+      btnHtml = '<button class="cover-card__btn cover-card__btn--equipped">✓ Equipped</button>';
+    } else if (owned) {
+      btnHtml = `<button class="cover-card__btn cover-card__btn--equip" onclick="equipCover('${item.slug}')">Equip</button>`;
+    } else {
+      btnHtml = `<button class="cover-card__btn cover-card__btn--buy" ${canAfford ? '' : 'disabled'} onclick="purchaseCover('${item.id}', '${item.name}', ${item.price_stars})">
+        ${canAfford ? 'Buy for ' + item.price_stars + ' ⭐' : 'Need ' + item.price_stars + ' ⭐'}
+      </button>`;
+    }
+
+    let badgeHtml = '';
+    if (equipped) badgeHtml = '<div class="cover-card__badge cover-card__badge--equipped">Equipped</div>';
+    else if (owned) badgeHtml = '<div class="cover-card__badge cover-card__badge--owned">Owned</div>';
+
+    return `<div class="cover-card ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}">
+      ${badgeHtml}
+      <img class="cover-card__preview" src="${item.preview_url}" alt="${item.name}" loading="lazy">
+      <div class="cover-card__info">
+        <div class="cover-card__name">
+          ${item.name}
+          <span class="cover-card__rarity cover-card__rarity--${item.rarity}">${item.rarity}</span>
+        </div>
+        <div class="cover-card__price ${isFree ? 'cover-card__price--free' : ''}">
+          ${isFree ? '✓ Free' : item.price_stars + ' ⭐'}
+        </div>
+        ${btnHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Purchase Cover ──
+async function purchaseCover(itemId, itemName, price) {
+  if (starsBalance < price) {
+    showAlert('Not Enough Stars', `You need ${price} stars to buy ${itemName}. You have ${starsBalance}.`, { icon: '⭐' });
+    return;
+  }
+
+  if (!confirm(`Buy ${itemName} for ${price} ⭐?`)) return;
+
+  try {
+    const { data, error } = await supabase.rpc('purchase_store_item', { p_item_id: itemId });
+
+    if (error) throw error;
+    if (data.error) {
+      showAlert('Purchase Failed', data.error, { icon: '⚠️' });
+      return;
+    }
+
+    // Update local state
+    starsBalance = data.new_balance;
+    userPurchases.add(itemId);
+    updateBalanceDisplay();
+    renderCoversGrid();
+    showAlert('Cover Unlocked!', `${data.item} is now yours. Equip it from the Covers tab.`, { icon: '🎉' });
+
+    // Auto-equip
+    await equipCover(data.slug);
+
+  } catch (err) {
+    console.error('Purchase error:', err);
+    showAlert('Purchase Failed', err.message, { icon: '⚠️' });
+  }
+}
+
+// ── Equip Cover ──
+async function equipCover(slug) {
+  try {
+    const { error } = await supabase.from('profiles')
+      .update({ selected_cover: slug })
+      .eq('id', currentUser.id);
+
+    if (error) throw error;
+
+    currentProfile.selected_cover = slug;
+    renderCoversGrid();
+  } catch (err) {
+    console.error('Equip error:', err);
+    showAlert('Failed', 'Could not equip cover. Try again.', { icon: '⚠️' });
+  }
+}
+
+// ── Time Ago ──
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return 'Just now';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  if (s < 604800) return Math.floor(s / 86400) + 'd ago';
+  return date.toLocaleDateString();
+}
+
+// ── Init ──
+async function initStarsPage() {
+  // Get session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'allnet-app.html';
+    return;
+  }
+
+  currentUser = session.user;
+  currentProfile = await getUserProfile(currentUser.id);
+
+  if (!currentProfile) {
+    window.location.href = 'allnet-app.html';
+    return;
+  }
+
+  starsBalance = currentProfile.stars_balance || 0;
+  updateBalanceDisplay();
+
+  // Load data
+  await Promise.all([loadTransactions(), loadCoversStore()]);
+}
+
+initStarsPage();
+</script>
+</body>
+</html>

@@ -320,8 +320,9 @@ function renderPlayer(player) {
 function renderMatchCard(match) {
   const teamA = typeof match.team_a === 'string' ? JSON.parse(match.team_a) : match.team_a;
   const teamB = typeof match.team_b === 'string' ? JSON.parse(match.team_b) : match.team_b;
-  const winnerTeam = match.winner === 'a' ? teamA : teamB;
-  const loserTeam = match.winner === 'a' ? teamB : teamA;
+  const isDraw = match.winner === 'draw';
+  const winnerTeam = isDraw ? teamA : (match.winner === 'a' ? teamA : teamB);
+  const loserTeam = isDraw ? teamB : (match.winner === 'a' ? teamB : teamA);
   const time = timeAgo(new Date(match.played_at));
 
   return `<div class="match-card">
@@ -334,14 +335,14 @@ function renderMatchCard(match) {
       ${match.court_name}
     </div>
     <div class="match-card__teams">
-      <div class="match-card__team match-card__team--winner">
-        <div class="match-card__team-result match-card__team-result--w">W</div>
+      <div class="match-card__team ${isDraw ? 'match-card__team--loser' : 'match-card__team--winner'}">
+        <div class="match-card__team-result ${isDraw ? 'match-card__team-result--l' : 'match-card__team-result--w'}">${isDraw ? 'D' : 'W'}</div>
         <div class="match-card__team-players">
           ${winnerTeam.map(p => renderPlayer(p)).join('')}
         </div>
       </div>
       <div class="match-card__team match-card__team--loser">
-        <div class="match-card__team-result match-card__team-result--l">L</div>
+        <div class="match-card__team-result match-card__team-result--l">${isDraw ? 'D' : 'L'}</div>
         <div class="match-card__team-players">
           ${loserTeam.map(p => renderPlayer(p)).join('')}
         </div>

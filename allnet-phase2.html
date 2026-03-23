@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Game Session</title>
+<link rel="stylesheet" href="css/app.css">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -168,7 +169,40 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
 </head>
 <body>
 <div class="app">
-  <div class="top-bar"><a href="allnet-app.html" class="top-bar__logo"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a><button class="top-bar__back" id="backBtn" onclick="goBack()">← Back</button></div>
+  <!-- ═══ Nav Drawer ═══ -->
+  <div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer__header">
+      <svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
+      <button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button>
+    </div>
+    <nav class="nav-drawer__links">
+      <a href="allnet-app.html" class="nav-drawer__link nav-drawer__link--active" data-nav="play">
+        <span class="nav-drawer__link-icon">🏀</span>
+        <span class="nav-drawer__link-label">Play</span>
+      </a>
+      <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity">
+        <span class="nav-drawer__link-icon">📊</span>
+        <span class="nav-drawer__link-label">Activity</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false">
+        <span class="nav-drawer__link-icon">🏆</span>
+        <span class="nav-drawer__link-label">Career</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+      <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars">
+        <span class="nav-drawer__link-icon">⭐</span>
+        <span class="nav-drawer__link-label">Stars</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false">
+        <span class="nav-drawer__link-icon">⚙️</span>
+        <span class="nav-drawer__link-label">Settings</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+    </nav>
+    <div class="nav-drawer__footer"></div>
+  </div>
+  <div class="top-bar"><button class="top-bar__menu" onclick="openNavDrawer()" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect y="3" width="20" height="2" rx="1" fill="white"/><rect y="9" width="20" height="2" rx="1" fill="white"/><rect y="15" width="20" height="2" rx="1" fill="white"/></svg></button><a href="allnet-app.html" class="top-bar__logo"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a><button class="top-bar__back" id="backBtn" onclick="goBack()">← Back</button></div>
   <div class="screen active" id="screenChoose">
     <div class="court-context"><div class="court-context__dot"></div><div class="court-context__name">Loading...</div><div class="court-context__badge">Checked In</div></div>
     <div class="section-label">// Game Session</div><h1 class="screen-title">Ready to play?</h1><p class="screen-sub">Start a game to log it, or join someone else's.</p>
@@ -241,193 +275,9 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-helpers.js"></script>
 <script>
-// ═══════════════════════════════════════════════
-// AllNet — Supabase Client Configuration
-// AllNet Supabase Client
-// ═══════════════════════════════════════════════
-
-var SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
-
-let sb;
-try {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch(e) {
-  console.error('Supabase client creation failed:', e);
-}
-var supabase = sb;
-console.log('Supabase client:', supabase ? 'OK' : 'FAILED', 'window.supabase:', typeof window.supabase);
-
-// ── Auth helpers ──
-async function getUser() {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
-}
-
-async function getUserProfile() {
-  const user = await getUser();
-  if (!user) return null;
-  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-  return data;
-}
-
-async function signUp(email, password, name, location) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { name, location } }
-  });
-  if (error) throw error;
-  // Update profile with location after auto-creation
-  if (data.user) {
-    await supabase.from('profiles').update({ location, name, initials: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) }).eq('id', data.user.id);
-  }
-  return data;
-}
-
-async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  return data;
-}
-
-async function signOut() {
-  await supabase.auth.signOut();
-}
-
-// ── Court helpers ──
-async function fetchCourts() {
-  const { data, error } = await supabase.from('courts').select('*').order('name');
-  if (error) throw error;
-  return data;
-}
-
-async function fetchCourtWithCheckins(courtId) {
-  const { data: court } = await supabase.from('courts').select('*').eq('id', courtId).single();
-  const { data: checkins } = await supabase
-    .from('checkins')
-    .select('*, profiles(name, initials, is_founding_hooper)')
-    .eq('court_id', courtId)
-    .gte('checked_in_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
-    .order('checked_in_at', { ascending: false });
-  return { court, checkins: checkins || [] };
-}
-
-// ── Check-in helpers ──
-async function checkInAtCourt(courtId) {
-  const user = await getUser();
-  if (!user) throw new Error('Not logged in');
-  const { data, error } = await supabase.from('checkins').insert({ user_id: user.id, court_id: courtId });
-  if (error) throw error;
-  return data;
-}
-
-async function getUserCheckins(userId) {
-  const { data } = await supabase
-    .from('checkins')
-    .select('*, courts(name)')
-    .eq('user_id', userId)
-    .order('checked_in_at', { ascending: false })
-    .limit(20);
-  return data || [];
-}
-
-// ── Game session helpers ──
-async function createGameSession(courtId, format, teamSize, codeA, codeB) {
-  const user = await getUser();
-  if (!user) throw new Error('Not logged in');
-  const { data, error } = await supabase.from('game_sessions').insert({
-    court_id: courtId,
-    creator_id: user.id,
-    format,
-    team_size: teamSize,
-    code_a: codeA,
-    code_b: codeB,
-    status: 'lobby'
-  }).select().single();
-  if (error) throw error;
-  // Add creator to team A
-  await supabase.from('game_players').insert({ game_id: data.id, user_id: user.id, team: 'a' });
-  return data;
-}
-
-async function joinGameByCode(code) {
-  // Find game by either code
-  const { data: gameA } = await supabase.from('game_sessions')
-    .select('*').eq('code_a', code).in('status', ['lobby', 'active']).single();
-  const { data: gameB } = await supabase.from('game_sessions')
-    .select('*').eq('code_b', code).in('status', ['lobby', 'active']).single();
-  
-  const game = gameA || gameB;
-  if (!game) throw new Error('Game not found');
-  
-  const team = gameA ? 'a' : 'b';
-  const user = await getUser();
-  await supabase.from('game_players').insert({ game_id: game.id, user_id: user.id, team });
-  return { game, team };
-}
-
-async function startGameSession(gameId) {
-  await supabase.from('game_sessions').update({ status: 'active', started_at: new Date().toISOString() }).eq('id', gameId);
-}
-
-async function endGameSession(gameId, durationSeconds) {
-  await supabase.from('game_sessions').update({
-    status: 'review',
-    ended_at: new Date().toISOString(),
-    duration_seconds: durationSeconds
-  }).eq('id', gameId);
-}
-
-async function completeGame(gameId, winner) {
-  await supabase.from('game_sessions').update({ status: 'completed', winner }).eq('id', gameId);
-}
-
-async function getGamePlayers(gameId) {
-  const { data } = await supabase.from('game_players')
-    .select('*, profiles(name, initials, is_founding_hooper)')
-    .eq('game_id', gameId);
-  return data || [];
-}
-
-// ── Review helpers ──
-async function submitReview(gameId, revieweeId, skillRating, socialRating, relationship) {
-  const user = await getUser();
-  if (!user) throw new Error('Not logged in');
-  const { error } = await supabase.from('reviews').insert({
-    game_id: gameId,
-    reviewer_id: user.id,
-    reviewee_id: revieweeId,
-    skill_rating: skillRating,
-    social_rating: socialRating,
-    relationship
-  });
-  if (error) throw error;
-}
-
-// ── Player card helper ──
-async function getPlayerCard(userId) {
-  const { data } = await supabase.from('player_cards').select('*').eq('id', userId).single();
-  return data;
-}
-
-// ── Realtime subscriptions ──
-function subscribeToCheckins(courtId, callback) {
-  return supabase.channel('checkins-' + courtId)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins', filter: 'court_id=eq.' + courtId }, callback)
-    .subscribe();
-}
-
-function subscribeToGamePlayers(gameId, callback) {
-  return supabase.channel('game-' + gameId)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_players', filter: 'game_id=eq.' + gameId }, callback)
-    .subscribe();
-}
-
-</script>
-<script>
-const FORMAT_SIZES={'1v1':1,'2v2':2,'3v3':3,'5v5':5};
+const FORMAT_SIZES={'1v1':1,'2v2':2,'3v3':3,'4v4':4,'5v5':5};
 
 // Read court name from URL param
 const urlParams=new URLSearchParams(window.location.search);
@@ -668,28 +518,38 @@ let currentProfile = null;
 let dbGameId = null;
 let dbCourtId = null;
 
+// Nav drawer
+function openNavDrawer() {
+  document.getElementById('navOverlay').classList.add('open');
+  document.getElementById('navDrawer').classList.add('open');
+}
+function closeNavDrawer() {
+  document.getElementById('navOverlay').classList.remove('open');
+  document.getElementById('navDrawer').classList.remove('open');
+}
+
 async function initPhase2() {
-  if (typeof supabase === 'undefined' || typeof getUser !== 'function') {
+  if (typeof supabase === 'undefined' || typeof fetchCourts !== 'function') {
     console.log('Phase 2: Running in demo mode');
     return;
   }
   try {
-    currentUser = await getUser();
-    if (!currentUser) { console.log('Phase 2: Not logged in'); return; }
-    currentProfile = await getUserProfile();
+    // Use getSession pattern (same as app.js)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { console.log('Phase 2: Not logged in'); return; }
+    currentUser = session.user;
+    currentProfile = await getUserProfile(currentUser.id);
     if (currentProfile) {
-      // Update ME object with real user data
-      ME.name = currentProfile.name;
-      ME.initials = currentProfile.initials;
+      ME.name = currentProfile.name || ME.name;
+      ME.initials = currentProfile.initials || ME.initials;
     }
-    // Try to resolve court ID from URL court name
-    const courtName = new URLSearchParams(window.location.search).get('court');
-    if (courtName) {
-      const courts = await fetchCourts();
-      const match = courts.find(c => c.name === courtName);
-      if (match) dbCourtId = match.id;
+    // Resolve court ID from URL
+    const courtParam = new URLSearchParams(window.location.search).get('court');
+    if (courtParam) {
+      const { data: courts } = await supabase.from('courts').select('id,name').ilike('name', courtParam);
+      if (courts && courts.length > 0) dbCourtId = courts[0].id;
     }
-    console.log('Phase 2: Connected as ' + currentProfile?.name);
+    console.log('Phase 2: Connected as ' + currentProfile?.name + ', court: ' + dbCourtId);
   } catch (err) { console.error('Phase 2 init error:', err); }
 }
 
@@ -729,13 +589,47 @@ endGame = async function() {
   }
 };
 
-// Override finalizeGame to persist reviews and game result
+// Override finalizeGame to persist reviews, match_feed, and stars
 const _origFinalizeGame = finalizeGame;
 finalizeGame = async function() {
   _origFinalizeGame(); // Run original (updates local stats + UI)
+
+  // Always post to match_feed (even without dbGameId — works for demo games)
+  try {
+    const myTeam = G.teamA.some(p => p.isYou) ? 'a' : 'b';
+    let feedWinner;
+    if (G.winner === 'me') feedWinner = myTeam;
+    else if (G.winner === 'them') feedWinner = myTeam === 'a' ? 'b' : 'a';
+    else feedWinner = 'draw';
+
+    const teamAData = G.teamA.map(p => ({
+      name: p.name, initials: p.initials,
+      avatar_url: (p.isYou && currentProfile?.avatar_url) ? currentProfile.avatar_url : null
+    }));
+    const teamBData = G.teamB.map(p => ({
+      name: p.name, initials: p.initials,
+      avatar_url: (p.isYou && currentProfile?.avatar_url) ? currentProfile.avatar_url : null
+    }));
+
+    const courtParam = new URLSearchParams(window.location.search).get('court') || 'Unknown Court';
+
+    const { error: feedError } = await supabase.from('match_feed').insert({
+      court_id: dbCourtId || null,
+      court_name: courtParam,
+      format: G.format,
+      team_a: teamAData,
+      team_b: teamBData,
+      winner: feedWinner,
+      played_at: new Date().toISOString()
+    });
+
+    if (feedError) console.error('match_feed insert error:', feedError);
+    else console.log('Match posted to Activity feed');
+  } catch (err) { console.error('match_feed error:', err); }
+
+  // Complete game in game_sessions DB
   if (dbGameId && currentUser) {
     try {
-      // Determine winner in DB format
       const myTeam = G.teamA.some(p => p.isYou) ? 'a' : 'b';
       let dbWinner;
       if (G.winner === 'me') dbWinner = myTeam === 'a' ? 'team_a' : 'team_b';
@@ -744,13 +638,39 @@ finalizeGame = async function() {
 
       await completeGame(dbGameId, dbWinner);
       console.log('Game completed in DB, winner:', dbWinner);
-
-      // Submit reviews (only for real users in the game - in prototype, mock players aren't in DB)
-      // In production, each review.reviewee_id would be a real UUID
-      // For now we log that reviews would be submitted
-      console.log('Reviews to submit:', G.reviews.length, 'players reviewed');
     } catch (err) { console.error('DB finalize error:', err); }
   }
+
+  // Award stars
+  if (currentUser) {
+    try {
+      const starsAmount = G.winner === 'me' ? 100 : 50; // Win = 100, Loss/Draw = 50
+      const starsType = G.winner === 'me' ? 'match_win' : 'match_loss';
+      const starsDesc = G.winner === 'me'
+        ? 'Won ' + G.format + ' at ' + (new URLSearchParams(window.location.search).get('court') || 'Court')
+        : (G.winner === 'draw' ? 'Drew ' : 'Lost ') + G.format + ' at ' + (new URLSearchParams(window.location.search).get('court') || 'Court');
+
+      const { error: starsError } = await supabase.from('stars_transactions').insert({
+        user_id: currentUser.id,
+        amount: starsAmount,
+        type: starsType,
+        game_id: dbGameId || null,
+        description: starsDesc,
+        status: 'confirmed'
+      });
+
+      if (starsError) {
+        console.error('Stars award error:', starsError);
+      } else {
+        // Update cached balance
+        const newBalance = (currentProfile?.stars_balance || 0) + starsAmount;
+        await supabase.from('profiles').update({ stars_balance: newBalance }).eq('id', currentUser.id);
+        console.log('Stars awarded: +' + starsAmount + ' (' + starsType + '), new balance: ' + newBalance);
+      }
+    } catch (err) { console.error('Stars error:', err); }
+  }
+
+  console.log('Reviews collected:', G.reviews.length, 'players reviewed');
 };
 
 initPhase2();

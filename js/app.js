@@ -1631,14 +1631,15 @@ async function logOut() {
 // 2. Then run initApp to load courts + proactive session check
 // ═══════════════════════════════════════════════
 
-// Step 1: Auth listener — catches OAuth redirects and sign-outs.
+// Step 1: Auth listener — catches OAuth redirects (SIGNED_IN / INITIAL_SESSION) and sign-outs.
 // Registered BEFORE initApp so no events are missed.
+// Both this and getSession() in initApp have !currentUser guards to prevent double-loading.
 supabase.auth.onAuthStateChange(async (event, session) => {
   console.log('AllNet: Auth event:', event, 'session:', !!session, 'currentUser:', !!currentUser);
 
-  if (event === 'SIGNED_IN' && session && !currentUser) {
-    // Fresh OAuth redirect completing
-    console.log('AllNet: SIGNED_IN — loading profile');
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !currentUser) {
+    // Fresh OAuth redirect or returning user with stored session
+    console.log('AllNet: ' + event + ' — loading profile');
     await loadUserProfile(session.user);
   }
 

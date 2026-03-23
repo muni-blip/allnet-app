@@ -1213,11 +1213,23 @@ function renderCareerCard() {
   const coverFile   = COVERS[cover] || COVERS.crossover;
   const firstName   = (currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '').toUpperCase();
   const lastName    = (currentProfile?.last_name  || currentProfile?.name?.split(' ').slice(1).join(' ') || '').toUpperCase();
-  const wins        = currentProfile?.wins   || 0;
-  const losses      = currentProfile?.losses || 0;
-  const draws       = currentProfile?.draws  || 0;
-  const skillRating = currentProfile?.skill_rating  ? Number(currentProfile.skill_rating).toFixed(1)  : '—';
   const socialRating= currentProfile?.social_rating ? Number(currentProfile.social_rating).toFixed(1) : '—';
+
+  // Get active division stats
+  const div = profileActiveDivision;
+  const ds = profileDivisionStats[div];
+  const hasPlayed = ds && ds.games_count > 0;
+  const wins = hasPlayed ? ds.wins : '—';
+  const losses = hasPlayed ? ds.losses : '—';
+  const draws = hasPlayed ? ds.draws : '—';
+  const skillRating = hasPlayed && ds.skill_rating !== null ? ds.skill_rating.toFixed(1) : '—';
+  const isNew = hasPlayed && ds.games_count <= 5;
+
+  // Division tabs HTML
+  const divisions = ['1v1','2v2','3v3','4v4','5v5'];
+  const tabsHtml = divisions.map(d =>
+    `<span class="career-card__div-tab${d === div ? ' career-card__div-tab--active' : ''}" onclick="switchProfileCardDivision('${d}')">${d}</span>`
+  ).join('');
 
   if (!cutoutUrl) {
     cardEl.innerHTML = `
@@ -1247,7 +1259,7 @@ function renderCareerCard() {
     </div>
 
     <div class="career-card__bottom">
-      <div class="career-card__wld">
+      <div class="career-card__wld" id="profileCardWLD">
         <div class="career-card__wld-col">
           <span class="career-card__wld-label">W</span>
           <span class="career-card__wld-value">${wins}</span>
@@ -1261,22 +1273,66 @@ function renderCareerCard() {
           <span class="career-card__wld-value">${draws}</span>
         </div>
       </div>
-      <div class="career-card__ratings">
-        <div class="career-card__rating-row">
-          <span class="career-card__rating-label">SKILL RATING</span>
-          <span class="career-card__rating-value career-card__rating-value--skill">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="#F74501"><rect x="0" y="0" width="6" height="14" rx="1"/><rect x="8" y="0" width="6" height="14" rx="1"/></svg>
-            ${skillRating}
-          </span>
-        </div>
+      <div class="career-card__ratings" id="profileCardRatings">
         <div class="career-card__rating-row">
           <span class="career-card__rating-label">SOCIAL RATING</span>
           <span class="career-card__rating-value career-card__rating-value--social">
             ★ ${socialRating}
           </span>
         </div>
+        <div class="career-card__rating-row">
+          <span class="career-card__rating-label" id="profileSkillLabel">${div} SKILL RATING</span>
+          <span class="career-card__rating-value career-card__rating-value--skill">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="#F74501"><rect x="0" y="0" width="6" height="14" rx="1"/><rect x="8" y="0" width="6" height="14" rx="1"/></svg>
+            <span id="profileSkillValue">${skillRating}</span>
+            ${isNew ? '<span class="career-card__new-badge">NEW</span>' : ''}
+          </span>
+        </div>
+      </div>
+      <div class="career-card__div-tabs" id="profileDivTabs">
+        ${tabsHtml}
       </div>
     </div>`;
+}
+
+function switchProfileCardDivision(div) {
+  profileActiveDivision = div;
+  const ds = profileDivisionStats[div];
+  const hasPlayed = ds && ds.games_count > 0;
+
+  // Update W/L/D
+  const wldEl = document.getElementById('profileCardWLD');
+  if (wldEl) {
+    wldEl.innerHTML = `
+      <div class="career-card__wld-col"><span class="career-card__wld-label">W</span><span class="career-card__wld-value">${hasPlayed ? ds.wins : '—'}</span></div>
+      <div class="career-card__wld-col"><span class="career-card__wld-label">L</span><span class="career-card__wld-value">${hasPlayed ? ds.losses : '—'}</span></div>
+      <div class="career-card__wld-col"><span class="career-card__wld-label">D</span><span class="career-card__wld-value">${hasPlayed ? ds.draws : '—'}</span></div>`;
+  }
+
+  // Update skill label and value
+  const labelEl = document.getElementById('profileSkillLabel');
+  if (labelEl) labelEl.textContent = div + ' SKILL RATING';
+
+  const skillVal = document.getElementById('profileSkillValue');
+  if (skillVal) skillVal.textContent = hasPlayed && ds.skill_rating !== null ? ds.skill_rating.toFixed(1) : '—';
+
+  // Update NEW badge — find the skill rating-value span and toggle badge
+  const skillRow = skillVal?.closest('.career-card__rating-value');
+  if (skillRow) {
+    const existingBadge = skillRow.querySelector('.career-card__new-badge');
+    if (existingBadge) existingBadge.remove();
+    if (hasPlayed && ds.games_count <= 5) {
+      const badge = document.createElement('span');
+      badge.className = 'career-card__new-badge';
+      badge.textContent = 'NEW';
+      skillRow.appendChild(badge);
+    }
+  }
+
+  // Update tabs
+  document.querySelectorAll('.career-card__div-tab').forEach(tab => {
+    tab.classList.toggle('career-card__div-tab--active', tab.textContent === div);
+  });
 }
 
 function showCareerCardProcessing() {
@@ -1444,6 +1500,8 @@ async function submitPromptAvatar() {
    ══════════════════════════════ */
 let currentUser = null;
 let currentProfile = null;
+let profileDivisionStats = {}; // {division: {skill_rating, wins, losses, draws, games_count}}
+let profileActiveDivision = '1v1'; // Currently selected tab on career card
 let dbCourts = null;
 
 async function initApp() {
@@ -1647,6 +1705,23 @@ async function loadUserProfile(user) {
 
       renderCareerCard();
       checkOnboarding();
+
+      // Load division stats for career card tabs
+      try {
+        const { data: divStats } = await supabase.from('player_division_stats').select('*').eq('user_id', user.id);
+        if (divStats) {
+          divStats.forEach(ds => {
+            profileDivisionStats[ds.division] = {
+              skill_rating: ds.skill_rating !== null ? parseFloat(ds.skill_rating) : null,
+              wins: ds.wins || 0,
+              losses: ds.losses || 0,
+              draws: ds.draws || 0,
+              games_count: ds.games_count || 0
+            };
+          });
+          renderCareerCard(); // Re-render with division data
+        }
+      } catch (err) { console.error('Failed to load division stats:', err); }
 
       // Show star balance in top bar
       const starsEl = document.getElementById('topBarStars');

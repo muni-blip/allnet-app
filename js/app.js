@@ -1426,10 +1426,18 @@ async function initApp() {
       setTimeout(autoRequestLocation, 500);
     }
 
-    // User auth is handled entirely by onAuthStateChange listener below.
-    // This eliminates a race condition where initApp's getUser() could
-    // overwrite currentUser that the INITIAL_SESSION handler already set.
-    console.log('AllNet: Courts loaded, auth handled by onAuthStateChange');
+    // Proactive session check — reads from localStorage, handles token refresh.
+    // The auth listener above handles SIGNED_IN (OAuth redirects) and SIGNED_OUT.
+    // This handles the common case: returning user with a stored session.
+    if (!currentUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && session.user) {
+        console.log('AllNet: getSession found stored session — loading profile');
+        await loadUserProfile(session.user);
+      } else {
+        console.log('AllNet: No stored session — user not logged in');
+      }
+    }
   } catch (err) {
     console.error('AllNet: Supabase init error', err);
   }
@@ -1550,130 +1558,104 @@ function timeAgo(date) {
   return Math.floor(s / 86400) + 'd ago';
 }
 
-// Init on load
-initApp();
+/* ══════════════════════════════
+   LOAD USER PROFILE — single source of truth
+   Called from auth listener and initApp getSession fallback.
+   Never duplicated.
+   ══════════════════════════════ */
+async function loadUserProfile(user) {
+  if (!user) return;
+  currentUser = user;
+  try {
+    currentProfile = await getUserProfile();
+    if (currentProfile) {
+      const btn = document.getElementById('profileBtn');
+      btn.className = 'top-bar__profile';
+      btn.innerHTML = buildCompositeAvatar();
 
-// ── Auth state listener ──
-// Sole handler for all auth state. initApp() only loads courts.
-// Handles:
-//   INITIAL_SESSION — returning user with session in localStorage
-//   SIGNED_IN — fresh OAuth redirect completing
-//   TOKEN_REFRESHED — expired token auto-refreshed by Supabase
+      const profileName = document.querySelector('.profile-card__name');
+      if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
+
+      const profileAvatar = document.getElementById('profileCardAvatar');
+      if (profileAvatar) profileAvatar.innerHTML = buildCompositeAvatar();
+
+      const profileLocation = document.querySelector('.profile-card__location');
+      if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
+
+      const profileDays = document.getElementById('profileDays');
+      if (profileDays) {
+        const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
+        profileDays.textContent = daysSince || 1;
+      }
+      document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
+      document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
+
+      renderCareerCard();
+      checkOnboarding();
+    }
+
+    const myCheckins = await getUserCheckins(currentUser.id);
+    if (myCheckins) {
+      userCheckins = myCheckins.map(c => ({
+        courtId: c.court_id,
+        courtName: c.courts?.name || 'Unknown',
+        time: new Date(c.checked_in_at)
+      }));
+      myCheckins.forEach(c => checkinCourts.add(c.court_id));
+      updateProfileStats();
+    }
+
+    await loadUserWatches();
+    console.log('AllNet: Profile loaded — ' + currentProfile?.name);
+  } catch (err) {
+    console.error('AllNet: Failed to load profile', err);
+  }
+}
+
+/* ══════════════════════════════
+   LOG OUT
+   ══════════════════════════════ */
+async function logOut() {
+  try {
+    await supabase.auth.signOut();
+    closeProfile();
+    showToast('Logged out');
+  } catch (err) {
+    console.error('Sign out failed:', err);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// BOOT SEQUENCE — order matters
+// 1. Register auth listener FIRST (before any async work)
+// 2. Then run initApp to load courts + proactive session check
+// ═══════════════════════════════════════════════
+
+// Step 1: Auth listener — catches OAuth redirects and sign-outs.
+// Registered BEFORE initApp so no events are missed.
 supabase.auth.onAuthStateChange(async (event, session) => {
   console.log('AllNet: Auth event:', event, 'session:', !!session, 'currentUser:', !!currentUser);
 
-  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session && !currentUser) {
-    console.log('AllNet: Auth event ' + event + ' — loading user profile');
-    currentUser = session.user;
-    try {
-      currentProfile = await getUserProfile();
-      if (currentProfile) {
-        const btn = document.getElementById('profileBtn');
-        btn.className = 'top-bar__profile';
-        btn.innerHTML = buildCompositeAvatar();
-
-        const profileName = document.querySelector('.profile-card__name');
-        if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
-
-        const profileAvatar = document.getElementById('profileCardAvatar');
-        if (profileAvatar) profileAvatar.innerHTML = buildCompositeAvatar();
-
-        const profileLocation = document.querySelector('.profile-card__location');
-        if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
-
-        const profileDays = document.getElementById('profileDays');
-        if (profileDays) {
-          const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
-          profileDays.textContent = daysSince || 1;
-        }
-        document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
-        document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
-
-        renderCareerCard();
-        checkOnboarding();
-      }
-
-      const myCheckins = await getUserCheckins(currentUser.id);
-      if (myCheckins) {
-        userCheckins = myCheckins.map(c => ({
-          courtId: c.court_id,
-          courtName: c.courts?.name || 'Unknown',
-          time: new Date(c.checked_in_at)
-        }));
-        myCheckins.forEach(c => checkinCourts.add(c.court_id));
-        updateProfileStats();
-      }
-
-      await loadUserWatches();
-      console.log('AllNet: User profile loaded via ' + event + ' — ' + currentProfile?.name);
-    } catch (err) {
-      console.error('AllNet: Failed to load profile on auth state change', err);
-    }
+  if (event === 'SIGNED_IN' && session && !currentUser) {
+    // Fresh OAuth redirect completing
+    console.log('AllNet: SIGNED_IN — loading profile');
+    await loadUserProfile(session.user);
   }
 
   if (event === 'SIGNED_OUT') {
     currentUser = null;
     currentProfile = null;
+    userWatches = new Set();
+    userCheckins = [];
+    checkinCourts = new Set();
     const btn = document.getElementById('profileBtn');
     btn.className = 'top-bar__cta';
     btn.textContent = 'Get Started';
+    btn.onclick = () => handleProfileClick();
+    updateWatchingChipVisibility();
+    renderMarkers();
   }
 });
 
-// ── Proactive session check ──
-// onAuthStateChange INITIAL_SESSION can fire with session: null if the token
-// is mid-refresh. This fallback reads the session from localStorage directly
-// and kicks off profile loading if a valid session exists.
-setTimeout(async () => {
-  if (currentUser) return; // auth listener already handled it
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session && !currentUser) {
-      console.log('AllNet: Proactive getSession found valid session — loading profile');
-      currentUser = session.user;
-
-      currentProfile = await getUserProfile();
-      if (currentProfile) {
-        const btn = document.getElementById('profileBtn');
-        btn.className = 'top-bar__profile';
-        btn.innerHTML = buildCompositeAvatar();
-
-        const profileName = document.querySelector('.profile-card__name');
-        if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
-
-        const profileAvatar = document.getElementById('profileCardAvatar');
-        if (profileAvatar) profileAvatar.innerHTML = buildCompositeAvatar();
-
-        const profileLocation = document.querySelector('.profile-card__location');
-        if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
-
-        const profileDays = document.getElementById('profileDays');
-        if (profileDays) {
-          const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
-          profileDays.textContent = daysSince || 1;
-        }
-        document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
-        document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
-
-        renderCareerCard();
-        checkOnboarding();
-      }
-
-      const myCheckins = await getUserCheckins(currentUser.id);
-      if (myCheckins) {
-        userCheckins = myCheckins.map(c => ({
-          courtId: c.court_id,
-          courtName: c.courts?.name || 'Unknown',
-          time: new Date(c.checked_in_at)
-        }));
-        myCheckins.forEach(c => checkinCourts.add(c.court_id));
-        updateProfileStats();
-      }
-
-      await loadUserWatches();
-      console.log('AllNet: Profile loaded via getSession fallback — ' + currentProfile?.name);
-    }
-  } catch (err) {
-    console.error('AllNet: getSession fallback failed', err);
-  }
-}, 1500);
+// Step 2: Init app — load courts, then check for existing session
+initApp();

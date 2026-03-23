@@ -1422,66 +1422,14 @@ async function initApp() {
       renderMarkers();
       console.log('AllNet: ' + courts.length + ' courts loaded from Supabase');
 
-      // Now that courts are loaded, request location to activate radius filter
+      // Now that courts are loaded, request location to center map
       setTimeout(autoRequestLocation, 500);
     }
 
-    // User-specific data — only when logged in
-    currentUser = await getUser();
-    if (!currentUser) {
-      console.log('AllNet: Not logged in — courts loaded, user features disabled');
-      return;
-    }
-
-    currentProfile = await getUserProfile();
-    if (currentProfile) {
-      // Swap "Get Started" to composite avatar (cover + cutout) or initials
-      const btn = document.getElementById('profileBtn');
-      btn.className = 'top-bar__profile';
-      btn.innerHTML = buildCompositeAvatar();
-
-      const profileName = document.querySelector('.profile-card__name');
-      if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
-
-      const profileAvatar = document.getElementById('profileCardAvatar');
-      if (profileAvatar) {
-        profileAvatar.innerHTML = buildCompositeAvatar();
-      }
-
-      const profileLocation = document.querySelector('.profile-card__location');
-      if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
-
-      const profileDays = document.getElementById('profileDays');
-      if (profileDays) {
-        const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
-        profileDays.textContent = daysSince || 1;
-      }
-      document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
-      document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
-
-      // Render career card with loaded profile data
-      renderCareerCard();
-
-      // Check if onboarding is needed (new user without first_name)
-      checkOnboarding();
-    }
-
-    // Load user check-in history
-    const myCheckins = await getUserCheckins(currentUser.id);
-    if (myCheckins) {
-      userCheckins = myCheckins.map(c => ({
-        courtId: c.court_id,
-        courtName: c.courts?.name || 'Unknown',
-        time: new Date(c.checked_in_at)
-      }));
-      myCheckins.forEach(c => checkinCourts.add(c.court_id));
-      updateProfileStats();
-    }
-
-    // Load court watches
-    await loadUserWatches();
-
-    console.log('AllNet: Fully connected — ' + courts.length + ' courts, user: ' + currentProfile?.name);
+    // User auth is handled entirely by onAuthStateChange listener below.
+    // This eliminates a race condition where initApp's getUser() could
+    // overwrite currentUser that the INITIAL_SESSION handler already set.
+    console.log('AllNet: Courts loaded, auth handled by onAuthStateChange');
   } catch (err) {
     console.error('AllNet: Supabase init error', err);
   }
@@ -1606,12 +1554,15 @@ function timeAgo(date) {
 initApp();
 
 // ── Auth state listener ──
-// Handles both:
+// Sole handler for all auth state. initApp() only loads courts.
+// Handles:
 //   INITIAL_SESSION — returning user with session in localStorage
 //   SIGNED_IN — fresh OAuth redirect completing
-// Without INITIAL_SESSION handling, returning users see "Get Started" until manual reload.
+//   TOKEN_REFRESHED — expired token auto-refreshed by Supabase
 supabase.auth.onAuthStateChange(async (event, session) => {
-  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !currentUser) {
+  console.log('AllNet: Auth event:', event, 'session:', !!session, 'currentUser:', !!currentUser);
+
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session && !currentUser) {
     console.log('AllNet: Auth event ' + event + ' — loading user profile');
     currentUser = session.user;
     try {

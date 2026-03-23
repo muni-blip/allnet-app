@@ -226,6 +226,33 @@ map.on('load', () => {
 /* ══════════════════════════════
    CENTER MAP
    ══════════════════════════════ */
+/* ══════════════════════════════
+   NAV DRAWER
+   ══════════════════════════════ */
+function openNavDrawer() {
+  document.getElementById('navOverlay').classList.add('open');
+  document.getElementById('navDrawer').classList.add('open');
+}
+
+function closeNavDrawer() {
+  document.getElementById('navOverlay').classList.remove('open');
+  document.getElementById('navDrawer').classList.remove('open');
+}
+
+function updateNavDrawerUser() {
+  const navUser = document.getElementById('navUser');
+  if (!navUser) return;
+  if (currentUser && currentProfile) {
+    navUser.style.display = 'flex';
+    document.getElementById('navUserName').textContent = currentProfile.name || 'Player';
+    document.getElementById('navUserStars').textContent = '⭐ ' + (currentProfile.stars_balance || 0).toLocaleString();
+    const navAvatar = document.getElementById('navAvatar');
+    if (navAvatar) navAvatar.innerHTML = buildCompositeAvatar();
+  } else {
+    navUser.style.display = 'none';
+  }
+}
+
 function centerMap() {
   if (userLat && userLng) {
     map.flyTo({ center: [userLng, userLat], zoom: 12, duration: 1000 });
@@ -1621,6 +1648,7 @@ async function loadUserProfile(user) {
     }
 
     await loadUserWatches();
+    updateNavDrawerUser();
     console.log('AllNet: Profile loaded — ' + currentProfile?.name);
   } catch (err) {
     console.error('AllNet: Failed to load profile', err);
@@ -1676,6 +1704,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     // Hide star balance
     const starsEl = document.getElementById('topBarStars');
     if (starsEl) starsEl.style.display = 'none';
+    updateNavDrawerUser();
   }
 });
 

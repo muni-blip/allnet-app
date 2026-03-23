@@ -2061,3 +2061,28 @@ html, body {
 .search-area-btn:active {
   transform: translateX(-50%) scale(0.97);
 }
+
+/* ═══════════════════════════════════════════════
+   LOG OUT BUTTON
+   ═══════════════════════════════════════════════ */
+.logout-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  margin-bottom: 16px;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  color: var(--red);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: var(--red);
+}

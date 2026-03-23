@@ -1400,7 +1400,21 @@ async function initApp() {
   }
 
   try {
-    // Always load courts — no auth needed
+    // ── Step 1: Establish session FIRST ──
+    // On OAuth redirects, tokens are in the URL hash. getSession() detects and
+    // exchanges them. This MUST run before any other async work so the session
+    // is established before any authenticated API calls happen.
+    if (!currentUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && session.user) {
+        console.log('AllNet: getSession found session — loading profile');
+        await loadUserProfile(session.user);
+      } else {
+        console.log('AllNet: No session — user not logged in');
+      }
+    }
+
+    // ── Step 2: Load courts (no auth needed) ──
     const courtData = await fetchCourts();
     if (courtData && courtData.length > 0) {
       dbCourts = courtData;
@@ -1424,19 +1438,6 @@ async function initApp() {
 
       // Now that courts are loaded, request location to center map
       setTimeout(autoRequestLocation, 500);
-    }
-
-    // Proactive session check — reads from localStorage, handles token refresh.
-    // The auth listener above handles SIGNED_IN (OAuth redirects) and SIGNED_OUT.
-    // This handles the common case: returning user with a stored session.
-    if (!currentUser) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && session.user) {
-        console.log('AllNet: getSession found stored session — loading profile');
-        await loadUserProfile(session.user);
-      } else {
-        console.log('AllNet: No stored session — user not logged in');
-      }
     }
   } catch (err) {
     console.error('AllNet: Supabase init error', err);
@@ -1567,7 +1568,7 @@ async function loadUserProfile(user) {
   if (!user) return;
   currentUser = user;
   try {
-    currentProfile = await getUserProfile();
+    currentProfile = await getUserProfile(user.id);
     if (currentProfile) {
       const btn = document.getElementById('profileBtn');
       btn.className = 'top-bar__profile';

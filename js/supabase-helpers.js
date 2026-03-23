@@ -26,10 +26,10 @@ async function getUser() {
   return user;
 }
 
-async function getUserProfile() {
-  const user = await getUser();
-  if (!user) return null;
-  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+async function getUserProfile(userId) {
+  const id = userId || (await getUser())?.id;
+  if (!id) return null;
+  const { data } = await supabase.from('profiles').select('*').eq('id', id).single();
   return data;
 }
 

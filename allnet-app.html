@@ -14,9 +14,55 @@
 <div class="app" id="app">
   <!-- ═══ Top bar ═══ -->
   <div class="top-bar">
+    <button class="top-bar__menu" onclick="openNavDrawer()" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect y="3" width="20" height="2" rx="1" fill="white"/><rect y="9" width="20" height="2" rx="1" fill="white"/><rect y="15" width="20" height="2" rx="1" fill="white"/></svg>
+    </button>
     <a href="allnet-landing.html" class="top-bar__logo" style="text-decoration:none;"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a>
     <a href="allnet-stars.html" class="top-bar__stars" id="topBarStars" style="display:none;">⭐ <span id="topBarStarsCount">0</span></a>
     <button class="top-bar__cta" id="profileBtn" onclick="handleProfileClick()">Get Started</button>
+  </div>
+
+  <!-- ═══ Nav Drawer ═══ -->
+  <div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer__header">
+      <svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
+      <button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button>
+    </div>
+    <nav class="nav-drawer__links">
+      <a href="allnet-app.html" class="nav-drawer__link nav-drawer__link--active" data-nav="play">
+        <span class="nav-drawer__link-icon">🏀</span>
+        <span class="nav-drawer__link-label">Play</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="activity">
+        <span class="nav-drawer__link-icon">📊</span>
+        <span class="nav-drawer__link-label">Activity</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="career">
+        <span class="nav-drawer__link-icon">🏆</span>
+        <span class="nav-drawer__link-label">Career</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+      <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars">
+        <span class="nav-drawer__link-icon">⭐</span>
+        <span class="nav-drawer__link-label">Stars</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="settings">
+        <span class="nav-drawer__link-icon">⚙️</span>
+        <span class="nav-drawer__link-label">Settings</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+    </nav>
+    <div class="nav-drawer__footer">
+      <div class="nav-drawer__user" id="navUser" style="display:none;">
+        <div class="nav-drawer__user-avatar" id="navAvatar">U</div>
+        <div class="nav-drawer__user-info">
+          <div class="nav-drawer__user-name" id="navUserName">Player</div>
+          <div class="nav-drawer__user-stars" id="navUserStars">⭐ 0</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ Check-in nudge banner ═══ -->

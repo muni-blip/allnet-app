@@ -42,9 +42,9 @@
     </button>
     <div class="radius-select-wrapper" id="radiusWrapper">
       <select class="radius-select" id="radiusSelect" onchange="onRadiusChange(this.value)">
-        <option value="0">All Distances</option>
+        <option value="0" selected>Map Area</option>
         <option value="5">Within 5 mi</option>
-        <option value="10" selected>Within 10 mi</option>
+        <option value="10">Within 10 mi</option>
         <option value="15">Within 15 mi</option>
         <option value="25">Within 25 mi</option>
       </select>
@@ -54,6 +54,7 @@
   <!-- ═══ Map ═══ -->
   <div class="map-view">
     <div id="map"></div>
+    <button class="search-area-btn" id="searchAreaBtn" onclick="searchThisArea()">🔍 Search This Area</button>
     <button class="locate-btn" onclick="centerMap()" title="Center on OC">📍</button>
   </div>
 

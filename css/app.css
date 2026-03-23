@@ -2311,3 +2311,13 @@ html, body {
   font-family: var(--font-mono);
   margin-top: 2px;
 }
+
+/* Alert modal button row for confirm mode */
+.alert-modal__buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.alert-modal__buttons .alert-modal__btn {
+  flex: 1;
+}

@@ -36,6 +36,9 @@ function renderMarkers() {
   markers.forEach(m => m.remove());
   markers = [];
 
+  // Get current map viewport bounds for "Map Area" mode
+  const bounds = map.getBounds();
+
   courts.forEach(court => {
     if (currentFilter === 'watching') {
       if (!userWatches.has(court.id)) return;
@@ -44,9 +47,18 @@ function renderMarkers() {
     }
 
     if (nearMeActive && userLat !== null && userLng !== null) {
+      // Radius mode: filter by distance from user
       const dist = haversineMiles(userLat, userLng, court.lat, court.lng);
       if (dist > radiusMiles) return;
       court._distance = dist;
+    } else if (currentFilter !== 'watching') {
+      // Map Area mode: only show courts within viewport (with small padding)
+      const padLng = (bounds.getEast() - bounds.getWest()) * 0.1;
+      const padLat = (bounds.getNorth() - bounds.getSouth()) * 0.1;
+      if (court.lng < bounds.getWest() - padLng || court.lng > bounds.getEast() + padLng ||
+          court.lat < bounds.getSouth() - padLat || court.lat > bounds.getNorth() + padLat) {
+        return;
+      }
     }
 
     const isWatchedView = currentFilter === 'watching';
@@ -78,6 +90,10 @@ function renderMarkers() {
 
     markers.push(marker);
   });
+
+  // Track where markers were rendered so we can detect significant panning
+  if (typeof updateLastRenderCenter === 'function') updateLastRenderCenter();
+  if (typeof hideSearchAreaBtn === 'function') hideSearchAreaBtn();
 }
 
 /* ══════════════════════════════
@@ -98,7 +114,7 @@ function setFilter(filter, chipEl) {
    RADIUS FILTER — LOCATION-BASED
    Location stays client-side only. Never sent to server.
    ══════════════════════════════ */
-let radiusMiles = 10;
+let radiusMiles = 0;
 let nearMeActive = false;
 let userLat = null;
 let userLng = null;
@@ -118,10 +134,10 @@ function onRadiusChange(value) {
   const sel = document.getElementById('radiusSelect');
 
   if (radiusMiles === 0) {
+    // "Map Area" mode — show courts in current viewport, no radius filter
     nearMeActive = false;
     sel.classList.remove('active');
     renderMarkers();
-    map.flyTo({ center: [-117.83, 33.68], zoom: 10.5, duration: 800 });
     return;
   }
 
@@ -175,15 +191,26 @@ function autoRequestLocation() {
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         console.log('Auto-location acquired (client-side only)');
-        nearMeActive = true;
-        document.getElementById('radiusSelect').value = '10';
-        document.getElementById('radiusSelect').classList.add('active');
-        renderMarkers();
-        map.flyTo({ center: [userLng, userLat], zoom: 12, duration: 800 });
+
+        // Check if user is near any courts — if so, center map on them
+        // Stay in "Map Area" mode (viewport-based), don't activate radius filter
+        const nearbyCourts = courts.filter(c =>
+          haversineMiles(userLat, userLng, c.lat, c.lng) <= 25
+        );
+
+        if (nearbyCourts.length > 0) {
+          map.flyTo({ center: [userLng, userLat], zoom: 12, duration: 800 });
+          // Re-render after fly completes to show courts in new viewport
+          map.once('moveend', () => renderMarkers());
+        } else {
+          // User is far from all courts — stay on OC, render viewport courts
+          renderMarkers();
+          console.log('Auto-location: no courts nearby, staying on OC');
+        }
       },
       (err) => {
-        console.log('Auto-location denied or failed, showing all courts');
-        document.getElementById('radiusSelect').value = '0';
+        console.log('Auto-location denied or failed, showing courts in viewport');
+        renderMarkers();
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
     );
@@ -192,7 +219,8 @@ function autoRequestLocation() {
 
 map.on('load', () => {
   renderMarkers();
-  setTimeout(autoRequestLocation, 1000);
+  // Delay autoRequestLocation until courts are loaded
+  // initApp() will call autoRequestLocation after courts are populated
 });
 
 /* ══════════════════════════════
@@ -205,6 +233,63 @@ function centerMap() {
     map.flyTo({ center: [-117.83, 33.68], zoom: 10.5, duration: 1000 });
   }
 }
+
+/* ══════════════════════════════
+   SEARCH THIS AREA
+   Shows button when user pans map
+   significantly from last render
+   ══════════════════════════════ */
+let lastRenderCenter = null;
+
+function updateLastRenderCenter() {
+  const c = map.getCenter();
+  lastRenderCenter = { lng: c.lng, lat: c.lat };
+}
+
+function showSearchAreaBtn() {
+  document.getElementById('searchAreaBtn').classList.add('visible');
+}
+
+function hideSearchAreaBtn() {
+  document.getElementById('searchAreaBtn').classList.remove('visible');
+}
+
+function searchThisArea() {
+  // Switch to Map Area mode and render courts in current viewport
+  nearMeActive = false;
+  radiusMiles = 0;
+  document.getElementById('radiusSelect').value = '0';
+  document.getElementById('radiusSelect').classList.remove('active');
+
+  // Reset filter to "All Courts"
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+
+  renderMarkers();
+  hideSearchAreaBtn();
+
+  // Count visible markers for feedback
+  const count = markers.length;
+  if (count > 0) {
+    showToast(count + ' court' + (count !== 1 ? 's' : '') + ' in this area');
+  } else {
+    showToast('No courts found in this area');
+  }
+}
+
+// Detect significant map panning — show button so user can refresh courts in viewport
+map.on('moveend', () => {
+  if (!lastRenderCenter || courts.length === 0) return;
+
+  const c = map.getCenter();
+  const moved = Math.abs(c.lng - lastRenderCenter.lng) + Math.abs(c.lat - lastRenderCenter.lat);
+
+  // ~0.03 degrees ≈ 2 miles — show button after meaningful pan
+  if (moved > 0.03) {
+    showSearchAreaBtn();
+  }
+});
 
 /* ══════════════════════════════
    BOTTOM SHEET — COURT DETAIL
@@ -1336,6 +1421,9 @@ async function initApp() {
       });
       renderMarkers();
       console.log('AllNet: ' + courts.length + ' courts loaded from Supabase');
+
+      // Now that courts are loaded, request location to activate radius filter
+      setTimeout(autoRequestLocation, 500);
     }
 
     // User-specific data — only when logged in
@@ -1518,13 +1606,13 @@ function timeAgo(date) {
 initApp();
 
 // ── Auth state listener ──
-// Catches OAuth redirects where the session token arrives in the URL hash
-// AFTER initApp() already ran and found no user. Without this, users who
-// just signed in via Google/Apple still see "Get Started" until they reload.
+// Handles both:
+//   INITIAL_SESSION — returning user with session in localStorage
+//   SIGNED_IN — fresh OAuth redirect completing
+// Without INITIAL_SESSION handling, returning users see "Get Started" until manual reload.
 supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session && !currentUser) {
-    // User just signed in (OAuth redirect) — run the user-specific setup
-    console.log('AllNet: Auth state SIGNED_IN — loading user profile');
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !currentUser) {
+    console.log('AllNet: Auth event ' + event + ' — loading user profile');
     currentUser = session.user;
     try {
       currentProfile = await getUserProfile();
@@ -1566,7 +1654,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       }
 
       await loadUserWatches();
-      console.log('AllNet: User profile loaded via auth state change — ' + currentProfile?.name);
+      console.log('AllNet: User profile loaded via ' + event + ' — ' + currentProfile?.name);
     } catch (err) {
       console.error('AllNet: Failed to load profile on auth state change', err);
     }

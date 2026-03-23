@@ -1566,9 +1566,11 @@ function timeAgo(date) {
    ══════════════════════════════ */
 async function loadUserProfile(user) {
   if (!user) return;
+  console.log('AllNet: loadUserProfile called for', user.id);
   currentUser = user;
   try {
     currentProfile = await getUserProfile(user.id);
+    console.log('AllNet: getUserProfile returned:', currentProfile ? currentProfile.name : 'null');
     if (currentProfile) {
       const btn = document.getElementById('profileBtn');
       btn.className = 'top-bar__profile';
@@ -1640,8 +1642,11 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && !currentUser) {
     // Fresh OAuth redirect or returning user with stored session
-    console.log('AllNet: ' + event + ' — loading profile');
-    await loadUserProfile(session.user);
+    // Don't await inside the callback — let Supabase finish its internal
+    // auth setup first, then load the profile on the next tick.
+    console.log('AllNet: ' + event + ' — scheduling profile load');
+    const user = session.user;
+    setTimeout(() => loadUserProfile(user), 0);
   }
 
   if (event === 'SIGNED_OUT') {

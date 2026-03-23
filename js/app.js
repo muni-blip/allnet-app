@@ -144,7 +144,7 @@ function onRadiusChange(value) {
 
 function requestLocation(onSuccess) {
   if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser.');
+    showAlert('Not Supported', 'Geolocation is not supported by your browser.', { icon: '🚫' });
     return;
   }
   navigator.geolocation.getCurrentPosition(
@@ -156,9 +156,9 @@ function requestLocation(onSuccess) {
     },
     (err) => {
       if (err.code === 1) {
-        alert('Location access denied. Enable location in your browser settings to use the radius filter.');
+        showAlert('Location Denied', 'Enable location in your browser settings to use the radius filter.', { icon: '📍' });
       } else {
-        alert('Could not get your location. Please try again.');
+        showAlert('Location Error', 'Could not get your location. Please try again.', { icon: '📍' });
       }
       document.getElementById('radiusSelect').value = '0';
       document.getElementById('radiusSelect').classList.remove('active');
@@ -395,6 +395,28 @@ function showToast(message, isCheckin) {
   setTimeout(() => toast.classList.remove('visible'), 3500);
 }
 
+/* ══════════════════════════════
+   IN-APP ALERT MODAL
+   Replaces native alert() calls
+   ══════════════════════════════ */
+let alertCallback = null;
+
+function showAlert(title, message, opts = {}) {
+  const icon = opts.icon || '📍';
+  const btnText = opts.btnText || 'Got It';
+  alertCallback = opts.onClose || null;
+  document.getElementById('alertIcon').textContent = icon;
+  document.getElementById('alertTitle').textContent = title;
+  document.getElementById('alertMessage').textContent = message;
+  document.getElementById('alertBtn').textContent = btnText;
+  document.getElementById('alertModal').classList.add('active');
+}
+
+function closeAlertModal() {
+  document.getElementById('alertModal').classList.remove('active');
+  if (alertCallback) { alertCallback(); alertCallback = null; }
+}
+
 function getDirections(lat, lng) {
   window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
 }
@@ -422,10 +444,10 @@ async function oauthSignIn(provider) {
       options: { redirectTo: window.location.href }
     });
     if (error) {
-      alert('Sign-in failed: ' + error.message);
+      showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
     }
   } catch (err) {
-    alert('Sign-in error: ' + err.message);
+    showAlert('Sign-In Error', err.message, { icon: '⚠️' });
   }
 }
 
@@ -448,12 +470,12 @@ function validateProximity(court) {
 function handleProximityFailure(result, courtName) {
   if (result.reason === 'no_location') {
     requestLocation(() => {
-      alert('Location acquired! Please try checking in again.');
+      showAlert('Location Found', 'Got your location! Please try checking in again.', { icon: '✅' });
     });
     return;
   }
   if (result.reason === 'too_far') {
-    alert(`You're ${result.distance.toFixed(1)} miles from ${courtName}.\n\nYou need to be within ${CHECKIN_RADIUS_MILES} miles to check in.`);
+    showAlert('Too Far Away', `You're ${result.distance.toFixed(1)} miles from ${courtName}. You need to be within ${CHECKIN_RADIUS_MILES} miles to check in.`, { icon: '📍' });
   }
 }
 
@@ -505,12 +527,12 @@ async function submitReport() {
     showToast('Report submitted');
   } catch (err) {
     if (err.message && err.message.includes('duplicate')) {
-      alert('You have already reported this court.');
+      showAlert('Already Reported', 'You have already reported this court.', { icon: '⚑' });
       closeReportModal();
     } else {
       btn.disabled = false;
       btn.textContent = 'Submit Report';
-      alert('Failed to submit report: ' + err.message);
+      showAlert('Report Failed', 'Failed to submit report: ' + err.message, { icon: '⚠️' });
     }
   }
 }
@@ -1443,7 +1465,7 @@ checkIn = async function(courtId) {
       showToast(court?.name || 'Court', true);
     } catch (err) {
       console.error('Check-in failed:', err);
-      alert('Check-in failed: ' + err.message);
+      showAlert('Check-In Failed', err.message, { icon: '⚠️' });
     }
   } else {
     _originalCheckIn(courtId);

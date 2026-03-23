@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<style>
+html, body { height: auto; overflow: auto; }
+
+.activity-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 40px;
+}
+
+.activity-topbar {
+  position: sticky; top: 0; z-index: 100;
+  padding: 14px 16px;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(16px);
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-topbar__title {
+  flex: 1; font-family: var(--font-display); font-size: 18px;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* Filter tabs */
+.feed-filters {
+  display: flex; gap: 0; padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.feed-filter {
+  flex: 1; padding: 12px 8px; text-align: center;
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; transition: var(--transition);
+}
+
+.feed-filter:hover { color: var(--text-secondary); }
+
+.feed-filter.active {
+  color: var(--orange); border-bottom-color: var(--orange);
+}
+
+.feed-filter--disabled {
+  opacity: 0.35; cursor: not-allowed;
+}
+
+/* Match cards */
+.feed-list {
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.match-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.match-card__header {
+  padding: 14px 16px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.match-card__format {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 100px;
+  background: rgba(255,90,31,0.1); color: var(--orange);
+  border: 1px solid rgba(255,90,31,0.2);
+}
+
+.match-card__meta {
+  font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+  display: flex; align-items: center; gap: 6px;
+}
+
+.match-card__court {
+  padding: 0 16px 12px;
+  font-size: 13px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px;
+}
+
+.match-card__court-icon { opacity: 0.6; }
+
+/* Teams display */
+.match-card__teams {
+  padding: 0 16px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.match-card__team {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.match-card__team--winner {
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.15);
+}
+
+.match-card__team--loser {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+}
+
+.match-card__team-result {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: white;
+}
+
+.match-card__team-result--w { background: var(--green-live); }
+.match-card__team-result--l { background: rgba(107,107,107,0.4); }
+
+.match-card__team-players {
+  flex: 1; display: flex; flex-wrap: wrap; gap: 6px;
+}
+
+.match-card__player {
+  display: flex; align-items: center; gap: 6px;
+}
+
+.match-card__player-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 10px; font-weight: 700;
+  color: white; flex-shrink: 0; overflow: hidden;
+}
+
+.match-card__team--loser .match-card__player-avatar {
+  background: linear-gradient(135deg, #555, #777);
+}
+
+.match-card__player-name {
+  font-size: 13px; font-weight: 600;
+}
+
+.match-card__team--loser .match-card__player-name {
+  color: var(--text-muted);
+}
+
+/* Spray row placeholder */
+.match-card__sprays {
+  padding: 0 16px 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.spray-btn {
+  background: none; border: 1px solid var(--border-light);
+  border-radius: 100px; padding: 4px 12px;
+  font-size: 11px; color: var(--text-muted); cursor: pointer;
+  font-family: var(--font-body); transition: var(--transition);
+  display: flex; align-items: center; gap: 4px;
+}
+
+.spray-btn:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
+/* Empty state */
+.feed-empty {
+  text-align: center; padding: 80px 20px; color: var(--text-muted);
+}
+
+.feed-empty__icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+
+.feed-empty__title {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px;
+}
+
+.feed-empty__desc { font-size: 14px; line-height: 1.6; max-width: 280px; margin: 0 auto; }
+
+.feed-loading {
+  text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="activity-page" id="activityPage">
+  <!-- Nav Drawer -->
+  <div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer__header">
+      <svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
+      <button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button>
+    </div>
+    <nav class="nav-drawer__links">
+      <a href="allnet-app.html" class="nav-drawer__link" data-nav="play">
+        <span class="nav-drawer__link-icon">🏀</span>
+        <span class="nav-drawer__link-label">Play</span>
+      </a>
+      <a href="allnet-activity.html" class="nav-drawer__link nav-drawer__link--active" data-nav="activity">
+        <span class="nav-drawer__link-icon">📊</span>
+        <span class="nav-drawer__link-label">Activity</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="career">
+        <span class="nav-drawer__link-icon">🏆</span>
+        <span class="nav-drawer__link-label">Career</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+      <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars">
+        <span class="nav-drawer__link-icon">⭐</span>
+        <span class="nav-drawer__link-label">Stars</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="settings">
+        <span class="nav-drawer__link-icon">⚙️</span>
+        <span class="nav-drawer__link-label">Settings</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+    </nav>
+    <div class="nav-drawer__footer">
+      <div class="nav-drawer__user" id="navUser" style="display:none;">
+        <div class="nav-drawer__user-avatar" id="navAvatar">U</div>
+        <div class="nav-drawer__user-info">
+          <div class="nav-drawer__user-name" id="navUserName">Player</div>
+          <div class="nav-drawer__user-stars" id="navUserStars">⭐ 0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Bar -->
+  <div class="activity-topbar">
+    <button class="top-bar__menu" onclick="openNavDrawer()" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect y="3" width="20" height="2" rx="1" fill="white"/><rect y="9" width="20" height="2" rx="1" fill="white"/><rect y="15" width="20" height="2" rx="1" fill="white"/></svg>
+    </button>
+    <div class="activity-topbar__title">Activity</div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="feed-filters">
+    <button class="feed-filter active" data-filter="all" onclick="setFeedFilter('all', this)">All Games</button>
+    <button class="feed-filter feed-filter--disabled" onclick="return false">My Games</button>
+    <button class="feed-filter feed-filter--disabled" onclick="return false">Nearby</button>
+  </div>
+
+  <!-- Feed -->
+  <div class="feed-list" id="feedList">
+    <div class="feed-loading">Loading games...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-helpers.js"></script>
+<script>
+/* ══════════════════════════════
+   ACTIVITY FEED — AllNet
+   ══════════════════════════════ */
+let currentUser = null;
+let currentProfile = null;
+
+// ── Nav Drawer ──
+function openNavDrawer() {
+  document.getElementById('navOverlay').classList.add('open');
+  document.getElementById('navDrawer').classList.add('open');
+}
+
+function closeNavDrawer() {
+  document.getElementById('navOverlay').classList.remove('open');
+  document.getElementById('navDrawer').classList.remove('open');
+}
+
+function updateNavDrawerUser() {
+  const navUser = document.getElementById('navUser');
+  if (!navUser || !currentUser || !currentProfile) return;
+  navUser.style.display = 'flex';
+  document.getElementById('navUserName').textContent = currentProfile.name || 'Player';
+  document.getElementById('navUserStars').textContent = '⭐ ' + (currentProfile.stars_balance || 0).toLocaleString();
+  const navAvatar = document.getElementById('navAvatar');
+  if (navAvatar && currentProfile.avatar_url) {
+    navAvatar.innerHTML = '<img src="' + currentProfile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  } else if (navAvatar) {
+    navAvatar.textContent = currentProfile.initials || 'U';
+  }
+}
+
+// ── Feed Filter ──
+function setFeedFilter(filter, el) {
+  if (el.classList.contains('feed-filter--disabled')) return;
+  document.querySelectorAll('.feed-filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── Time Ago ──
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return 'Just now';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  if (s < 604800) return Math.floor(s / 86400) + 'd ago';
+  return date.toLocaleDateString();
+}
+
+// ── Render Player ──
+function renderPlayer(player) {
+  const avatarContent = player.avatar_url
+    ? `<img src="${player.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    : player.initials;
+  return `<div class="match-card__player">
+    <div class="match-card__player-avatar">${avatarContent}</div>
+    <span class="match-card__player-name">${player.name}</span>
+  </div>`;
+}
+
+// ── Render Match Card ──
+function renderMatchCard(match) {
+  const teamA = typeof match.team_a === 'string' ? JSON.parse(match.team_a) : match.team_a;
+  const teamB = typeof match.team_b === 'string' ? JSON.parse(match.team_b) : match.team_b;
+  const winnerTeam = match.winner === 'a' ? teamA : teamB;
+  const loserTeam = match.winner === 'a' ? teamB : teamA;
+  const time = timeAgo(new Date(match.played_at));
+
+  return `<div class="match-card">
+    <div class="match-card__header">
+      <span class="match-card__format">${match.format}</span>
+      <span class="match-card__meta">${time}</span>
+    </div>
+    <div class="match-card__court">
+      <span class="match-card__court-icon">📍</span>
+      ${match.court_name}
+    </div>
+    <div class="match-card__teams">
+      <div class="match-card__team match-card__team--winner">
+        <div class="match-card__team-result match-card__team-result--w">W</div>
+        <div class="match-card__team-players">
+          ${winnerTeam.map(p => renderPlayer(p)).join('')}
+        </div>
+      </div>
+      <div class="match-card__team match-card__team--loser">
+        <div class="match-card__team-result match-card__team-result--l">L</div>
+        <div class="match-card__team-players">
+          ${loserTeam.map(p => renderPlayer(p)).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="match-card__sprays">
+      <button class="spray-btn" disabled>🎨 Spray · Coming soon</button>
+    </div>
+  </div>`;
+}
+
+// ── Load Feed ──
+async function loadFeed() {
+  const { data, error } = await supabase
+    .from('match_feed')
+    .select('*')
+    .order('played_at', { ascending: false })
+    .limit(50);
+
+  const list = document.getElementById('feedList');
+
+  if (error) {
+    console.error('Feed load error:', error);
+    list.innerHTML = `<div class="feed-empty">
+      <div class="feed-empty__icon">⚠️</div>
+      <div class="feed-empty__title">Load Error</div>
+      <div class="feed-empty__desc">${error.message}</div>
+    </div>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.innerHTML = `<div class="feed-empty">
+      <div class="feed-empty__icon">🏀</div>
+      <div class="feed-empty__title">No Games Yet</div>
+      <div class="feed-empty__desc">When players complete games on AllNet, their results will show up here.</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(match => renderMatchCard(match)).join('');
+}
+
+// ── Init ──
+async function initActivityPage() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    currentProfile = await getUserProfile(currentUser.id);
+    updateNavDrawerUser();
+  }
+  await loadFeed();
+}
+
+initActivityPage();
+</script>
+</body>
+</html>

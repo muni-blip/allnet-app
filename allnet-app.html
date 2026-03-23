@@ -34,10 +34,9 @@
         <span class="nav-drawer__link-icon">🏀</span>
         <span class="nav-drawer__link-label">Play</span>
       </a>
-      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="activity">
+      <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity">
         <span class="nav-drawer__link-icon">📊</span>
         <span class="nav-drawer__link-label">Activity</span>
-        <span class="nav-drawer__link-badge">Soon</span>
       </a>
       <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="career">
         <span class="nav-drawer__link-icon">🏆</span>
@@ -298,7 +297,10 @@
       <div class="alert-modal__icon" id="alertIcon">📍</div>
       <div class="alert-modal__title" id="alertTitle"></div>
       <div class="alert-modal__message" id="alertMessage"></div>
-      <button class="btn btn--primary alert-modal__btn" id="alertBtn" onclick="closeAlertModal()">Got It</button>
+      <div class="alert-modal__buttons">
+        <button class="btn btn--secondary alert-modal__btn" id="alertCancelBtn" onclick="closeAlertModal(false)" style="display:none;">Cancel</button>
+        <button class="btn btn--primary alert-modal__btn" id="alertBtn" onclick="closeAlertModal(true)">Got It</button>
+      </div>
     </div>
   </div>
 

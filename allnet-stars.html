@@ -319,10 +319,9 @@ html, body { height: auto; overflow: auto; }
         <span class="nav-drawer__link-icon">🏀</span>
         <span class="nav-drawer__link-label">Play</span>
       </a>
-      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="activity">
+      <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity">
         <span class="nav-drawer__link-icon">📊</span>
         <span class="nav-drawer__link-label">Activity</span>
-        <span class="nav-drawer__link-badge">Soon</span>
       </a>
       <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="career">
         <span class="nav-drawer__link-icon">🏆</span>
@@ -439,7 +438,10 @@ html, body { height: auto; overflow: auto; }
       <div class="alert-modal__icon" id="alertIcon">⭐</div>
       <div class="alert-modal__title" id="alertTitle"></div>
       <div class="alert-modal__message" id="alertMessage"></div>
-      <button class="btn btn--primary" id="alertBtn" onclick="closeAlertModal()" style="width:100%;flex:none;">Got It</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn--secondary" id="alertCancelBtn" onclick="closeAlertModal(false)" style="display:none;flex:1;">Cancel</button>
+        <button class="btn btn--primary" id="alertBtn" onclick="closeAlertModal(true)" style="flex:1;">Got It</button>
+      </div>
     </div>
   </div>
 </div>
@@ -481,17 +483,37 @@ function updateNavDrawerUser() {
   }
 }
 
-// ── Alert Modal ──
+// ── Alert & Confirm Modal ──
+let confirmResolve = null;
+
 function showAlert(title, message, opts = {}) {
+  confirmResolve = null;
   document.getElementById('alertIcon').textContent = opts.icon || '⭐';
   document.getElementById('alertTitle').textContent = title;
   document.getElementById('alertMessage').textContent = message;
   document.getElementById('alertBtn').textContent = opts.btnText || 'Got It';
+  document.getElementById('alertCancelBtn').style.display = 'none';
   document.getElementById('alertModal').classList.add('active');
 }
 
-function closeAlertModal() {
+function showConfirm(title, message, opts = {}) {
+  return new Promise(resolve => {
+    confirmResolve = resolve;
+    document.getElementById('alertIcon').textContent = opts.icon || '⭐';
+    document.getElementById('alertTitle').textContent = title;
+    document.getElementById('alertMessage').textContent = message;
+    document.getElementById('alertBtn').textContent = opts.confirmText || 'Confirm';
+    const cancelBtn = document.getElementById('alertCancelBtn');
+    cancelBtn.textContent = opts.cancelText || 'Cancel';
+    cancelBtn.style.display = 'flex';
+    document.getElementById('alertModal').classList.add('active');
+  });
+}
+
+function closeAlertModal(confirmed) {
   document.getElementById('alertModal').classList.remove('active');
+  document.getElementById('alertCancelBtn').style.display = 'none';
+  if (confirmResolve) { confirmResolve(!!confirmed); confirmResolve = null; }
 }
 
 // ── Tab Switching ──
@@ -627,7 +649,8 @@ async function purchaseCover(itemId, itemName, price) {
     return;
   }
 
-  if (!confirm(`Buy ${itemName} for ${price} ⭐?`)) return;
+  const confirmed = await showConfirm('Purchase Cover', `Buy ${itemName} for ${price} ⭐?`, { icon: '🛒', confirmText: 'Buy Now', cancelText: 'Cancel' });
+  if (!confirmed) return;
 
   try {
     const { data, error } = await supabase.rpc('purchase_store_item', { p_item_id: itemId });

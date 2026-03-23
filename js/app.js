@@ -449,7 +449,7 @@ function toggleForecastTooltip(wrapper) {
 /* ══════════════════════════════
    CHECK-IN
    ══════════════════════════════ */
-function checkIn(courtId) {
+async function checkIn(courtId) {
   const court = courts.find(c => c.id === courtId);
   if (!court) return;
 
@@ -468,9 +468,8 @@ function checkIn(courtId) {
 
   if (activeCheckin && activeCheckin.courtId !== courtId) {
     const oldName = activeCheckin.courtName;
-    if (!confirm(`You're currently checked in at ${oldName}.\n\nCheck out and move to ${court.name}?`)) {
-      return;
-    }
+    const confirmed = await showConfirm('Switch Courts?', `You're currently checked in at ${oldName}. Check out and move to ${court.name}?`, { icon: '📍', confirmText: 'Switch', cancelText: 'Stay' });
+    if (!confirmed) return;
     performCheckout();
   }
 
@@ -512,20 +511,43 @@ function showToast(message, isCheckin) {
    Replaces native alert() calls
    ══════════════════════════════ */
 let alertCallback = null;
+let confirmResolve = null;
 
 function showAlert(title, message, opts = {}) {
   const icon = opts.icon || '📍';
   const btnText = opts.btnText || 'Got It';
   alertCallback = opts.onClose || null;
+  confirmResolve = null;
   document.getElementById('alertIcon').textContent = icon;
   document.getElementById('alertTitle').textContent = title;
   document.getElementById('alertMessage').textContent = message;
   document.getElementById('alertBtn').textContent = btnText;
+  document.getElementById('alertCancelBtn').style.display = 'none';
   document.getElementById('alertModal').classList.add('active');
 }
 
-function closeAlertModal() {
+function showConfirm(title, message, opts = {}) {
+  return new Promise(resolve => {
+    const icon = opts.icon || '⚠️';
+    const confirmText = opts.confirmText || 'Confirm';
+    const cancelText = opts.cancelText || 'Cancel';
+    confirmResolve = resolve;
+    alertCallback = null;
+    document.getElementById('alertIcon').textContent = icon;
+    document.getElementById('alertTitle').textContent = title;
+    document.getElementById('alertMessage').textContent = message;
+    document.getElementById('alertBtn').textContent = confirmText;
+    const cancelBtn = document.getElementById('alertCancelBtn');
+    cancelBtn.textContent = cancelText;
+    cancelBtn.style.display = 'flex';
+    document.getElementById('alertModal').classList.add('active');
+  });
+}
+
+function closeAlertModal(confirmed) {
   document.getElementById('alertModal').classList.remove('active');
+  document.getElementById('alertCancelBtn').style.display = 'none';
+  if (confirmResolve) { confirmResolve(!!confirmed); confirmResolve = null; }
   if (alertCallback) { alertCallback(); alertCallback = null; }
 }
 
@@ -1517,9 +1539,8 @@ checkIn = async function(courtId) {
     if (activeCheckin && activeCheckin.courtId !== courtId) {
       const oldName = activeCheckin.courtName;
       const newCourt = courts.find(c => c.id === courtId);
-      if (!confirm(`You're currently checked in at ${oldName}.\n\nCheck out and move to ${newCourt?.name || 'this court'}?`)) {
-        return;
-      }
+      const confirmed = await showConfirm('Switch Courts?', `You're currently checked in at ${oldName}. Check out and move to ${newCourt?.name || 'this court'}?`, { icon: '📍', confirmText: 'Switch', cancelText: 'Stay' });
+      if (!confirmed) return;
       performCheckout();
       await new Promise(r => setTimeout(r, 300));
     }

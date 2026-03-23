@@ -1619,3 +1619,61 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     btn.textContent = 'Get Started';
   }
 });
+
+// ── Proactive session check ──
+// onAuthStateChange INITIAL_SESSION can fire with session: null if the token
+// is mid-refresh. This fallback reads the session from localStorage directly
+// and kicks off profile loading if a valid session exists.
+setTimeout(async () => {
+  if (currentUser) return; // auth listener already handled it
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && !currentUser) {
+      console.log('AllNet: Proactive getSession found valid session — loading profile');
+      currentUser = session.user;
+
+      currentProfile = await getUserProfile();
+      if (currentProfile) {
+        const btn = document.getElementById('profileBtn');
+        btn.className = 'top-bar__profile';
+        btn.innerHTML = buildCompositeAvatar();
+
+        const profileName = document.querySelector('.profile-card__name');
+        if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
+
+        const profileAvatar = document.getElementById('profileCardAvatar');
+        if (profileAvatar) profileAvatar.innerHTML = buildCompositeAvatar();
+
+        const profileLocation = document.querySelector('.profile-card__location');
+        if (profileLocation) profileLocation.textContent = '📍 ' + (currentProfile.location || 'OC/LA');
+
+        const profileDays = document.getElementById('profileDays');
+        if (profileDays) {
+          const daysSince = Math.floor((Date.now() - new Date(currentProfile.joined_at).getTime()) / 86400000);
+          profileDays.textContent = daysSince || 1;
+        }
+        document.getElementById('profileCheckins').textContent = currentProfile.total_checkins || 0;
+        document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
+
+        renderCareerCard();
+        checkOnboarding();
+      }
+
+      const myCheckins = await getUserCheckins(currentUser.id);
+      if (myCheckins) {
+        userCheckins = myCheckins.map(c => ({
+          courtId: c.court_id,
+          courtName: c.courts?.name || 'Unknown',
+          time: new Date(c.checked_in_at)
+        }));
+        myCheckins.forEach(c => checkinCourts.add(c.court_id));
+        updateProfileStats();
+      }
+
+      await loadUserWatches();
+      console.log('AllNet: Profile loaded via getSession fallback — ' + currentProfile?.name);
+    }
+  } catch (err) {
+    console.error('AllNet: getSession fallback failed', err);
+  }
+}, 1500);

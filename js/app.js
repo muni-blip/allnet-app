@@ -1142,9 +1142,13 @@ function updateAvatarDisplays(url) {
 const SUPABASE_COVERS_URL = 'https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
 
 const COVERS = {
-  crossover: SUPABASE_COVERS_URL + '/Crossover.png',
-  rally:     SUPABASE_COVERS_URL + '/Rally.png',
-  flowstate: SUPABASE_COVERS_URL + '/Flowstate.png'
+  crossover:  SUPABASE_COVERS_URL + '/Crossover.png',
+  rally:      SUPABASE_COVERS_URL + '/Rally.png',
+  flowstate:  SUPABASE_COVERS_URL + '/Flowstate.png',
+  fastbreak:  SUPABASE_COVERS_URL + '/Fastbreak.png',
+  shatter:    SUPABASE_COVERS_URL + '/Shatter.png',
+  showtime:   SUPABASE_COVERS_URL + '/Showtime.png',
+  fadeaway:   SUPABASE_COVERS_URL + '/Fadeaway.png'
 };
 
 /* ══════════════════════════════
@@ -1595,6 +1599,14 @@ async function loadUserProfile(user) {
 
       renderCareerCard();
       checkOnboarding();
+
+      // Show star balance in top bar
+      const starsEl = document.getElementById('topBarStars');
+      const starsCount = document.getElementById('topBarStarsCount');
+      if (starsEl && starsCount) {
+        starsCount.textContent = (currentProfile.stars_balance || 0).toLocaleString();
+        starsEl.style.display = 'flex';
+      }
     }
 
     const myCheckins = await getUserCheckins(currentUser.id);
@@ -1661,6 +1673,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     btn.onclick = () => handleProfileClick();
     updateWatchingChipVisibility();
     renderMarkers();
+    // Hide star balance
+    const starsEl = document.getElementById('topBarStars');
+    if (starsEl) starsEl.style.display = 'none';
   }
 });
 

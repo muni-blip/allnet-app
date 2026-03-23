@@ -242,6 +242,16 @@
     </div>
   </div>
 
+  <!-- ═══ In-App Alert Modal ═══ -->
+  <div class="alert-modal" id="alertModal" onclick="if(event.target===this)closeAlertModal()">
+    <div class="alert-modal__card">
+      <div class="alert-modal__icon" id="alertIcon">📍</div>
+      <div class="alert-modal__title" id="alertTitle"></div>
+      <div class="alert-modal__message" id="alertMessage"></div>
+      <button class="btn btn--primary alert-modal__btn" id="alertBtn" onclick="closeAlertModal()">Got It</button>
+    </div>
+  </div>
+
   <!-- ═══ Photo Prompt Modal (gate before starting a game) ═══ -->
   <div class="photo-prompt-modal" id="photoPromptModal" onclick="if(event.target===this)closePhotoPromptModal()">
     <div class="photo-prompt-modal__card">

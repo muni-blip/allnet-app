@@ -1959,3 +1959,60 @@ html, body {
   50% { transform: scale(1.05); }
   100% { transform: scale(1); opacity: 1; }
 }
+/* ═══════════════════════════════════════════════
+   IN-APP ALERT MODAL
+   ═══════════════════════════════════════════════ */
+.alert-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.alert-modal.active { display: flex; }
+
+.alert-modal__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  padding: 36px 28px 28px;
+  width: 90%;
+  max-width: 340px;
+  text-align: center;
+  animation: alertSlideUp 0.25s ease forwards;
+}
+
+@keyframes alertSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.alert-modal__icon {
+  font-size: 36px;
+  margin-bottom: 14px;
+}
+
+.alert-modal__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.alert-modal__message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.alert-modal__btn {
+  width: 100%;
+  flex: none;
+}

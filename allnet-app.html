@@ -8,14 +8,6 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
-<style>
-  .create-game-cta{display:flex;align-items:center;gap:14px;background:#1a1a1a;border:1px solid #333;border-radius:14px;padding:18px 16px;text-decoration:none;color:#fff;transition:border-color .2s}
-  .create-game-cta:hover{border-color:#F74501}
-  .create-game-cta__icon{font-size:28px;flex-shrink:0}
-  .create-game-cta__title{font-family:'Oswald',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.5px;color:#F74501}
-  .create-game-cta__text{font-size:13px;color:#999;margin-top:2px;line-height:1.4}
-  .create-game-cta__arrow{font-size:24px;color:#666;margin-left:auto;flex-shrink:0}
-</style>
 </head>
 <body>
 
@@ -248,16 +240,6 @@
 
       <div class="profile-section-title" id="watchedCourtsTitle" style="display:none;">// Watched Courts (<span id="watchedCount">0</span>)</div>
       <div class="watched-courts-list" id="watchedCourtsList"></div>
-
-      <div class="profile-section-title">// Ready to Play?</div>
-      <a href="allnet-phase2.html" class="create-game-cta">
-        <div class="create-game-cta__icon">🏀</div>
-        <div class="create-game-cta__content">
-          <div class="create-game-cta__title">Create a Game</div>
-          <div class="create-game-cta__text">Set up a match, invite players, and start building your ratings.</div>
-        </div>
-        <div class="create-game-cta__arrow">›</div>
-      </a>
 
       <button class="logout-btn" onclick="logOut()">Log Out</button>
     </div>

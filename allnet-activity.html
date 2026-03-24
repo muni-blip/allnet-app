@@ -139,6 +139,22 @@ html, body { height: auto; overflow: auto; }
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-size: 10px; font-weight: 700;
   color: white; flex-shrink: 0; overflow: hidden;
+  position: relative;
+}
+
+.match-card__player-avatar .av-comp {
+  position: absolute; inset: 0; border-radius: 50%; overflow: hidden;
+}
+
+.match-card__player-avatar .av-comp__cover {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+}
+
+.match-card__player-avatar .av-comp__cutout {
+  position: absolute; inset: -10%; width: 120%; height: 120%;
+  object-fit: contain; object-position: center top;
+  z-index: 1;
 }
 
 .match-card__team--loser .match-card__player-avatar {
@@ -207,10 +223,9 @@ html, body { height: auto; overflow: auto; }
         <span class="nav-drawer__link-icon">📊</span>
         <span class="nav-drawer__link-label">Activity</span>
       </a>
-      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="career">
+      <a href="allnet-career.html" class="nav-drawer__link" data-nav="career">
         <span class="nav-drawer__link-icon">🏆</span>
         <span class="nav-drawer__link-label">Career</span>
-        <span class="nav-drawer__link-badge">Soon</span>
       </a>
       <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars">
         <span class="nav-drawer__link-icon">⭐</span>
@@ -259,9 +274,24 @@ html, body { height: auto; overflow: auto; }
 <script>
 /* ══════════════════════════════
    ACTIVITY FEED — AllNet
+   Live-fetches profile data so avatars
+   always show current cutout + cover
    ══════════════════════════════ */
 let currentUser = null;
 let currentProfile = null;
+let liveProfiles = {}; // userId -> profile (fetched fresh)
+
+// ── Covers Catalog ──
+const SUPABASE_COVERS_URL = 'https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
+const COVERS = {
+  crossover:  SUPABASE_COVERS_URL + '/Crossover.png',
+  rally:      SUPABASE_COVERS_URL + '/Rally.png',
+  flowstate:  SUPABASE_COVERS_URL + '/Flowstate.png',
+  fastbreak:  SUPABASE_COVERS_URL + '/Fastbreak.png',
+  shatter:    SUPABASE_COVERS_URL + '/Shatter.png',
+  showtime:   SUPABASE_COVERS_URL + '/Showtime.png',
+  fadeaway:   SUPABASE_COVERS_URL + '/Fadeaway.png'
+};
 
 // ── Nav Drawer ──
 function openNavDrawer() {
@@ -281,10 +311,8 @@ function updateNavDrawerUser() {
   document.getElementById('navUserName').textContent = currentProfile.name || 'Player';
   document.getElementById('navUserStars').textContent = '⭐ ' + (currentProfile.stars_balance || 0).toLocaleString();
   const navAvatar = document.getElementById('navAvatar');
-  if (navAvatar && currentProfile.avatar_url) {
-    navAvatar.innerHTML = '<img src="' + currentProfile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-  } else if (navAvatar) {
-    navAvatar.textContent = currentProfile.initials || 'U';
+  if (navAvatar) {
+    navAvatar.innerHTML = buildAvatarHtml(currentProfile);
   }
 }
 
@@ -305,14 +333,42 @@ function timeAgo(date) {
   return date.toLocaleDateString();
 }
 
-// ── Render Player ──
+/* ══════════════════════════════
+   COMPOSITE AVATAR BUILDER
+   Used for any player avatar in the UI.
+   If the player has a cutout + cover, renders
+   the mini composite. Otherwise falls back to
+   raw photo or initials.
+   ══════════════════════════════ */
+function buildAvatarHtml(player) {
+  const cutout = player.avatar_cutout_url;
+  const cover = player.selected_cover || 'crossover';
+  const coverUrl = COVERS[cover] || COVERS.crossover;
+  const rawUrl = player.avatar_url;
+  const initials = player.initials || (player.name || '??').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+  if (cutout) {
+    return `<div class="av-comp">
+      <div class="av-comp__cover" style="background-image:url('${coverUrl}')"></div>
+      <img class="av-comp__cutout" src="${cutout}" alt="" onerror="this.style.display='none'">
+    </div>`;
+  }
+  if (rawUrl) {
+    return `<img src="${rawUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+  }
+  return initials;
+}
+
+// ── Render Player (uses live profile data if available) ──
 function renderPlayer(player) {
-  const avatarContent = player.avatar_url
-    ? `<img src="${player.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : player.initials;
+  // If this player has a user_id, use live profile data
+  const live = player.user_id ? liveProfiles[player.user_id] : null;
+  const avatarSource = live || player;
+  const displayName = live ? (live.first_name && live.last_name ? live.first_name + ' ' + live.last_name : live.name) : player.name;
+
   return `<div class="match-card__player">
-    <div class="match-card__player-avatar">${avatarContent}</div>
-    <span class="match-card__player-name">${player.name}</span>
+    <div class="match-card__player-avatar">${buildAvatarHtml(avatarSource)}</div>
+    <span class="match-card__player-name">${displayName}</span>
   </div>`;
 }
 
@@ -354,7 +410,13 @@ function renderMatchCard(match) {
   </div>`;
 }
 
-// ── Load Feed ──
+/* ══════════════════════════════
+   LOAD FEED
+   1. Fetch match_feed
+   2. Collect all user_ids from JSONB
+   3. Batch-fetch live profiles
+   4. Render with live data
+   ══════════════════════════════ */
 async function loadFeed() {
   const { data, error } = await supabase
     .from('match_feed')
@@ -383,6 +445,29 @@ async function loadFeed() {
     return;
   }
 
+  // Collect all user_ids from team JSONB
+  const userIds = new Set();
+  data.forEach(match => {
+    const teamA = typeof match.team_a === 'string' ? JSON.parse(match.team_a) : match.team_a;
+    const teamB = typeof match.team_b === 'string' ? JSON.parse(match.team_b) : match.team_b;
+    [...teamA, ...teamB].forEach(p => {
+      if (p.user_id) userIds.add(p.user_id);
+    });
+  });
+
+  // Batch-fetch live profile data for all real users
+  if (userIds.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, name, first_name, last_name, initials, avatar_url, avatar_cutout_url, selected_cover')
+      .in('id', Array.from(userIds));
+
+    if (profiles) {
+      profiles.forEach(p => { liveProfiles[p.id] = p; });
+    }
+  }
+
+  // Render with live data
   list.innerHTML = data.map(match => renderMatchCard(match)).join('');
 }
 

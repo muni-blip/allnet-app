@@ -728,7 +728,79 @@ async function initPhase2() {
       if (courts && courts.length > 0) dbCourtId = courts[0].id;
     }
     console.log('Phase 2: Connected as ' + currentProfile?.name + ', court: ' + dbCourtId);
+
+    // Check if we're in pending review mode (navigated from pending reviews)
+    const reviewMode = urlParams.get('mode');
+    const reviewGameId = urlParams.get('game_id');
+    if (reviewMode === 'review' && reviewGameId && currentUser) {
+      try {
+        await loadPendingReviewGame(reviewGameId);
+      } catch (err) { console.error('Failed to load pending review game:', err); }
+    }
   } catch (err) { console.error('Phase 2 init error:', err); }
+}
+
+async function loadPendingReviewGame(gameId) {
+  // Load game session
+  const { data: game, error: gameErr } = await supabase.from('game_sessions')
+    .select('*, courts(name)').eq('id', gameId).single();
+  if (gameErr || !game) { console.error('Game not found:', gameErr); return; }
+
+  // Load players
+  const { data: players, error: playersErr } = await supabase.from('game_players')
+    .select('*, profiles(name, initials)').eq('game_id', gameId);
+  if (playersErr || !players || players.length === 0) { console.error('No players found'); return; }
+
+  // Load existing reviews by this user for this game
+  const { data: existingReviews } = await supabase.from('reviews')
+    .select('reviewee_id').eq('game_id', gameId).eq('reviewer_id', currentUser.id);
+  const reviewedIds = new Set((existingReviews || []).map(r => r.reviewee_id));
+
+  // Set game state
+  G.format = game.format;
+  G.teamSize = FORMAT_SIZES[G.format];
+  dbGameId = gameId;
+  dbCourtId = game.court_id;
+
+  // Build team rosters
+  const myTeamLetter = players.find(p => p.user_id === currentUser.id)?.team || 'a';
+  G.teamA = [];
+  G.teamB = [];
+  players.forEach(p => {
+    const entry = {
+      name: p.profiles?.name || 'Unknown',
+      initials: p.profiles?.initials || '??',
+      isYou: p.user_id === currentUser.id,
+      userId: p.user_id
+    };
+    if (p.team === 'a') G.teamA.push(entry);
+    else G.teamB.push(entry);
+  });
+
+  // Build reviews list — only players not yet reviewed
+  const allOthers = [...G.teamA, ...G.teamB].filter(p => !p.isYou && !reviewedIds.has(p.userId));
+  if (allOthers.length === 0) {
+    // All reviews already submitted
+    document.querySelector('.court-context__name').textContent = (game.courts?.name || courtName) + ' · All Reviews Done';
+    return;
+  }
+
+  const myTeam = myTeamLetter === 'a' ? 'A' : 'B';
+  G.reviews = allOthers.map(p => {
+    const pTeam = G.teamA.some(t => t.name === p.name) ? 'A' : 'B';
+    return { ...p, team: pTeam === myTeam ? 'teammate' : 'opponent', skill: null, social: null, arrivedLate: null, wouldPlayAgain: null };
+  });
+
+  G.currentReviewIdx = 0;
+  G.winner = null;
+
+  // Update court context
+  document.querySelector('.court-context__name').textContent = (game.courts?.name || courtName) + ' · Pending Review';
+
+  // Jump to review screen
+  goTo('screenReview');
+  renderReview();
+  console.log('Phase 2: Loaded pending review for game', gameId, '—', G.reviews.length, 'players to review');
 }
 
 // Override createGame to persist to Supabase

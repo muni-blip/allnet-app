@@ -15,6 +15,43 @@
   .career-card__div-tab:hover { border-color:rgba(255,255,255,0.3); color:rgba(255,255,255,0.6); }
   .career-card__div-tab--active { border-color:rgba(255,255,255,0.8); color:#fff; background:rgba(255,255,255,0.08); }
   .career-card__new-badge { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; color:#22C55E; background:rgba(34,197,94,0.15); padding:2px 6px; border-radius:4px; margin-left:6px; vertical-align:middle; }
+
+  /* Pending reviews banner */
+  .pending-banner {
+    position:absolute; top:56px; left:0; right:0; z-index:140;
+    background:rgba(239,68,68,0.12); border-bottom:1px solid rgba(239,68,68,0.25);
+    padding:10px 16px; display:flex; align-items:center; gap:10px;
+    transform:translateY(-100%); opacity:0; transition:transform 0.3s ease, opacity 0.3s ease;
+    pointer-events:none; backdrop-filter:blur(12px);
+  }
+  .pending-banner.visible { transform:translateY(0); opacity:1; pointer-events:all; }
+  .pending-banner__dot { width:8px; height:8px; border-radius:50%; background:#EF4444; flex-shrink:0; animation:pulse-dot 2s ease-in-out infinite; }
+  .pending-banner__text { flex:1; font-size:13px; color:var(--text-secondary); }
+  .pending-banner__text strong { color:var(--text-primary); }
+  .pending-banner__btn { padding:6px 14px; border-radius:100px; font-family:var(--font-body); font-size:12px; font-weight:600; cursor:pointer; border:none; background:#EF4444; color:white; transition:var(--transition); flex-shrink:0; }
+  .pending-banner__btn:hover { background:#DC2626; }
+  .pending-banner__close { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px; padding:4px; flex-shrink:0; }
+
+  /* Red notification dot on profile */
+  .top-bar__profile { position:relative; }
+  .notif-dot { position:absolute; top:-2px; right:-2px; width:10px; height:10px; border-radius:50%; background:#EF4444; border:2px solid var(--bg); z-index:1; display:none; }
+  .notif-dot.visible { display:block; }
+
+  /* Pending reviews section in profile */
+  .pending-reviews-section { margin-bottom:20px; }
+  .pending-review-card {
+    display:flex; align-items:center; gap:12px; padding:14px;
+    background:var(--bg-card); border:1px solid rgba(239,68,68,0.25);
+    border-radius:var(--radius); margin-bottom:8px; cursor:pointer;
+    transition:var(--transition);
+  }
+  .pending-review-card:hover { border-color:rgba(239,68,68,0.5); transform:translateY(-1px); }
+  .pending-review-card__icon { width:40px; height:40px; border-radius:50%; background:rgba(239,68,68,0.1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .pending-review-card__info { flex:1; }
+  .pending-review-card__title { font-size:14px; font-weight:600; margin-bottom:2px; }
+  .pending-review-card__meta { font-size:11px; color:var(--text-muted); font-family:var(--font-mono); }
+  .pending-review-card__meta--urgent { color:#EF4444; }
+  .pending-review-card__arrow { color:var(--text-muted); font-size:16px; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -80,6 +117,14 @@
       <button class="nudge-btn nudge-btn--stay" onclick="extendCheckin()">Still Here</button>
       <button class="nudge-btn nudge-btn--leave" onclick="manualCheckout()">I Left</button>
     </div>
+  </div>
+
+  <!-- ═══ Pending reviews banner ═══ -->
+  <div class="pending-banner" id="pendingBanner">
+    <div class="pending-banner__dot"></div>
+    <div class="pending-banner__text"><strong id="pendingBannerCount">0</strong> <span id="pendingBannerLabel">reviews pending</span></div>
+    <button class="pending-banner__btn" onclick="openProfile();scrollToPendingReviews()">Review Now</button>
+    <button class="pending-banner__close" onclick="dismissPendingBanner()">✕</button>
   </div>
 
   <!-- ═══ Pulse filter chips ═══ -->
@@ -239,6 +284,12 @@
             <div class="career-card__placeholder-text">Upload a photo to generate your career card</div>
           </div>
         </div>
+      </div>
+
+      <!-- Pending Reviews -->
+      <div class="pending-reviews-section" id="pendingReviewsSection" style="display:none;">
+        <div class="profile-section-title" style="color:#EF4444;">// Pending Reviews (<span id="pendingReviewCount">0</span>)</div>
+        <div id="pendingReviewsList"></div>
       </div>
 
       <div class="profile-section-title">// Recent Activity</div>

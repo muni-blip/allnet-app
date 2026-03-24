@@ -904,7 +904,7 @@ async function handlePhotoSelect(event) {
 
   try {
     const ext = file.name.split('.').pop();
-    const path = `avatars/${currentUser.id}/avatar-${Date.now()}.${ext}`;
+    const path = `${currentUser.id}/avatar-${Date.now()}.${ext}`;
 
     const { error: uploadErr } = await supabase.storage
       .from('avatars')

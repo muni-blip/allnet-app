@@ -1520,6 +1520,78 @@ async function processAvatar(storagePath) {
 }
 
 /* ══════════════════════════════
+   REQUEST A COURT
+   ══════════════════════════════ */
+function openRequestCourtModal() {
+  if (!currentUser) {
+    showSignUpModal('request_court');
+    return;
+  }
+  document.getElementById('reqCourtName').value = '';
+  document.getElementById('reqCourtAddress').value = '';
+  document.getElementById('reqCourtNotes').value = '';
+  document.getElementById('reqCourtError').textContent = '';
+  document.getElementById('reqCourtSubmitBtn').disabled = false;
+  document.getElementById('reqCourtSubmitBtn').textContent = 'Submit Request';
+  document.getElementById('requestCourtModal').classList.add('active');
+}
+
+function closeRequestCourtModal() {
+  document.getElementById('requestCourtModal').classList.remove('active');
+}
+
+async function submitCourtRequest() {
+  const name = document.getElementById('reqCourtName').value.trim();
+  const address = document.getElementById('reqCourtAddress').value.trim();
+  const notes = document.getElementById('reqCourtNotes').value.trim();
+  const errorEl = document.getElementById('reqCourtError');
+  const btn = document.getElementById('reqCourtSubmitBtn');
+
+  if (!name || name.length < 3) {
+    errorEl.textContent = 'Please enter the court or park name';
+    return;
+  }
+  if (!address || address.length < 5) {
+    errorEl.textContent = 'Please enter the address or cross streets';
+    return;
+  }
+
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    const { error } = await supabase.from('court_requests').insert({
+      user_id: currentUser.id,
+      court_name: name,
+      address: address,
+      notes: notes || null,
+      lat: userLat || null,
+      lng: userLng || null
+    });
+
+    if (error) throw error;
+
+    closeRequestCourtModal();
+    showToast('Court request submitted! We\'ll review it within 24 hours.');
+  } catch (err) {
+    console.error('Court request failed:', err);
+    if (err.message && err.message.includes('duplicate')) {
+      errorEl.textContent = 'You already requested this court.';
+    } else {
+      errorEl.textContent = 'Failed to submit. Please try again.';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Submit Request';
+  }
+}
+
+function showRequestCourtButton() {
+  const btn = document.getElementById('requestCourtBtn');
+  if (btn && currentUser) btn.style.display = 'block';
+}
+
+/* ══════════════════════════════
    GAME START — photo gate
    Checks for profile photo before
    navigating to allnet-phase2.html
@@ -1860,6 +1932,7 @@ async function loadUserProfile(user) {
     await loadUserWatches();
     await loadPendingReviews();
     updateNavDrawerUser();
+    showRequestCourtButton();
     console.log('AllNet: Profile loaded — ' + currentProfile?.name);
   } catch (err) {
     console.error('AllNet: Failed to load profile', err);
@@ -1906,6 +1979,8 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     userWatches = new Set();
     userCheckins = [];
     checkinCourts = new Set();
+    pendingReviews = [];
+    pendingBannerDismissed = false;
     const btn = document.getElementById('profileBtn');
     btn.className = 'top-bar__cta';
     btn.textContent = 'Get Started';
@@ -1915,6 +1990,12 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     // Hide star balance
     const starsEl = document.getElementById('topBarStars');
     if (starsEl) starsEl.style.display = 'none';
+    // Hide request court button
+    const reqBtn = document.getElementById('requestCourtBtn');
+    if (reqBtn) reqBtn.style.display = 'none';
+    // Hide pending banner
+    const pendBanner = document.getElementById('pendingBanner');
+    if (pendBanner) pendBanner.classList.remove('visible');
     updateNavDrawerUser();
   }
 });

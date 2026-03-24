@@ -832,7 +832,9 @@ function openProfile() {
   updateProfileStats();
   renderHistory();
   renderWatchedCourts();
+  renderPendingReviews();
   renderCareerCard();
+  loadPendingReviews(); // refresh in background
   document.getElementById('profileScreen').classList.add('open');
 }
 
@@ -914,6 +916,111 @@ async function unwatchFromProfile(courtId) {
     renderWatchedCourts();
     showToast('You will no longer be notified when players check into ' + (court?.name || 'this court'));
   }
+}
+
+/* ══════════════════════════════
+   PENDING REVIEWS
+   ══════════════════════════════ */
+let pendingReviews = [];
+let pendingBannerDismissed = false;
+
+async function loadPendingReviews() {
+  if (!currentUser) return;
+  try {
+    const { data, error } = await supabase.rpc('get_pending_reviews', { p_user_id: currentUser.id });
+    if (error) { console.error('Pending reviews RPC error:', error); return; }
+    pendingReviews = data || [];
+    updatePendingReviewsUI();
+  } catch (err) { console.error('Failed to load pending reviews:', err); }
+}
+
+function updatePendingReviewsUI() {
+  const count = pendingReviews.length;
+
+  // Red dot on profile icon
+  let dot = document.getElementById('profileNotifDot');
+  if (!dot) {
+    const profileBtn = document.getElementById('profileBtn');
+    if (profileBtn && profileBtn.classList.contains('top-bar__profile')) {
+      dot = document.createElement('div');
+      dot.className = 'notif-dot';
+      dot.id = 'profileNotifDot';
+      profileBtn.appendChild(dot);
+    }
+  }
+  if (dot) dot.classList.toggle('visible', count > 0);
+
+  // Banner
+  if (count > 0 && !pendingBannerDismissed) {
+    document.getElementById('pendingBannerCount').textContent = count;
+    document.getElementById('pendingBannerLabel').textContent = count === 1 ? 'review pending' : 'reviews pending';
+    document.getElementById('pendingBanner').classList.add('visible');
+  } else {
+    document.getElementById('pendingBanner').classList.remove('visible');
+  }
+
+  // Profile section
+  renderPendingReviews();
+}
+
+function renderPendingReviews() {
+  const section = document.getElementById('pendingReviewsSection');
+  const list = document.getElementById('pendingReviewsList');
+  const countEl = document.getElementById('pendingReviewCount');
+  if (!section || !list) return;
+
+  if (pendingReviews.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  countEl.textContent = pendingReviews.length;
+
+  list.innerHTML = pendingReviews.map(pr => {
+    const deadline = new Date(pr.deadline);
+    const now = new Date();
+    const msLeft = deadline - now;
+    const hoursLeft = Math.max(0, Math.floor(msLeft / 3600000));
+    const minsLeft = Math.max(0, Math.floor((msLeft % 3600000) / 60000));
+    const isUrgent = msLeft < 4 * 3600000; // less than 4 hours
+    const isExpired = msLeft <= 0;
+
+    const timeStr = isExpired ? 'EXPIRED' : hoursLeft > 0 ? hoursLeft + 'h ' + minsLeft + 'm left' : minsLeft + 'm left';
+    const playersStr = pr.unreviewed_players
+      ? pr.unreviewed_players.map(p => p.name).join(', ')
+      : pr.players_to_review + ' player' + (pr.players_to_review !== 1 ? 's' : '');
+
+    return `<div class="pending-review-card" onclick="navigateToReview('${pr.game_id}')">
+      <div class="pending-review-card__icon">📝</div>
+      <div class="pending-review-card__info">
+        <div class="pending-review-card__title">${pr.format} at ${pr.court_name}</div>
+        <div class="pending-review-card__meta ${isUrgent || isExpired ? 'pending-review-card__meta--urgent' : ''}">
+          ${isExpired ? '⚠️ ' : isUrgent ? '⏰ ' : '⏳ '}${timeStr} · ${playersStr}
+        </div>
+      </div>
+      <div class="pending-review-card__arrow">›</div>
+    </div>`;
+  }).join('');
+}
+
+function dismissPendingBanner() {
+  pendingBannerDismissed = true;
+  document.getElementById('pendingBanner').classList.remove('visible');
+}
+
+function scrollToPendingReviews() {
+  setTimeout(() => {
+    const section = document.getElementById('pendingReviewsSection');
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 400);
+}
+
+function navigateToReview(gameId) {
+  // Find the pending review data to get court name
+  const pr = pendingReviews.find(r => r.game_id === gameId);
+  const courtName = pr ? pr.court_name : 'Court';
+  window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(courtName) + '&game_id=' + gameId + '&mode=review';
 }
 
 function formatTime(date) {
@@ -1174,6 +1281,13 @@ function updateAvatarDisplays(url) {
   const profileBtn = document.getElementById('profileBtn');
   if (profileBtn && profileBtn.classList.contains('top-bar__profile')) {
     profileBtn.innerHTML = html;
+    // Re-apply notification dot (destroyed by innerHTML)
+    if (pendingReviews && pendingReviews.length > 0) {
+      const dot = document.createElement('div');
+      dot.className = 'notif-dot visible';
+      dot.id = 'profileNotifDot';
+      profileBtn.appendChild(dot);
+    }
   }
   // Profile screen large avatar
   const profileAvatar = document.getElementById('profileCardAvatar');
@@ -1744,6 +1858,7 @@ async function loadUserProfile(user) {
     }
 
     await loadUserWatches();
+    await loadPendingReviews();
     updateNavDrawerUser();
     console.log('AllNet: Profile loaded — ' + currentProfile?.name);
   } catch (err) {

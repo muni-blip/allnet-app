@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Your Career Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<style>
+/* ═══ Career Page Specific Styles ═══ */
+html, body { height: auto; overflow: auto; }
+
+.career-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 60px;
+}
+
+.career-topbar {
+  position: sticky; top: 0; z-index: 100;
+  padding: 14px 16px;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(16px);
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.career-topbar__menu {
+  background: none; border: none; color: #fff; cursor: pointer;
+  padding: 4px; display: flex; align-items: center;
+}
+
+.career-topbar__title {
+  flex: 1; font-family: var(--font-display); font-size: 18px;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff;
+}
+
+.career-topbar__icon {
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  color: var(--orange); font-size: 18px;
+}
+
+/* ═══ Card Container ═══ */
+.career-page__card-section {
+  padding: 24px 16px 0;
+}
+
+/* ═══ Career Card (same as profile but standalone) ═══ */
+.cc {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  aspect-ratio: 343 / 520;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--orange);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  background: #000;
+}
+
+.cc__cover {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  z-index: 0;
+}
+
+.cc__gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 25%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.95) 75%, #000 100%);
+  z-index: 1;
+}
+
+.cc__cutout {
+  position: absolute;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  max-height: 70%;
+  object-fit: contain;
+  object-position: bottom center;
+  z-index: 2;
+}
+
+.cc__placeholder {
+  position: relative; z-index: 3;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; gap: 12px;
+  color: var(--text-muted); text-align: center; padding: 20px;
+}
+
+.cc__placeholder-icon { font-size: 40px; }
+.cc__placeholder-text { font-size: 14px; font-family: var(--font-body); line-height: 1.5; }
+
+.cc__name-block {
+  position: absolute;
+  top: 12px; left: 0; right: 0;
+  z-index: 3;
+  padding: 0 14px;
+}
+
+.cc__name-row {
+  display: flex; align-items: center; gap: 8px;
+}
+
+.cc__name-row--first { justify-content: flex-start; }
+.cc__name-row--last { justify-content: flex-end; }
+
+.cc__name-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(28px, 8vw, 40px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+  line-height: 1.05;
+}
+
+.cc__name-accent {
+  height: 4px; flex: 1; border-radius: 2px; min-width: 20px;
+}
+
+.cc__name-accent--orange { background: var(--orange); }
+.cc__name-accent--blue { background: #2563EB; }
+
+.cc__bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 3;
+  padding: 0 16px 16px;
+}
+
+.cc__wld {
+  display: flex; gap: 0; margin-bottom: 12px;
+}
+
+.cc__wld-col {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.cc__wld-label {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 16px; letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.6);
+}
+
+.cc__wld-value {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(32px, 9vw, 48px);
+  color: #fff; line-height: 1.1;
+}
+
+.cc__ratings {
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.cc__rating-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.cc__rating-label {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 13px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #fff;
+}
+
+.cc__rating-value {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 14px; display: flex; align-items: center; gap: 5px;
+}
+
+.cc__rating-value--skill { color: var(--orange); }
+.cc__rating-value--social { color: #facc15; }
+
+.cc__rating-delta {
+  font-size: 12px; font-weight: 600; margin-left: 4px;
+}
+
+.cc__rating-delta--up { color: #34d399; }
+.cc__rating-delta--down { color: #f87171; }
+
+/* ═══ Division Tabs ═══ */
+.cc-div-tabs {
+  display: flex; justify-content: center; gap: 8px;
+  padding: 16px 16px 0;
+  max-width: 380px; margin: 0 auto;
+}
+
+.cc-div-tab {
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.05em; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 14px; cursor: pointer; background: transparent;
+  transition: all 0.2s;
+}
+
+.cc-div-tab:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
+.cc-div-tab--active {
+  border-color: #2563EB; color: #2563EB; background: rgba(37,99,235,0.08);
+}
+
+/* ═══ Action Buttons ═══ */
+.cc-actions {
+  display: flex; gap: 10px;
+  padding: 20px 16px 0;
+  max-width: 380px; margin: 0 auto;
+}
+
+.cc-action-btn {
+  flex: 1;
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #fff; background: transparent;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 0; cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cc-action-btn:hover { border-color: #fff; }
+
+.cc-action-btn:active { background: rgba(255,255,255,0.05); }
+
+/* ═══ Match History ═══ */
+.match-history {
+  padding: 28px 16px 0;
+}
+
+.match-history__title {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 14px;
+}
+
+.match-history__empty {
+  text-align: center; padding: 32px 16px;
+  color: var(--text-muted); font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.mh-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mh-row:hover { background: rgba(255,255,255,0.03); }
+
+.mh-row:last-child { border-bottom: none; }
+
+.mh-row__avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  overflow: hidden; flex-shrink: 0; background: #1a1a1a;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.mh-row__avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+.mh-row__avatar-initials {
+  font-family: var(--font-display); font-size: 14px;
+  font-weight: 700; color: var(--text-muted);
+}
+
+.mh-row__info { flex: 1; min-width: 0; }
+
+.mh-row__name {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.mh-row__meta {
+  display: flex; align-items: center; gap: 6px; margin-top: 2px;
+}
+
+.mh-row__stars {
+  font-size: 11px; color: #facc15;
+}
+
+.mh-row__skill-bars {
+  display: flex; gap: 2px; align-items: center;
+}
+
+.mh-row__skill-bar {
+  width: 6px; height: 10px; border-radius: 1px;
+}
+
+.mh-row__skill-bar--filled { background: var(--orange); }
+.mh-row__skill-bar--empty { background: rgba(247,69,1,0.2); }
+
+.mh-row__format {
+  font-size: 10px; color: var(--text-muted);
+  font-family: var(--font-display); letter-spacing: 0.05em;
+}
+
+.mh-row__result {
+  font-family: var(--font-display); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 4px; flex-shrink: 0;
+}
+
+.mh-row__result--win {
+  color: #34d399; background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.2);
+}
+
+.mh-row__result--lose {
+  color: #f87171; background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.2);
+}
+
+.mh-row__result--draw {
+  color: var(--text-muted); background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ═══ Photo Upload Modal ═══ */
+.photo-modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.8);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.photo-modal-overlay.active { display: flex; }
+
+.photo-modal {
+  background: #1a1a1a; border-radius: 16px;
+  padding: 28px 24px; max-width: 340px; width: 100%;
+  text-align: center;
+}
+
+.photo-modal__title {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: #fff;
+  margin-bottom: 8px;
+}
+
+.photo-modal__text {
+  font-size: 14px; color: var(--text-muted); margin-bottom: 20px;
+  font-family: var(--font-body); line-height: 1.5;
+}
+
+.photo-modal__preview {
+  width: 120px; height: 120px; border-radius: 50%;
+  overflow: hidden; margin: 0 auto 20px; background: #111;
+  display: none; align-items: center; justify-content: center;
+}
+
+.photo-modal__preview.has-image { display: flex; }
+
+.photo-modal__preview img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+.photo-modal__upload-btn {
+  width: 100%; padding: 14px;
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--orange); color: #fff; border: none;
+  border-radius: 8px; cursor: pointer; margin-bottom: 10px;
+  transition: opacity 0.2s;
+}
+
+.photo-modal__upload-btn:hover { opacity: 0.9; }
+
+.photo-modal__cancel-btn {
+  width: 100%; padding: 12px;
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: transparent; color: var(--text-muted); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.2s;
+}
+
+.photo-modal__cancel-btn:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
+.photo-modal__processing {
+  display: none; flex-direction: column; align-items: center; gap: 12px;
+  padding: 20px 0;
+}
+
+.photo-modal__processing.active { display: flex; }
+
+.photo-modal__spinner {
+  font-size: 28px; animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.photo-modal__status {
+  font-size: 13px; color: var(--text-muted); font-family: var(--font-body);
+}
+
+/* ═══ Public Player Card Modal (Variant C) ═══ */
+.player-card-overlay {
+  position: fixed; inset: 0; z-index: 600;
+  background: rgba(0,0,0,0.7);
+  display: none; align-items: flex-end; justify-content: center;
+}
+
+.player-card-overlay.active { display: flex; }
+
+.player-card-sheet {
+  width: 100%; max-width: 420px;
+  background: #111; border-radius: 20px 20px 0 0;
+  padding: 12px 16px 32px;
+  max-height: 90vh; overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.player-card-sheet__handle {
+  width: 36px; height: 4px; background: rgba(255,255,255,0.2);
+  border-radius: 2px; margin: 0 auto 16px;
+}
+
+.player-card-sheet__close {
+  display: flex; justify-content: center; margin-top: 16px;
+}
+
+.player-card-sheet__close-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); border: none;
+  color: #fff; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+
+.player-card-sheet__close-btn:hover { background: rgba(255,255,255,0.15); }
+
+.player-card-sheet__actions {
+  display: flex; gap: 10px; margin-top: 16px;
+  max-width: 380px; margin-left: auto; margin-right: auto;
+}
+
+.player-card-sheet__action-btn {
+  flex: 1;
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #fff; background: transparent;
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 0; cursor: pointer;
+  transition: all 0.2s;
+}
+
+.player-card-sheet__action-btn:hover { border-color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="career-page" id="careerPage">
+
+  <!-- ═══ Top bar ═══ -->
+  <div class="career-topbar">
+    <button class="career-topbar__menu" onclick="openNavDrawer()" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect y="3" width="20" height="2" rx="1" fill="white"/><rect y="9" width="20" height="2" rx="1" fill="white"/><rect y="15" width="20" height="2" rx="1" fill="white"/></svg>
+    </button>
+    <div class="career-topbar__icon">🏆</div>
+    <div class="career-topbar__title">Your Career Card</div>
+  </div>
+
+  <!-- ═══ Nav Drawer ═══ -->
+  <div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer__header">
+      <svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
+      <button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button>
+    </div>
+    <nav class="nav-drawer__links">
+      <a href="allnet-app.html" class="nav-drawer__link" data-nav="play">
+        <span class="nav-drawer__link-icon">🏀</span>
+        <span class="nav-drawer__link-label">Play</span>
+      </a>
+      <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity">
+        <span class="nav-drawer__link-icon">📊</span>
+        <span class="nav-drawer__link-label">Activity</span>
+      </a>
+      <a href="allnet-career.html" class="nav-drawer__link nav-drawer__link--active" data-nav="career">
+        <span class="nav-drawer__link-icon">🏆</span>
+        <span class="nav-drawer__link-label">Career</span>
+      </a>
+      <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars">
+        <span class="nav-drawer__link-icon">⭐</span>
+        <span class="nav-drawer__link-label">Stars</span>
+      </a>
+      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="settings">
+        <span class="nav-drawer__link-icon">⚙️</span>
+        <span class="nav-drawer__link-label">Settings</span>
+        <span class="nav-drawer__link-badge">Soon</span>
+      </a>
+    </nav>
+    <div class="nav-drawer__footer">
+      <div class="nav-drawer__user" id="navUser" style="display:none;">
+        <div class="nav-drawer__user-avatar" id="navAvatar">U</div>
+        <div class="nav-drawer__user-info">
+          <div class="nav-drawer__user-name" id="navUserName">Player</div>
+          <div class="nav-drawer__user-stars" id="navUserStars">⭐ 0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Career Card ═══ -->
+  <div class="career-page__card-section">
+    <div class="cc" id="careerCard">
+      <div class="cc__placeholder">
+        <div class="cc__placeholder-icon">📷</div>
+        <div class="cc__placeholder-text">Upload a photo to generate your career card</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Division Tabs ═══ -->
+  <div class="cc-div-tabs" id="divTabs">
+    <button class="cc-div-tab cc-div-tab--active" data-div="1v1" onclick="switchDivision('1v1', this)">1v1</button>
+    <button class="cc-div-tab" data-div="2v2" onclick="switchDivision('2v2', this)">2v2</button>
+    <button class="cc-div-tab" data-div="3v3" onclick="switchDivision('3v3', this)">3v3</button>
+    <button class="cc-div-tab" data-div="4v4" onclick="switchDivision('4v4', this)">4v4</button>
+    <button class="cc-div-tab" data-div="5v5" onclick="switchDivision('5v5', this)">5v5</button>
+  </div>
+
+  <!-- ═══ Change Photo / Update Cover ═══ -->
+  <div class="cc-actions">
+    <button class="cc-action-btn" onclick="openPhotoModal()">Change Photo</button>
+    <button class="cc-action-btn" onclick="openCoverPicker()">Update Cover</button>
+  </div>
+
+  <!-- ═══ Match History ═══ -->
+  <div class="match-history">
+    <div class="match-history__title" id="matchHistoryTitle">Match History (0)</div>
+    <div id="matchHistoryList">
+      <div class="match-history__empty">No matches yet. Create a game to start building your history.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ Photo Upload Modal ═══ -->
+<div class="photo-modal-overlay" id="photoModal">
+  <div class="photo-modal">
+    <div class="photo-modal__title">Change Photo</div>
+    <div class="photo-modal__text">Upload a new photo. We'll remove the background automatically.</div>
+    <div class="photo-modal__preview" id="photoPreview">
+      <img id="photoPreviewImg" src="" alt="">
+    </div>
+    <div class="photo-modal__processing" id="photoProcessing">
+      <div class="photo-modal__spinner">⚡</div>
+      <div class="photo-modal__status" id="photoStatus">Removing background...</div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+    <button class="photo-modal__upload-btn" id="photoUploadBtn" onclick="document.getElementById('photoInput').click()">Choose Photo</button>
+    <button class="photo-modal__cancel-btn" onclick="closePhotoModal()">Cancel</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-helpers.js"></script>
+<script>
+/* ══════════════════════════════
+   CAREER PAGE — AllNet
+   ══════════════════════════════ */
+let currentUser = null;
+let currentProfile = null;
+let divisionStats = {};
+let activeDivision = '1v1';
+let matchHistory = [];
+
+// ── Covers Catalog ──
+const SUPABASE_COVERS_URL = 'https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
+const COVERS = {
+  crossover:  SUPABASE_COVERS_URL + '/Crossover.png',
+  rally:      SUPABASE_COVERS_URL + '/Rally.png',
+  flowstate:  SUPABASE_COVERS_URL + '/Flowstate.png',
+  fastbreak:  SUPABASE_COVERS_URL + '/Fastbreak.png',
+  shatter:    SUPABASE_COVERS_URL + '/Shatter.png',
+  showtime:   SUPABASE_COVERS_URL + '/Showtime.png',
+  fadeaway:   SUPABASE_COVERS_URL + '/Fadeaway.png'
+};
+
+// ── Nav Drawer ──
+function openNavDrawer() {
+  document.getElementById('navOverlay').classList.add('open');
+  document.getElementById('navDrawer').classList.add('open');
+}
+function closeNavDrawer() {
+  document.getElementById('navOverlay').classList.remove('open');
+  document.getElementById('navDrawer').classList.remove('open');
+}
+function updateNavDrawerUser() {
+  const navUser = document.getElementById('navUser');
+  if (!navUser || !currentUser || !currentProfile) return;
+  navUser.style.display = 'flex';
+  document.getElementById('navUserName').textContent = currentProfile.name || 'Player';
+  document.getElementById('navUserStars').textContent = '⭐ ' + (currentProfile.stars_balance || 0).toLocaleString();
+  const navAvatar = document.getElementById('navAvatar');
+  if (navAvatar && currentProfile.avatar_url) {
+    navAvatar.innerHTML = '<img src="' + currentProfile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  } else if (navAvatar) {
+    navAvatar.textContent = currentProfile.initials || 'U';
+  }
+}
+
+// ── Render Career Card ──
+function renderCard() {
+  const cardEl = document.getElementById('careerCard');
+  if (!cardEl) return;
+
+  const cutoutUrl = currentProfile?.avatar_cutout_url;
+  const cover = currentProfile?.selected_cover || 'crossover';
+  const coverFile = COVERS[cover] || COVERS.crossover;
+  const firstName = (currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '').toUpperCase();
+  const lastName = (currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '').toUpperCase();
+
+  // Get stats for active division
+  const stats = divisionStats[activeDivision];
+  const wins = stats?.wins || 0;
+  const losses = stats?.losses || 0;
+  const draws = stats?.draws || 0;
+  const skillRating = stats?.skill_rating ? Number(stats.skill_rating).toFixed(1) : '—';
+  const socialRating = currentProfile?.social_rating ? Number(currentProfile.social_rating).toFixed(1) : '—';
+  const gamesCount = stats?.games_count || 0;
+
+  // Division label for skill rating
+  const divLabel = activeDivision.toUpperCase();
+
+  if (!cutoutUrl) {
+    cardEl.innerHTML = `
+      <div class="cc__cover" style="background-image:url('${coverFile}')"></div>
+      <div class="cc__gradient"></div>
+      <div class="cc__placeholder">
+        <div class="cc__placeholder-icon">📷</div>
+        <div class="cc__placeholder-text">Upload a photo to generate your career card</div>
+      </div>`;
+    return;
+  }
+
+  const newBadge = gamesCount > 0 && gamesCount <= 5
+    ? '<span style="font-size:10px;background:rgba(37,99,235,0.2);color:#60a5fa;padding:2px 6px;border-radius:3px;margin-left:6px;font-family:var(--font-display);letter-spacing:0.05em;">NEW</span>'
+    : '';
+
+  cardEl.innerHTML = `
+    <div class="cc__cover" style="background-image:url('${coverFile}')"></div>
+    <div class="cc__gradient"></div>
+    <img class="cc__cutout" src="${cutoutUrl}" alt="${firstName} ${lastName}" onerror="this.style.display='none'">
+
+    <div class="cc__name-block">
+      <div class="cc__name-row cc__name-row--first">
+        <div class="cc__name-text">${firstName}</div>
+        <div class="cc__name-accent cc__name-accent--orange"></div>
+      </div>
+      <div class="cc__name-row cc__name-row--last">
+        <div class="cc__name-accent cc__name-accent--blue"></div>
+        <div class="cc__name-text">${lastName}</div>
+      </div>
+    </div>
+
+    <div class="cc__bottom">
+      <div class="cc__wld">
+        <div class="cc__wld-col">
+          <span class="cc__wld-label">W</span>
+          <span class="cc__wld-value">${wins}</span>
+        </div>
+        <div class="cc__wld-col">
+          <span class="cc__wld-label">L</span>
+          <span class="cc__wld-value">${losses}</span>
+        </div>
+        <div class="cc__wld-col">
+          <span class="cc__wld-label">D</span>
+          <span class="cc__wld-value">${draws}</span>
+        </div>
+      </div>
+      <div class="cc__ratings">
+        <div class="cc__rating-row">
+          <span class="cc__rating-label">SOCIAL RATING</span>
+          <span class="cc__rating-value cc__rating-value--social">★ ${socialRating}</span>
+        </div>
+        <div class="cc__rating-row">
+          <span class="cc__rating-label">${divLabel} SKILL RATING</span>
+          <span class="cc__rating-value cc__rating-value--skill">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="#F74501"><rect x="0" y="0" width="6" height="14" rx="1"/><rect x="8" y="0" width="6" height="14" rx="1"/></svg>
+            ${skillRating}${newBadge}
+          </span>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Division Tab Switching ──
+function switchDivision(div, el) {
+  activeDivision = div;
+  document.querySelectorAll('.cc-div-tab').forEach(t => t.classList.remove('cc-div-tab--active'));
+  if (el) el.classList.add('cc-div-tab--active');
+  renderCard();
+}
+
+// ── Load Division Stats ──
+async function loadDivisionStats() {
+  const { data, error } = await supabase
+    .from('player_division_stats')
+    .select('*')
+    .eq('user_id', currentUser.id);
+
+  if (!error && data) {
+    data.forEach(row => {
+      divisionStats[row.division] = row;
+    });
+  }
+
+  // Auto-select division with most games
+  let bestDiv = '1v1';
+  let bestGames = 0;
+  for (const [div, stats] of Object.entries(divisionStats)) {
+    if (stats.games_count > bestGames) {
+      bestGames = stats.games_count;
+      bestDiv = div;
+    }
+  }
+  if (bestGames > 0) {
+    activeDivision = bestDiv;
+    document.querySelectorAll('.cc-div-tab').forEach(t => {
+      t.classList.toggle('cc-div-tab--active', t.dataset.div === bestDiv);
+    });
+  }
+}
+
+// ── Load Match History ──
+async function loadMatchHistory() {
+  // Get games where this user was a player
+  const { data: playerGames, error: pgErr } = await supabase
+    .from('game_players')
+    .select('game_id, team')
+    .eq('user_id', currentUser.id);
+
+  if (pgErr || !playerGames || playerGames.length === 0) {
+    updateMatchHistoryUI([]);
+    return;
+  }
+
+  const gameIds = playerGames.map(pg => pg.game_id);
+  const teamMap = {};
+  playerGames.forEach(pg => { teamMap[pg.game_id] = pg.team; });
+
+  // Get game details for completed games
+  const { data: games, error: gErr } = await supabase
+    .from('game_sessions')
+    .select('id, format, winner, ended_at, court_id')
+    .in('id', gameIds)
+    .in('status', ['completed', 'nulled'])
+    .order('ended_at', { ascending: false })
+    .limit(50);
+
+  if (gErr || !games || games.length === 0) {
+    updateMatchHistoryUI([]);
+    return;
+  }
+
+  // Get all players in these games (opponents)
+  const { data: allPlayers, error: apErr } = await supabase
+    .from('game_players')
+    .select('game_id, user_id, team')
+    .in('game_id', gameIds);
+
+  // Get opponent profiles
+  const opponentIds = new Set();
+  if (allPlayers) {
+    allPlayers.forEach(ap => {
+      if (ap.user_id !== currentUser.id) opponentIds.add(ap.user_id);
+    });
+  }
+
+  let opponentProfiles = {};
+  if (opponentIds.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, name, first_name, last_name, avatar_url, social_rating, skill_rating')
+      .in('id', Array.from(opponentIds));
+    if (profiles) {
+      profiles.forEach(p => { opponentProfiles[p.id] = p; });
+    }
+  }
+
+  // Build match history rows
+  const rows = games.map(game => {
+    const myTeam = teamMap[game.id];
+    let result = 'draw';
+    if (game.winner === 'team_' + myTeam) result = 'win';
+    else if (game.winner === 'draw' || game.winner === 'null') result = 'draw';
+    else if (game.winner) result = 'lose';
+
+    // Find primary opponent (first player on opposite team)
+    let opponent = null;
+    if (allPlayers) {
+      const oppPlayer = allPlayers.find(ap => ap.game_id === game.id && ap.user_id !== currentUser.id && ap.team !== myTeam);
+      if (oppPlayer) opponent = opponentProfiles[oppPlayer.user_id];
+      // If no opposite team member found (1v1 edge case), pick any other player
+      if (!opponent) {
+        const anyOpp = allPlayers.find(ap => ap.game_id === game.id && ap.user_id !== currentUser.id);
+        if (anyOpp) opponent = opponentProfiles[anyOpp.user_id];
+      }
+    }
+
+    return { game, result, opponent };
+  });
+
+  matchHistory = rows;
+  updateMatchHistoryUI(rows);
+}
+
+function updateMatchHistoryUI(rows) {
+  const titleEl = document.getElementById('matchHistoryTitle');
+  const listEl = document.getElementById('matchHistoryList');
+
+  titleEl.textContent = `Match History (${rows.length})`;
+
+  if (rows.length === 0) {
+    listEl.innerHTML = '<div class="match-history__empty">No matches yet. Create a game to start building your history.</div>';
+    return;
+  }
+
+  listEl.innerHTML = rows.map(({ game, result, opponent }) => {
+    const oppName = opponent ? (opponent.first_name && opponent.last_name ? opponent.first_name + ' ' + opponent.last_name : opponent.name) : 'Unknown Player';
+    const oppInitials = oppName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const oppAvatar = opponent?.avatar_url
+      ? `<img src="${opponent.avatar_url}" alt="${oppName}">`
+      : `<span class="mh-row__avatar-initials">${oppInitials}</span>`;
+
+    const socialStars = opponent?.social_rating ? '★'.repeat(Math.round(Number(opponent.social_rating))) : '';
+    const socialCount = opponent?.social_rating ? `(${Number(opponent.social_rating).toFixed(1)})` : '';
+    const skillLevel = opponent?.skill_rating ? Math.round(Number(opponent.skill_rating)) : 0;
+    const skillBars = Array.from({ length: 5 }, (_, i) =>
+      `<div class="mh-row__skill-bar ${i < skillLevel ? 'mh-row__skill-bar--filled' : 'mh-row__skill-bar--empty'}"></div>`
+    ).join('');
+
+    const resultClass = result === 'win' ? 'mh-row__result--win' : result === 'lose' ? 'mh-row__result--lose' : 'mh-row__result--draw';
+    const resultLabel = result.toUpperCase();
+
+    const oppId = opponent?.id || '';
+
+    return `<div class="mh-row" onclick="openPlayerCard('${oppId}')" title="View player card">
+      <div class="mh-row__avatar">${oppAvatar}</div>
+      <div class="mh-row__info">
+        <div class="mh-row__name">${oppName}</div>
+        <div class="mh-row__meta">
+          <span class="mh-row__stars">${socialStars} ${socialCount}</span>
+          <span class="mh-row__skill-bars">SKILL LEVEL ${skillBars}</span>
+          <span class="mh-row__format">${game.format}</span>
+        </div>
+      </div>
+      <div class="mh-row__result ${resultClass}">${resultLabel}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Open Player Card (Variant C placeholder) ──
+function openPlayerCard(userId) {
+  if (!userId) return;
+  // Navigate to app with player card param, or open inline if we build the modal here
+  console.log('Open player card for:', userId);
+}
+
+// ── Photo Upload ──
+function openPhotoModal() {
+  document.getElementById('photoModal').classList.add('active');
+  document.getElementById('photoPreview').classList.remove('has-image');
+  document.getElementById('photoProcessing').classList.remove('active');
+  document.getElementById('photoUploadBtn').textContent = 'Choose Photo';
+  document.getElementById('photoUploadBtn').disabled = false;
+}
+
+function closePhotoModal() {
+  document.getElementById('photoModal').classList.remove('active');
+}
+
+async function handlePhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('photoPreviewImg').src = e.target.result;
+    document.getElementById('photoPreview').classList.add('has-image');
+  };
+  reader.readAsDataURL(file);
+
+  // Upload to Supabase storage
+  const uploadBtn = document.getElementById('photoUploadBtn');
+  const processing = document.getElementById('photoProcessing');
+  const status = document.getElementById('photoStatus');
+
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = 'Uploading...';
+
+  try {
+    const ext = file.name.split('.').pop();
+    const path = `avatars/${currentUser.id}/avatar-${Date.now()}.${ext}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true });
+
+    if (uploadErr) throw uploadErr;
+
+    // Get public URL
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+    const publicUrl = urlData.publicUrl;
+
+    // Update profile with new avatar
+    await supabase.from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', currentUser.id);
+
+    currentProfile.avatar_url = publicUrl;
+
+    // Now run remove.bg via edge function
+    uploadBtn.style.display = 'none';
+    processing.classList.add('active');
+    status.textContent = 'Removing background...';
+
+    let token = null;
+    const { data: sessionData } = await supabase.auth.getSession();
+    token = sessionData?.session?.access_token;
+    if (!token) {
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      token = refreshData?.session?.access_token;
+    }
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/avatar-process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ imagePath: path })
+    });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Processing failed');
+
+    currentProfile.avatar_cutout_url = result.cutoutUrl;
+    status.textContent = 'Done!';
+
+    setTimeout(() => {
+      closePhotoModal();
+      renderCard();
+      updateNavDrawerUser();
+    }, 600);
+
+  } catch (err) {
+    console.error('Photo upload error:', err);
+    processing.classList.remove('active');
+    uploadBtn.style.display = '';
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = 'Try Again';
+    alert('Photo upload failed: ' + err.message);
+  }
+}
+
+// ── Cover Picker (placeholder — waiting for Figma mock) ──
+function openCoverPicker() {
+  // For now, redirect to Stars page covers tab
+  window.location.href = 'allnet-stars.html';
+}
+
+// ── Init ──
+async function initCareerPage() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'allnet-app.html';
+    return;
+  }
+
+  currentUser = session.user;
+  currentProfile = await getUserProfile(currentUser.id);
+
+  if (!currentProfile) {
+    window.location.href = 'allnet-app.html';
+    return;
+  }
+
+  updateNavDrawerUser();
+  await loadDivisionStats();
+  renderCard();
+  loadMatchHistory();
+}
+
+initCareerPage();
+</script>
+</body>
+</html>

@@ -8,6 +8,83 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<style>
+/* ═══ Variant A: Rating Update Overlay ═══ */
+.rating-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.rating-overlay.active{display:flex;}
+.rating-overlay__header{font-family:var(--font-body);font-size:14px;color:var(--text-muted);margin-bottom:16px;text-align:center;}
+.rating-overlay__card{position:relative;width:100%;max-width:343px;aspect-ratio:343/520;border-radius:16px;overflow:hidden;border:1px solid var(--orange);box-shadow:0 8px 32px rgba(0,0,0,0.8);background:#000;}
+.rating-overlay__card .cc__cover{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;}
+.rating-overlay__card .cc__gradient{position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,0.4) 50%,rgba(0,0,0,0.95) 75%,#000 100%);z-index:1;}
+.rating-overlay__card .cc__cutout{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);width:85%;max-height:70%;object-fit:contain;object-position:bottom center;z-index:2;}
+.rating-overlay__card .cc__name-block{position:absolute;top:12px;left:0;right:0;z-index:3;padding:0 14px;}
+.rating-overlay__card .cc__name-row{display:flex;align-items:center;gap:8px;}
+.rating-overlay__card .cc__name-row--first{justify-content:flex-start;}
+.rating-overlay__card .cc__name-row--last{justify-content:flex-end;}
+.rating-overlay__card .cc__name-text{font-family:var(--font-display);font-weight:700;font-size:clamp(28px,8vw,40px);letter-spacing:.04em;text-transform:uppercase;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.7);line-height:1.05;}
+.rating-overlay__card .cc__name-accent{height:4px;flex:1;border-radius:2px;min-width:20px;}
+.rating-overlay__card .cc__name-accent--orange{background:var(--orange);}
+.rating-overlay__card .cc__name-accent--blue{background:#2563EB;}
+.rating-overlay__card .cc__bottom{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:0 16px 16px;}
+.rating-overlay__card .cc__wld{display:flex;gap:0;margin-bottom:12px;}
+.rating-overlay__card .cc__wld-col{flex:1;display:flex;flex-direction:column;align-items:center;}
+.rating-overlay__card .cc__wld-label{font-family:var(--font-display);font-weight:600;font-size:16px;letter-spacing:.1em;color:rgba(255,255,255,0.6);}
+.rating-overlay__card .cc__wld-value{font-family:var(--font-display);font-weight:700;font-size:clamp(32px,9vw,48px);color:#fff;line-height:1.1;}
+.rating-overlay__card .cc__wld-delta{font-family:var(--font-display);font-size:14px;font-weight:700;color:#34d399;line-height:1;}
+.rating-overlay__card .cc__ratings{display:flex;flex-direction:column;gap:4px;}
+.rating-overlay__card .cc__rating-row{display:flex;justify-content:space-between;align-items:center;}
+.rating-overlay__card .cc__rating-label{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#fff;}
+.rating-overlay__card .cc__rating-value{font-family:var(--font-display);font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;}
+.rating-overlay__card .cc__rating-value--skill{color:var(--orange);}
+.rating-overlay__card .cc__rating-value--social{color:#facc15;}
+.rating-overlay__delta{font-size:12px;font-weight:600;margin-left:4px;}
+.rating-overlay__delta--up{color:#34d399;}
+.rating-overlay__delta--down{color:#f87171;}
+.rating-overlay__tabs{display:flex;justify-content:center;gap:8px;margin-top:16px;width:100%;max-width:343px;}
+.rating-overlay__tab{font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:6px 14px;cursor:pointer;background:transparent;transition:all .2s;}
+.rating-overlay__tab--active{border-color:#2563EB;color:#2563EB;background:rgba(37,99,235,0.08);}
+.rating-overlay__done{width:100%;max-width:343px;margin-top:20px;padding:16px;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--orange);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:opacity .2s;}
+.rating-overlay__done:hover{opacity:0.9;}
+
+/* ═══ Variant C: Public Player Card Bottom Sheet ═══ */
+.player-sheet-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;justify-content:center;}
+.player-sheet-overlay.active{display:flex;}
+.player-sheet{width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:12px 16px 32px;max-height:90vh;overflow-y:auto;animation:sheetUp .3s ease-out;}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.player-sheet__handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 16px;}
+.player-sheet__card{position:relative;width:100%;max-width:380px;margin:0 auto;aspect-ratio:343/520;border-radius:16px;overflow:hidden;border:1px solid var(--orange);box-shadow:0 8px 32px rgba(0,0,0,0.6);background:#000;}
+.player-sheet__card .cc__cover{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;}
+.player-sheet__card .cc__gradient{position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,0.4) 50%,rgba(0,0,0,0.95) 75%,#000 100%);z-index:1;}
+.player-sheet__card .cc__cutout{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);width:85%;max-height:70%;object-fit:contain;object-position:bottom center;z-index:2;}
+.player-sheet__card .cc__name-block{position:absolute;top:12px;left:0;right:0;z-index:3;padding:0 14px;}
+.player-sheet__card .cc__name-row{display:flex;align-items:center;gap:8px;}
+.player-sheet__card .cc__name-row--first{justify-content:flex-start;}
+.player-sheet__card .cc__name-row--last{justify-content:flex-end;}
+.player-sheet__card .cc__name-text{font-family:var(--font-display);font-weight:700;font-size:clamp(28px,8vw,40px);letter-spacing:.04em;text-transform:uppercase;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.7);line-height:1.05;}
+.player-sheet__card .cc__name-accent{height:4px;flex:1;border-radius:2px;min-width:20px;}
+.player-sheet__card .cc__name-accent--orange{background:var(--orange);}
+.player-sheet__card .cc__name-accent--blue{background:#2563EB;}
+.player-sheet__card .cc__bottom{position:absolute;bottom:0;left:0;right:0;z-index:3;padding:0 16px 16px;}
+.player-sheet__card .cc__wld{display:flex;gap:0;margin-bottom:12px;}
+.player-sheet__card .cc__wld-col{flex:1;display:flex;flex-direction:column;align-items:center;}
+.player-sheet__card .cc__wld-label{font-family:var(--font-display);font-weight:600;font-size:16px;letter-spacing:.1em;color:rgba(255,255,255,0.6);}
+.player-sheet__card .cc__wld-value{font-family:var(--font-display);font-weight:700;font-size:clamp(32px,9vw,48px);color:#fff;line-height:1.1;}
+.player-sheet__card .cc__ratings{display:flex;flex-direction:column;gap:4px;}
+.player-sheet__card .cc__rating-row{display:flex;justify-content:space-between;align-items:center;}
+.player-sheet__card .cc__rating-label{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#fff;}
+.player-sheet__card .cc__rating-value{font-family:var(--font-display);font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;}
+.player-sheet__card .cc__rating-value--skill{color:var(--orange);}
+.player-sheet__card .cc__rating-value--social{color:#facc15;}
+.player-sheet__tabs{display:flex;justify-content:center;gap:8px;margin-top:16px;max-width:380px;margin-left:auto;margin-right:auto;}
+.player-sheet__tab{font-family:var(--font-display);font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:6px 14px;cursor:pointer;background:transparent;transition:all .2s;}
+.player-sheet__tab--active{border-color:#2563EB;color:#2563EB;background:rgba(37,99,235,0.08);}
+.player-sheet__actions{display:flex;gap:10px;margin-top:16px;max-width:380px;margin-left:auto;margin-right:auto;}
+.player-sheet__action-btn{flex:1;font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:transparent;border:1px solid var(--border);border-radius:8px;padding:12px 0;cursor:pointer;transition:all .2s;}
+.player-sheet__action-btn:hover{border-color:#fff;}
+.player-sheet__close{display:flex;justify-content:center;margin-top:16px;}
+.player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.player-sheet__close-btn:hover{background:rgba(255,255,255,0.15);}
+</style>
 </head>
 <body>
 
@@ -38,10 +115,9 @@
         <span class="nav-drawer__link-icon">📊</span>
         <span class="nav-drawer__link-label">Activity</span>
       </a>
-      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="career">
+      <a href="allnet-career.html" class="nav-drawer__link" data-nav="career">
         <span class="nav-drawer__link-icon">🏆</span>
         <span class="nav-drawer__link-label">Career</span>
-        <span class="nav-drawer__link-badge">Soon</span>
       </a>
       <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars">
         <span class="nav-drawer__link-icon">⭐</span>
@@ -315,6 +391,30 @@
       <div class="onboarding-error" id="promptPhotoError"></div>
       <button class="btn btn--primary" id="promptPhotoBtn" onclick="submitPromptAvatar()" style="width:100%;margin-bottom:10px;flex:none;" disabled>Upload & Start Game</button>
       <button class="btn btn--secondary" onclick="closePhotoPromptModal()" style="width:100%;flex:none;">Not now</button>
+    </div>
+  </div>
+
+  <!-- ═══ Variant A: Rating Update Overlay ═══ -->
+  <div class="rating-overlay" id="ratingOverlay">
+    <div class="rating-overlay__header">Your career card has updated!</div>
+    <div class="rating-overlay__card" id="ratingOverlayCard"></div>
+    <div class="rating-overlay__tabs" id="ratingOverlayTabs"></div>
+    <button class="rating-overlay__done" onclick="dismissRatingOverlay()">Done</button>
+  </div>
+
+  <!-- ═══ Variant C: Public Player Card Bottom Sheet ═══ -->
+  <div class="player-sheet-overlay" id="playerSheetOverlay" onclick="closePlayerSheet(event)">
+    <div class="player-sheet" onclick="event.stopPropagation()">
+      <div class="player-sheet__handle"></div>
+      <div class="player-sheet__card" id="playerSheetCard"></div>
+      <div class="player-sheet__tabs" id="playerSheetTabs"></div>
+      <div class="player-sheet__actions">
+        <button class="player-sheet__action-btn" onclick="alert('Follow feature coming soon!')">Follow</button>
+        <button class="player-sheet__action-btn" onclick="alert('Friend feature coming soon!')">Friend</button>
+      </div>
+      <div class="player-sheet__close">
+        <button class="player-sheet__close-btn" onclick="closePlayerSheet()">✕</button>
+      </div>
     </div>
   </div>
 

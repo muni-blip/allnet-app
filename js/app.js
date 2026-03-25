@@ -912,7 +912,7 @@ async function oauthSignIn(provider) {
 /* ══════════════════════════════
    PROXIMITY VALIDATION
    ══════════════════════════════ */
-const CHECKIN_RADIUS_MILES = 0.3;
+const CHECKIN_RADIUS_MILES = 0.5;
 
 function validateProximity(court) {
   if (userLat === null || userLng === null) {
@@ -933,7 +933,7 @@ function handleProximityFailure(result, courtName) {
     return;
   }
   if (result.reason === 'too_far') {
-    showAlert('Too Far Away', `You're ${result.distance.toFixed(1)} miles from ${courtName}. You need to be within ${CHECKIN_RADIUS_MILES} miles to check in.`, { icon: '📍' });
+    showAlert('Too Far Away', `You're ${result.distance.toFixed(2)} miles from ${courtName}. You need to be within ${CHECKIN_RADIUS_MILES} miles to check in.`, { icon: '📍' });
   }
 }
 

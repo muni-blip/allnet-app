@@ -155,6 +155,7 @@ function renderCard() {
     lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: currentProfile?.avatar_cutout_url,
     coverSlug: currentProfile?.selected_cover || 'crossover',
+    showPlaceholder: !currentProfile?.avatar_cutout_url,
     wins: ds?.wins || 0,
     losses: ds?.losses || 0,
     draws: ds?.draws || 0,

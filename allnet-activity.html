@@ -337,7 +337,7 @@ html, body { height: auto; overflow: auto; }
   font-size: 16px;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  z-index: 2;
+  z-index: 10;
   backdrop-filter: blur(4px);
 }
 
@@ -583,8 +583,8 @@ function renderMatchCard(match, media) {
       : '';
 
     const navHtml = media.length > 1
-      ? `<button class="match-card__media-nav match-card__media-nav--prev" onclick="slideCarousel('${carouselId}', -1)">‹</button>
-         <button class="match-card__media-nav match-card__media-nav--next" onclick="slideCarousel('${carouselId}', 1)">›</button>`
+      ? `<button class="match-card__media-nav match-card__media-nav--prev" onclick="event.stopPropagation();slideCarousel('${carouselId}', -1)">‹</button>
+         <button class="match-card__media-nav match-card__media-nav--next" onclick="event.stopPropagation();slideCarousel('${carouselId}', 1)">›</button>`
       : '';
 
     mediaHtml = `<div class="match-card__media" id="${carouselId}" data-idx="0" data-count="${media.length}">

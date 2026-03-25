@@ -20,10 +20,10 @@ html, body { height: auto; overflow: auto; }
 .cc-action-btn { flex: 1; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; background: transparent; border: 1px solid #5a5a5a; padding: 12px 32px; cursor: pointer; transition: all 0.2s; }
 .cc-action-btn:hover { border-color: #fff; }
 
-.match-history { padding: 40px 16px 0; }
+.match-history { padding: 40px 16px 0; max-width: 375px; margin: 0 auto; }
 .match-history__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; margin-bottom: 16px; }
 .match-history__empty { text-align: center; padding: 32px 16px; color: #666; font-size: 14px; font-family: 'Montserrat', sans-serif; }
-.mh-row { width: 343px; height: 108px; max-width: 100%; background: #181818; border: 1px solid #2e2e2e; position: relative; margin-bottom: 16px; cursor: pointer; overflow: hidden; }
+.mh-row { width: 100%; max-width: 343px; height: 108px; background: #181818; border: 1px solid #2e2e2e; position: relative; margin: 0 auto 16px; cursor: pointer; overflow: hidden; }
 .mh-row__thumb { position: absolute; left: -1px; top: -1px; width: 108px; height: 108px; overflow: hidden; background: #111; }
 .mh-row__thumb-cover { position: absolute; inset: 0; background-size: cover; background-position: center; }
 .mh-row__thumb-cutout { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
@@ -67,6 +67,7 @@ html, body { height: auto; overflow: auto; }
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F74501" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     </button>
     <div class="career-topbar__title">Your Career Card</div>
+    <div style="width:48px;flex-shrink:0;"></div>
   </div>
   <div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
   <div class="nav-drawer" id="navDrawer">

@@ -42,6 +42,8 @@ html, body { height: auto; overflow: auto; }
 .mh-row__skill-bar--filled { background: #F74501; }
 .mh-row__skill-bar--empty { background: rgba(247,69,1,0.2); }
 .mh-row__result { position: absolute; left: 119px; top: 79px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; line-height: 16px; color: #c4c4c4; }
+.mh-row__unrated { font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 11px; color: #555; margin-top: 4px; }
+.mh-row__time { font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 10px; color: #555; }
 
 .photo-modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; padding: 20px; }
 .photo-modal-overlay.active { display: flex; }
@@ -264,9 +266,8 @@ function switchDivision(dv) { activeDivision = dv; renderCard(); }
 async function loadDivisionStats() {
   var res = await supabase.from('player_division_stats').select('*').eq('user_id', currentUser.id);
   if (res.data) res.data.forEach(function(r) { divisionStats[r.division] = r; });
-  var best = '1v1', bg = 0;
-  for (var dv in divisionStats) { if (divisionStats[dv].games_count > bg) { bg = divisionStats[dv].games_count; best = dv; } }
-  if (bg > 0) activeDivision = best;
+  // Always default to 1v1
+  activeDivision = '1v1';
 }
 
 /* ── Match History ── */
@@ -307,6 +308,15 @@ var DIV_THUMBS = {
   '5v5': 'img/5v5.png'
 };
 
+function timeAgo(date) {
+  var s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return 'Just now';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  if (s < 604800) return Math.floor(s / 86400) + 'd ago';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 function updateMH(rows) {
   document.getElementById('matchHistoryTitle').textContent = 'MATCH HISTORY (' + rows.length + ')';
   var el = document.getElementById('matchHistoryList');
@@ -316,16 +326,23 @@ function updateMH(rows) {
     var isTeamGame = g.format !== '1v1';
     var nm = isTeamGame ? g.format.toUpperCase() : (opp ? (opp.first_name && opp.last_name ? opp.first_name + ' ' + opp.last_name : opp.name) : 'Unknown Player');
 
-    // Social rating from profile
-    var sv = opp && opp.social_rating ? Number(opp.social_rating) : 0; var sc = opp && opp.social_rating ? '(' + Math.round(sv) + ')' : '';
-    var fs = Math.round(sv); var sh = ''; for (var i = 0; i < 5; i++) sh += starSvg(i < fs);
+    // Timestamp
+    var timeStr = g.ended_at ? timeAgo(new Date(g.ended_at)) : '';
 
-    // Skill rating from per-division stats (not overall profile rating)
+    // Social rating from profile
+    var hasSocial = opp && opp.social_rating && Number(opp.social_rating) > 0;
+    var sv = hasSocial ? Number(opp.social_rating) : 0;
+    var sc = hasSocial ? '(' + sv.toFixed(1) + ')' : '';
+    var fs = Math.round(sv);
+    var sh = ''; for (var i = 0; i < 5; i++) sh += starSvg(i < fs);
+
+    // Skill rating from per-division stats
     var divStat = opp ? oppDivisionStats[opp.id + '_' + g.format] : null;
-    var skv = divStat && divStat.skill_rating ? Math.round(Number(divStat.skill_rating)) : 0;
+    var hasSkill = divStat && divStat.skill_rating && Number(divStat.skill_rating) > 0;
+    var skv = hasSkill ? Math.round(Number(divStat.skill_rating)) : 0;
     var bh = ''; for (var i = 0; i < 5; i++) bh += '<div class="mh-row__skill-bar ' + (i < skv ? 'mh-row__skill-bar--filled' : 'mh-row__skill-bar--empty') + '"></div>';
 
-    // Thumbnail: division image for team games, opponent avatar for 1v1
+    // Thumbnail
     var th;
     if (isTeamGame && DIV_THUMBS[g.format]) {
       th = '<img src="' + DIV_THUMBS[g.format] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + g.format + '">';
@@ -335,16 +352,29 @@ function updateMH(rows) {
       th = ct ? '<div class="mh-row__thumb-cover" style="background-image:url(\'' + cu + '\')"></div><img class="mh-row__thumb-cutout" src="' + ct + '" alt="" onerror="this.style.display=\'none\'">' : opp && opp.avatar_url ? '<img src="' + opp.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="mh-row__thumb-initials">' + ini + '</div>';
     }
 
-    // For team games, show format + court info instead of opponent social/skill
+    // Build info section
     var infoHtml;
     if (isTeamGame) {
       infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__skill"><span class="mh-row__skill-label">' + g.format.toUpperCase() + ' DIVISION</span></div></div>';
+    } else if (!hasSocial && !hasSkill) {
+      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__unrated">Unrated</div></div>';
     } else {
-      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__stars"><div class="mh-row__stars-icons">' + sh + '</div><span class="mh-row__stars-count">' + sc + '</span></div><div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">' + bh + '</div></div></div>';
+      var ratingsHtml = '';
+      if (hasSocial) {
+        ratingsHtml += '<div class="mh-row__stars"><div class="mh-row__stars-icons">' + sh + '</div><span class="mh-row__stars-count">' + sc + '</span></div>';
+      }
+      if (hasSkill) {
+        ratingsHtml += '<div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">' + bh + '</div></div>';
+      }
+      if (!hasSocial) ratingsHtml += '<div class="mh-row__unrated">Social: Unrated</div>';
+      if (!hasSkill) ratingsHtml += '<div class="mh-row__unrated">Skill: Unrated</div>';
+      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div>' + ratingsHtml + '</div>';
     }
 
+    var resultHtml = '<div class="mh-row__result">' + r + (timeStr ? '<div class="mh-row__time">' + timeStr + '</div>' : '') + '</div>';
+
     var clickTarget = isTeamGame ? '' : (opp ? opp.id : '');
-    return '<div class="mh-row" onclick="openPlayerCard(\'' + clickTarget + '\')">' + '<div class="mh-row__thumb">' + th + '</div>' + infoHtml + '<div class="mh-row__result">' + r + '</div></div>';
+    return '<div class="mh-row" onclick="openPlayerCard(\'' + clickTarget + '\')">' + '<div class="mh-row__thumb">' + th + '</div>' + infoHtml + resultHtml + '</div>';
   }).join('');
 }
 

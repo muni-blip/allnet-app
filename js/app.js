@@ -11,114 +11,64 @@ let checkinCourts = new Set();
 
 /* ══════════════════════════════
    VARIANT C — Public Player Card (bottom sheet)
-   Opens when tapping any player name/image
+   Uses shared CareerCard component
    ══════════════════════════════ */
 async function showPlayerCard(name, userId) {
   if (!userId) return;
   const overlay = document.getElementById('playerSheetOverlay');
   const cardEl = document.getElementById('playerSheetCard');
-  const tabsEl = document.getElementById('playerSheetTabs');
   if (!overlay || !cardEl) return;
 
-  // Fetch player profile
   const { data: player } = await supabase.from('profiles')
     .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating, skill_rating')
     .eq('id', userId).single();
+  if (!player) return;
 
-  if (!player) { console.warn('Player not found:', userId); return; }
-
-  // Fetch division stats
   const { data: stats } = await supabase.from('player_division_stats')
     .select('*').eq('user_id', userId);
 
   const divStats = {};
   let bestDiv = '1v1', bestGames = 0;
-  if (stats) {
-    stats.forEach(s => {
-      divStats[s.division] = s;
-      if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
-    });
-  }
+  if (stats) stats.forEach(s => {
+    divStats[s.division] = s;
+    if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
+  });
 
-  // Store on overlay for tab switching
   overlay._playerData = { player, divStats, activeDivision: bestGames > 0 ? bestDiv : '1v1' };
-
-  renderPlayerSheetCard(overlay._playerData);
-
-  // Render tabs
-  const divisions = ['1v1','2v2','3v3','4v4','5v5'];
-  tabsEl.innerHTML = divisions.map(d =>
-    `<button class="player-sheet__tab ${d === overlay._playerData.activeDivision ? 'player-sheet__tab--active' : ''}"
-      onclick="switchPlayerSheetDiv('${d}', this)">${d}</button>`
-  ).join('');
-
+  renderPlayerSheetCard();
   overlay.classList.add('active');
 }
 
-function renderPlayerSheetCard(data) {
-  const { player, divStats, activeDivision } = data;
+function renderPlayerSheetCard() {
+  const overlay = document.getElementById('playerSheetOverlay');
   const cardEl = document.getElementById('playerSheetCard');
-  const cover = player.selected_cover || 'crossover';
-  const coverFile = COVERS[cover] || COVERS.crossover;
-  const firstName = (player.first_name || player.name?.split(' ')[0] || '').toUpperCase();
-  const lastName = (player.last_name || player.name?.split(' ').slice(1).join(' ') || '').toUpperCase();
+  if (!overlay?._playerData || !cardEl) return;
+  const { player, divStats, activeDivision } = overlay._playerData;
   const ds = divStats[activeDivision];
-  const wins = ds?.wins || 0, losses = ds?.losses || 0, draws = ds?.draws || 0;
-  const skillRating = ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—';
-  const socialRating = player.social_rating ? Number(player.social_rating).toFixed(1) : '—';
-  const cutoutUrl = player.avatar_cutout_url;
 
-  if (!cutoutUrl) {
-    cardEl.innerHTML = `
-      <div class="cc__cover" style="background-image:url('${coverFile}')"></div>
-      <div class="cc__gradient"></div>
-      <div style="position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;">${firstName} ${lastName}<br><span style="font-size:12px;margin-top:4px;">No photo yet</span></div>`;
-    return;
-  }
-
-  cardEl.innerHTML = `
-    <div class="cc__cover" style="background-image:url('${coverFile}')"></div>
-    <div class="cc__gradient"></div>
-    <img class="cc__cutout" src="${cutoutUrl}" alt="${firstName} ${lastName}" onerror="this.style.display='none'">
-    <div class="cc__name-block">
-      <div class="cc__name-row cc__name-row--first">
-        <div class="cc__name-text">${firstName}</div>
-        <div class="cc__name-accent cc__name-accent--orange"></div>
-      </div>
-      <div class="cc__name-row cc__name-row--last">
-        <div class="cc__name-accent cc__name-accent--blue"></div>
-        <div class="cc__name-text">${lastName}</div>
-      </div>
-    </div>
-    <div class="cc__bottom">
-      <div class="cc__wld">
-        <div class="cc__wld-col"><span class="cc__wld-label">W</span><span class="cc__wld-value">${wins}</span></div>
-        <div class="cc__wld-col"><span class="cc__wld-label">L</span><span class="cc__wld-value">${losses}</span></div>
-        <div class="cc__wld-col"><span class="cc__wld-label">D</span><span class="cc__wld-value">${draws}</span></div>
-      </div>
-      <div class="cc__ratings">
-        <div class="cc__rating-row">
-          <span class="cc__rating-label">SKILL RATING</span>
-          <span class="cc__rating-value cc__rating-value--skill">
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="#F74501"><rect x="0" y="0" width="6" height="14" rx="1"/><rect x="8" y="0" width="6" height="14" rx="1"/></svg>
-            ${skillRating}
-          </span>
-        </div>
-        <div class="cc__rating-row">
-          <span class="cc__rating-label">SOCIAL RATING</span>
-          <span class="cc__rating-value cc__rating-value--social">★ ${socialRating}</span>
-        </div>
-      </div>
-    </div>`;
+  cardEl.innerHTML = CareerCard.render({
+    cardId: 'psc',
+    firstName: player.first_name || player.name?.split(' ')[0] || '',
+    lastName: player.last_name || player.name?.split(' ').slice(1).join(' ') || '',
+    cutoutUrl: player.avatar_cutout_url,
+    coverSlug: player.selected_cover || 'crossover',
+    wins: ds?.wins || 0, losses: ds?.losses || 0, draws: ds?.draws || 0,
+    skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
+    socialRating: player.social_rating ? Number(player.social_rating).toFixed(1) : '—',
+    divisionLabel: activeDivision.toUpperCase(),
+    activeDivision: activeDivision,
+    showTabs: true,
+    onTabClick: 'switchPlayerSheetDiv',
+    showDeltas: false
+  });
+  requestAnimationFrame(() => CareerCard.fitNames('psc'));
 }
 
-function switchPlayerSheetDiv(div, el) {
+function switchPlayerSheetDiv(div) {
   const overlay = document.getElementById('playerSheetOverlay');
-  if (!overlay._playerData) return;
+  if (!overlay?._playerData) return;
   overlay._playerData.activeDivision = div;
-  document.querySelectorAll('.player-sheet__tab').forEach(t => t.classList.remove('player-sheet__tab--active'));
-  if (el) el.classList.add('player-sheet__tab--active');
-  renderPlayerSheetCard(overlay._playerData);
+  renderPlayerSheetCard();
 }
 
 function closePlayerSheet(event) {
@@ -126,149 +76,85 @@ function closePlayerSheet(event) {
   document.getElementById('playerSheetOverlay').classList.remove('active');
 }
 
-function closePlayerCard() {
-  closePlayerSheet();
-}
+function closePlayerCard() { closePlayerSheet(); }
 
 /* ══════════════════════════════
    VARIANT A — Rating Update Overlay
-   Checks for unseen rating changes on app open
+   Uses shared CareerCard component with deltas
    ══════════════════════════════ */
 async function checkRatingUpdates() {
   if (!currentUser) return;
-
   const { data: updates, error } = await supabase
-    .from('rating_updates')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('seen', false)
+    .from('rating_updates').select('*')
+    .eq('user_id', currentUser.id).eq('seen', false)
     .order('created_at', { ascending: false });
-
   if (error || !updates || updates.length === 0) return;
-
-  // Use the most recent update
-  const latest = updates[0];
-  showRatingOverlay(latest, updates);
+  showRatingOverlay(updates[0], updates);
 }
 
 async function showRatingOverlay(latestUpdate, allUpdates) {
   const overlay = document.getElementById('ratingOverlay');
   if (!overlay) return;
 
-  // Load division stats for the card display
   const { data: stats } = await supabase.from('player_division_stats')
     .select('*').eq('user_id', currentUser.id);
-
   const divStats = {};
   if (stats) stats.forEach(s => { divStats[s.division] = s; });
 
-  const targetDiv = latestUpdate.division;
-
-  // Store data for tab switching
   overlay._ratingData = {
-    profile: currentProfile,
-    divStats,
-    activeDivision: targetDiv,
-    latestUpdate,
+    profile: currentProfile, divStats,
+    activeDivision: latestUpdate.division,
     allUpdates
   };
 
-  renderRatingOverlayCard(overlay._ratingData);
-
-  // Render tabs
-  const divisions = ['1v1','2v2','3v3','4v4','5v5'];
-  document.getElementById('ratingOverlayTabs').innerHTML = divisions.map(d =>
-    `<button class="rating-overlay__tab ${d === targetDiv ? 'rating-overlay__tab--active' : ''}"
-      onclick="switchRatingOverlayDiv('${d}', this)">${d}</button>`
-  ).join('');
-
+  renderRatingOverlayCard();
   overlay.classList.add('active');
 }
 
-function renderRatingOverlayCard(data) {
-  const { profile, divStats, activeDivision, latestUpdate, allUpdates } = data;
+function renderRatingOverlayCard() {
+  const overlay = document.getElementById('ratingOverlay');
   const cardEl = document.getElementById('ratingOverlayCard');
-  const cover = profile.selected_cover || 'crossover';
-  const coverFile = COVERS[cover] || COVERS.crossover;
-  const firstName = (profile.first_name || profile.name?.split(' ')[0] || '').toUpperCase();
-  const lastName = (profile.last_name || profile.name?.split(' ').slice(1).join(' ') || '').toUpperCase();
+  if (!overlay?._ratingData || !cardEl) return;
+  const { profile, divStats, activeDivision, allUpdates } = overlay._ratingData;
   const ds = divStats[activeDivision];
-  const wins = ds?.wins || 0, losses = ds?.losses || 0, draws = ds?.draws || 0;
-  const skillRating = ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—';
-  const socialRating = profile.social_rating ? Number(profile.social_rating).toFixed(1) : '—';
-  const cutoutUrl = profile.avatar_cutout_url;
-
-  // Find deltas for this division from updates
   const divUpdate = allUpdates.find(u => u.division === activeDivision);
-  const skillDelta = divUpdate?.skill_delta ? Number(divUpdate.skill_delta) : null;
-  const socialDelta = divUpdate?.social_delta ? Number(divUpdate.social_delta) : null;
-  const winsDelta = divUpdate?.wins_delta || 0;
 
-  const skillDeltaHtml = skillDelta !== null
-    ? `<span class="rating-overlay__delta ${skillDelta >= 0 ? 'rating-overlay__delta--up' : 'rating-overlay__delta--down'}">${skillDelta >= 0 ? '+' : ''}${skillDelta.toFixed(1)} ↗</span>`
-    : '';
-  const socialDeltaHtml = socialDelta !== null
-    ? `<span class="rating-overlay__delta ${socialDelta >= 0 ? 'rating-overlay__delta--up' : 'rating-overlay__delta--down'}">${socialDelta >= 0 ? '+' : ''}${socialDelta.toFixed(1)} ↗</span>`
-    : '';
-  const winsDeltaHtml = winsDelta > 0 ? `<div class="cc__wld-delta">+${winsDelta}</div>` : '';
-
-  if (!cutoutUrl) { cardEl.innerHTML = ''; return; }
-
-  cardEl.innerHTML = `
-    <div class="cc__cover" style="background-image:url('${coverFile}')"></div>
-    <div class="cc__gradient"></div>
-    <img class="cc__cutout" src="${cutoutUrl}" alt="${firstName} ${lastName}" onerror="this.style.display='none'">
-    <div class="cc__name-block">
-      <div class="cc__name-row cc__name-row--first">
-        <div class="cc__name-text">${firstName}</div>
-        <div class="cc__name-accent cc__name-accent--orange"></div>
-      </div>
-      <div class="cc__name-row cc__name-row--last">
-        <div class="cc__name-accent cc__name-accent--blue"></div>
-        <div class="cc__name-text">${lastName}</div>
-      </div>
-    </div>
-    <div class="cc__bottom">
-      <div class="cc__wld">
-        <div class="cc__wld-col"><span class="cc__wld-label">W</span><span class="cc__wld-value">${wins}</span>${winsDeltaHtml}</div>
-        <div class="cc__wld-col"><span class="cc__wld-label">L</span><span class="cc__wld-value">${losses}</span></div>
-        <div class="cc__wld-col"><span class="cc__wld-label">D</span><span class="cc__wld-value">${draws}</span></div>
-      </div>
-      <div class="cc__ratings">
-        <div class="cc__rating-row">
-          <span class="cc__rating-label">SKILL RATING</span>
-          <span class="cc__rating-value cc__rating-value--skill">
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="#F74501"><rect x="0" y="0" width="6" height="14" rx="1"/><rect x="8" y="0" width="6" height="14" rx="1"/></svg>
-            ${skillRating} ${skillDeltaHtml}
-          </span>
-        </div>
-        <div class="cc__rating-row">
-          <span class="cc__rating-label">SOCIAL RATING</span>
-          <span class="cc__rating-value cc__rating-value--social">★ ${socialRating} ${socialDeltaHtml}</span>
-        </div>
-      </div>
-    </div>`;
+  cardEl.innerHTML = CareerCard.render({
+    cardId: 'rov',
+    firstName: profile.first_name || profile.name?.split(' ')[0] || '',
+    lastName: profile.last_name || profile.name?.split(' ').slice(1).join(' ') || '',
+    cutoutUrl: profile.avatar_cutout_url,
+    coverSlug: profile.selected_cover || 'crossover',
+    wins: ds?.wins || 0, losses: ds?.losses || 0, draws: ds?.draws || 0,
+    skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
+    socialRating: profile.social_rating ? Number(profile.social_rating).toFixed(1) : '—',
+    divisionLabel: activeDivision.toUpperCase(),
+    activeDivision: activeDivision,
+    showTabs: true,
+    onTabClick: 'switchRatingOverlayDiv',
+    showDeltas: true,
+    skillDelta: divUpdate?.skill_delta != null ? Number(divUpdate.skill_delta) : null,
+    socialDelta: divUpdate?.social_delta != null ? Number(divUpdate.social_delta) : null,
+    winsDelta: divUpdate?.wins_delta || 0,
+    lossesDelta: divUpdate?.losses_delta || 0,
+    drawsDelta: divUpdate?.draws_delta || 0
+  });
+  requestAnimationFrame(() => CareerCard.fitNames('rov'));
 }
 
-function switchRatingOverlayDiv(div, el) {
+function switchRatingOverlayDiv(div) {
   const overlay = document.getElementById('ratingOverlay');
-  if (!overlay._ratingData) return;
+  if (!overlay?._ratingData) return;
   overlay._ratingData.activeDivision = div;
-  document.querySelectorAll('.rating-overlay__tab').forEach(t => t.classList.remove('rating-overlay__tab--active'));
-  if (el) el.classList.add('rating-overlay__tab--active');
-  renderRatingOverlayCard(overlay._ratingData);
+  renderRatingOverlayCard();
 }
 
 async function dismissRatingOverlay() {
-  const overlay = document.getElementById('ratingOverlay');
-  overlay.classList.remove('active');
-
-  // Mark all unseen updates as seen
+  document.getElementById('ratingOverlay').classList.remove('active');
   if (currentUser) {
     await supabase.from('rating_updates')
       .update({ seen: true })
-      .eq('user_id', currentUser.id)
-      .eq('seen', false);
+      .eq('user_id', currentUser.id).eq('seen', false);
   }
 }
 
@@ -1438,112 +1324,97 @@ function updateAvatarDisplays(url) {
 }
 
 /* ══════════════════════════════
-   COVERS CATALOG
-   Served from Supabase Storage public bucket.
-   To add a new cover: upload to the 'covers' bucket
-   and add an entry here — no code deploy needed.
+   COVERS — alias from shared component
    ══════════════════════════════ */
-const SUPABASE_COVERS_URL = 'https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
-
-const COVERS = {
-  crossover:  SUPABASE_COVERS_URL + '/Crossover.png',
-  rally:      SUPABASE_COVERS_URL + '/Rally.png',
-  flowstate:  SUPABASE_COVERS_URL + '/Flowstate.png',
-  fastbreak:  SUPABASE_COVERS_URL + '/Fastbreak.png',
-  shatter:    SUPABASE_COVERS_URL + '/Shatter.png',
-  showtime:   SUPABASE_COVERS_URL + '/Showtime.png',
-  fadeaway:   SUPABASE_COVERS_URL + '/Fadeaway.png'
-};
+const COVERS = CareerCard.COVERS;
 
 /* ══════════════════════════════
-   RENDER CAREER CARD
-   CSS-composited: cover bg + cutout PNG
+   RENDER CAREER CARD (Profile page)
+   Uses shared CareerCard component
    ══════════════════════════════ */
 function renderCareerCard() {
   const cardEl = document.getElementById('careerCard');
   if (!cardEl) return;
 
-  const cutoutUrl   = currentProfile?.avatar_cutout_url;
-  const cover       = currentProfile?.selected_cover || 'crossover';
-  const coverFile   = COVERS[cover] || COVERS.crossover;
-  const firstName   = (currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '').toUpperCase();
-  const lastName    = (currentProfile?.last_name  || currentProfile?.name?.split(' ').slice(1).join(' ') || '').toUpperCase();
-  const wins        = currentProfile?.wins   || 0;
-  const losses      = currentProfile?.losses || 0;
-  const draws       = currentProfile?.draws  || 0;
-  const skillRating = currentProfile?.skill_rating  ? Number(currentProfile.skill_rating).toFixed(1)  : '—';
-  const socialRating= currentProfile?.social_rating ? Number(currentProfile.social_rating).toFixed(1) : '—';
+  cardEl.innerHTML = CareerCard.render({
+    cardId: 'profileCC',
+    firstName: currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '',
+    lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
+    cutoutUrl: currentProfile?.avatar_cutout_url,
+    coverSlug: currentProfile?.selected_cover || 'crossover',
+    wins: currentProfile?.wins || 0,
+    losses: currentProfile?.losses || 0,
+    draws: currentProfile?.draws || 0,
+    skillRating: currentProfile?.skill_rating ? Number(currentProfile.skill_rating).toFixed(1) : '—',
+    socialRating: currentProfile?.social_rating ? Number(currentProfile.social_rating).toFixed(1) : '—',
+    divisionLabel: '1V1',
+    activeDivision: '1v1',
+    showTabs: true,
+    onTabClick: 'switchProfileCardDivision',
+    showDeltas: false
+  });
 
-  if (!cutoutUrl) {
-    cardEl.innerHTML = `
-      <div class="career-card__cover" style="background-image:url('${coverFile}')"></div>
-      <div class="career-card__gradient"></div>
-      <div class="career-card__placeholder">
-        <div class="career-card__placeholder-icon">📷</div>
-        <div class="career-card__placeholder-text">Upload a photo to generate your career card</div>
-      </div>`;
-    return;
+  requestAnimationFrame(function() { CareerCard.fitNames('profileCC'); });
+}
+
+// Profile card division switching
+let profileCardDivStats = {};
+let profileCardActiveDivision = '1v1';
+
+function switchProfileCardDivision(div) {
+  profileCardActiveDivision = div;
+  const ds = profileCardDivStats[div];
+  const cardEl = document.getElementById('careerCard');
+  if (!cardEl) return;
+
+  cardEl.innerHTML = CareerCard.render({
+    cardId: 'profileCC',
+    firstName: currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '',
+    lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
+    cutoutUrl: currentProfile?.avatar_cutout_url,
+    coverSlug: currentProfile?.selected_cover || 'crossover',
+    wins: ds?.wins || 0,
+    losses: ds?.losses || 0,
+    draws: ds?.draws || 0,
+    skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
+    socialRating: currentProfile?.social_rating ? Number(currentProfile.social_rating).toFixed(1) : '—',
+    divisionLabel: div.toUpperCase(),
+    activeDivision: div,
+    showTabs: true,
+    onTabClick: 'switchProfileCardDivision',
+    showDeltas: false
+  });
+
+  requestAnimationFrame(function() { CareerCard.fitNames('profileCC'); });
+}
+
+// Load profile division stats after profile loads
+async function loadProfileDivisionStats() {
+  if (!currentUser) return;
+  const { data } = await supabase.from('player_division_stats').select('*').eq('user_id', currentUser.id);
+  if (data) data.forEach(function(r) { profileCardDivStats[r.division] = r; });
+
+  // Auto-select most played division
+  let best = '1v1', bg = 0;
+  for (const dv in profileCardDivStats) {
+    if (profileCardDivStats[dv].games_count > bg) { bg = profileCardDivStats[dv].games_count; best = dv; }
   }
-
-  cardEl.innerHTML = `
-    <div class="career-card__cover" style="background-image:url('${coverFile}')"></div>
-    <div class="career-card__gradient"></div>
-    <img class="career-card__cutout" src="${cutoutUrl}" alt="${firstName} ${lastName}" onerror="this.style.display='none'">
-
-    <div class="career-card__name-block">
-      <div class="career-card__name-row career-card__name-row--first">
-        <div class="career-card__name-text">${firstName}</div>
-        <div class="career-card__name-accent career-card__name-accent--orange"></div>
-      </div>
-      <div class="career-card__name-row career-card__name-row--last">
-        <div class="career-card__name-accent career-card__name-accent--blue"></div>
-        <div class="career-card__name-text">${lastName}</div>
-      </div>
-    </div>
-
-    <div class="career-card__bottom">
-      <div class="career-card__wld">
-        <div class="career-card__wld-col">
-          <span class="career-card__wld-label">W</span>
-          <span class="career-card__wld-value">${wins}</span>
-        </div>
-        <div class="career-card__wld-col">
-          <span class="career-card__wld-label">L</span>
-          <span class="career-card__wld-value">${losses}</span>
-        </div>
-        <div class="career-card__wld-col">
-          <span class="career-card__wld-label">D</span>
-          <span class="career-card__wld-value">${draws}</span>
-        </div>
-      </div>
-      <div class="career-card__ratings">
-        <div class="career-card__rating-row">
-          <span class="career-card__rating-label">SKILL RATING</span>
-          <span class="career-card__rating-value career-card__rating-value--skill">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="#F74501"><rect x="0" y="0" width="6" height="14" rx="1"/><rect x="8" y="0" width="6" height="14" rx="1"/></svg>
-            ${skillRating}
-          </span>
-        </div>
-        <div class="career-card__rating-row">
-          <span class="career-card__rating-label">SOCIAL RATING</span>
-          <span class="career-card__rating-value career-card__rating-value--social">
-            ★ ${socialRating}
-          </span>
-        </div>
-      </div>
-    </div>`;
+  if (bg > 0) {
+    profileCardActiveDivision = best;
+    switchProfileCardDivision(best);
+  }
 }
 
 function showCareerCardProcessing() {
   const cardEl = document.getElementById('careerCard');
   if (!cardEl) return;
-  const cover = currentProfile?.selected_cover || 'crossover';
+  const coverUrl = CareerCard.getCoverUrl(currentProfile?.selected_cover || 'crossover');
   cardEl.innerHTML = `
-    <div class="career-card__cover" style="background-image:url('${COVERS[cover] || COVERS.crossover}')"></div>
-    <div class="career-card__gradient"></div>
-    <div class="career-card__processing">
-      <div class="career-card__processing-spinner">⚡</div>
-      <div class="career-card__processing-label">Removing background...</div>
+    <div class="cc__cover" style="background-image:url('${coverUrl}')"></div>
+    <div class="cc__overlay"></div>
+    <div class="cc__placeholder">
+      <div class="cc__placeholder-icon">⚡</div>
+      <div class="cc__placeholder-text">Removing background...</div>
     </div>`;
 }
 
@@ -1901,6 +1772,7 @@ async function loadUserProfile(user) {
       document.getElementById('profileCourts').textContent = currentProfile.unique_courts || 0;
 
       renderCareerCard();
+      loadProfileDivisionStats();
       checkOnboarding();
       checkRatingUpdates();
 

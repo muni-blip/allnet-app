@@ -23,27 +23,73 @@ html, body { height: auto; overflow: auto; }
 .match-history { padding: 40px 16px 0; max-width: 375px; margin: 0 auto; }
 .match-history__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; margin-bottom: 16px; }
 .match-history__empty { text-align: center; padding: 32px 16px; color: #666; font-size: 14px; font-family: 'Montserrat', sans-serif; }
-.mh-row { width: 100%; max-width: 343px; height: 108px; background: #181818; border: 1px solid #2e2e2e; position: relative; margin: 0 auto 16px; cursor: pointer; overflow: hidden; }
-.mh-row__thumb { position: absolute; left: -1px; top: -1px; width: 108px; height: 108px; overflow: hidden; background: #111; }
+.mh-row { width: 100%; max-width: 343px; min-height: 108px; background: #181818; border: 1px solid #2e2e2e; display: flex; align-items: stretch; margin: 0 auto 16px; cursor: pointer; overflow: hidden; }
+.mh-row__thumb { width: 108px; min-height: 108px; flex-shrink: 0; overflow: hidden; background: #111; position: relative; }
 .mh-row__thumb-cover { position: absolute; inset: 0; background-size: cover; background-position: center; }
 .mh-row__thumb-cutout { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 .mh-row__thumb-initials { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 20px; color: #666; }
-.mh-row__info { position: absolute; left: 119px; top: 11px; }
-.mh-row__name { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 16px; line-height: 24px; color: #fff; }
+.mh-row__body { flex: 1; padding: 11px 12px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.mh-row__name { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 16px; line-height: 24px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mh-row__stars { display: flex; align-items: center; gap: 4px; }
 .mh-row__stars-icons { display: flex; gap: 2px; }
 .mh-row__star { width: 8px; height: 8px; }
 .mh-row__star--empty { opacity: 0.3; }
 .mh-row__stars-count { font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 10px; line-height: 12px; color: #c4c4c4; }
-.mh-row__skill { display: flex; align-items: center; gap: 4px; margin-top: 8px; }
+.mh-row__skill { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
 .mh-row__skill-label { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; line-height: 16px; color: #c4c4c4; }
 .mh-row__skill-bars { display: flex; gap: 2px; }
 .mh-row__skill-bar { width: 4px; height: 8px; }
 .mh-row__skill-bar--filled { background: #F74501; }
 .mh-row__skill-bar--empty { background: rgba(247,69,1,0.2); }
-.mh-row__result { position: absolute; left: 119px; top: 79px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; line-height: 16px; color: #c4c4c4; }
+.mh-row__result { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; line-height: 16px; color: #c4c4c4; margin-top: 8px; }
 .mh-row__unrated { font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 11px; color: #555; margin-top: 4px; }
 .mh-row__time { font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 10px; color: #555; }
+
+/* Skeleton loader */
+.mh-skeleton { width: 100%; max-width: 343px; height: 108px; background: #181818; border: 1px solid #2e2e2e; display: flex; margin: 0 auto 16px; overflow: hidden; }
+.mh-skeleton__thumb { width: 108px; background: #222; }
+.mh-skeleton__body { flex: 1; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+.mh-skeleton__line { height: 14px; border-radius: 4px; background: #222; animation: shimmer 1.4s ease-in-out infinite; }
+.mh-skeleton__line--short { width: 60%; }
+.mh-skeleton__line--medium { width: 80%; }
+.mh-skeleton__line--long { width: 45%; }
+@keyframes shimmer { 0%,100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+
+/* Game Summary Sheet */
+.game-summary-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; }
+.game-summary-overlay.active { display: flex; }
+.game-summary-sheet { width: 100%; max-width: 420px; background: #111; border-radius: 20px 20px 0 0; padding: 12px 16px 32px; max-height: 90vh; overflow-y: auto; animation: sheetSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+.game-summary__handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 16px; }
+.game-summary__back { display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; color: #999; background: none; border: none; cursor: pointer; padding: 0 0 12px; transition: color 0.2s; }
+.game-summary__back:hover { color: #fff; }
+.game-summary__back svg { width: 16px; height: 16px; }
+.game-summary__context { display: flex; align-items: center; gap: 10px; padding: 12px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; margin-bottom: 16px; }
+.game-summary__format { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; color: #22C55E; background: rgba(34,197,94,0.12); padding: 4px 10px; border-radius: 100px; }
+.game-summary__meta { font-family: 'Montserrat', sans-serif; font-size: 13px; color: #999; flex: 1; }
+.game-summary__result-banner { text-align: center; padding: 12px; margin-bottom: 16px; border-radius: 8px; font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 0.06em; }
+.game-summary__result-banner--win { background: rgba(34,197,94,0.1); color: #22C55E; }
+.game-summary__result-banner--lose { background: rgba(239,68,68,0.1); color: #EF4444; }
+.game-summary__result-banner--draw { background: rgba(250,204,21,0.1); color: #FACC15; }
+.game-summary__team-label { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 0; }
+.game-summary__team-label--a { color: #F74501; }
+.game-summary__team-label--b { color: #3B82F6; }
+.game-summary__team-label--you { color: #F74501; }
+.game-summary__vs { text-align: center; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: #555; padding: 8px 0; }
+.game-summary__player { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.2s; }
+.game-summary__player:hover { border-color: #555; }
+.game-summary__player-avatar { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: #333; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; color: #999; position: relative; }
+.game-summary__player-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.game-summary__player-name { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; color: #fff; flex: 1; }
+.game-summary__you-badge { font-family: 'Montserrat', sans-serif; font-size: 9px; font-weight: 700; color: #F74501; background: rgba(247,69,1,0.12); padding: 2px 8px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.06em; }
+.game-summary__close { display: flex; justify-content: center; margin-top: 16px; }
+.game-summary__close-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.game-summary__close-btn:hover { background: rgba(255,255,255,0.15); }
+
+/* Game summary → player card transition */
+.game-summary__card-view { display: none; }
+.game-summary__card-view.active { display: block; animation: fadeSlideIn 0.25s ease; }
+.game-summary__summary-view.hidden { display: none; }
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 .photo-modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; padding: 20px; }
 .photo-modal-overlay.active { display: flex; }
@@ -157,7 +203,7 @@ html, body { height: auto; overflow: auto; }
   </div>
   <div class="cc-wrapper"><div class="cc-border"><div class="cc" id="careerCard"><div class="cc__placeholder"><div class="cc__placeholder-icon">📷</div><div class="cc__placeholder-text">Upload a photo to generate your career card</div></div></div></div></div>
   <div class="cc-actions"><button class="cc-action-btn" onclick="openPhotoModal()">CHANGE PHOTO</button><button class="cc-action-btn" onclick="openCoverPicker()">UPDATE COVER</button></div>
-  <div class="match-history"><div class="match-history__title" id="matchHistoryTitle">MATCH HISTORY (0)</div><div id="matchHistoryList"><div class="match-history__empty">No matches yet.</div></div></div>
+  <div class="match-history"><div class="match-history__title" id="matchHistoryTitle">MATCH HISTORY</div><div id="matchHistoryList"><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div></div></div>
 </div>
 <div class="photo-modal-overlay" id="photoModal"><div class="photo-modal"><div class="photo-modal__title">Change Photo</div><div class="photo-modal__text">Upload a new photo. We'll remove the background automatically.</div><div class="photo-modal__preview" id="photoPreview"><img id="photoPreviewImg" src="" alt=""></div><div class="photo-modal__processing" id="photoProcessing"><div class="photo-modal__spinner">⚡</div><div class="photo-modal__status" id="photoStatus">Removing background...</div></div><input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)"><button class="photo-modal__upload-btn" id="photoUploadBtn" onclick="document.getElementById('photoInput').click()">Choose Photo</button><button class="photo-modal__cancel-btn" onclick="closePhotoModal()">Cancel</button></div></div>
 
@@ -188,6 +234,27 @@ html, body { height: auto; overflow: auto; }
     <div class="cover-purchase-dialog__remaining" id="purchaseRemaining"></div>
     <button class="cover-purchase-dialog__btn cover-purchase-dialog__btn--buy" id="purchaseBuyBtn" onclick="confirmPurchase()">Unlock Cover</button>
     <button class="cover-purchase-dialog__btn cover-purchase-dialog__btn--cancel" onclick="closePurchaseModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Game Summary Sheet -->
+<div class="game-summary-overlay" id="gameSummaryOverlay" onclick="if(event.target===this)closeGameSummary()">
+  <div class="game-summary-sheet" onclick="event.stopPropagation()">
+    <div class="game-summary__handle"></div>
+    <div class="game-summary__summary-view" id="gameSummaryView">
+      <div class="game-summary__context" id="gameSummaryContext"></div>
+      <div id="gameSummaryResult"></div>
+      <div id="gameSummaryTeams"></div>
+      <div class="game-summary__close"><button class="game-summary__close-btn" onclick="closeGameSummary()">✕</button></div>
+    </div>
+    <div class="game-summary__card-view" id="gameSummaryCardView">
+      <button class="game-summary__back" onclick="showGameSummaryView()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back to Game Summary
+      </button>
+      <div class="cc-border"><div class="cc" id="gameSummaryCard"></div></div>
+      <div class="game-summary__close"><button class="game-summary__close-btn" onclick="closeGameSummary()">✕</button></div>
+    </div>
   </div>
 </div>
 
@@ -352,31 +419,210 @@ function updateMH(rows) {
       th = ct ? '<div class="mh-row__thumb-cover" style="background-image:url(\'' + cu + '\')"></div><img class="mh-row__thumb-cutout" src="' + ct + '" alt="" onerror="this.style.display=\'none\'">' : opp && opp.avatar_url ? '<img src="' + opp.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="mh-row__thumb-initials">' + ini + '</div>';
     }
 
-    // Build info section
-    var infoHtml;
+    // Build body content
+    var bodyHtml;
     if (isTeamGame) {
-      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__skill"><span class="mh-row__skill-label">' + g.format.toUpperCase() + ' DIVISION</span></div></div>';
+      bodyHtml = '<div class="mh-row__name">' + nm + '</div><div class="mh-row__skill"><span class="mh-row__skill-label">' + g.format.toUpperCase() + ' DIVISION</span></div>';
     } else if (!hasSocial && !hasSkill) {
-      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__unrated">Unrated</div></div>';
+      bodyHtml = '<div class="mh-row__name">' + nm + '</div><div class="mh-row__unrated">Unrated</div>';
     } else {
-      var ratingsHtml = '';
-      if (hasSocial) {
-        ratingsHtml += '<div class="mh-row__stars"><div class="mh-row__stars-icons">' + sh + '</div><span class="mh-row__stars-count">' + sc + '</span></div>';
-      }
-      if (hasSkill) {
-        ratingsHtml += '<div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">' + bh + '</div></div>';
-      }
-      if (!hasSocial) ratingsHtml += '<div class="mh-row__unrated">Social: Unrated</div>';
-      if (!hasSkill) ratingsHtml += '<div class="mh-row__unrated">Skill: Unrated</div>';
-      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div>' + ratingsHtml + '</div>';
+      bodyHtml = '<div class="mh-row__name">' + nm + '</div>';
+      if (hasSocial) bodyHtml += '<div class="mh-row__stars"><div class="mh-row__stars-icons">' + sh + '</div><span class="mh-row__stars-count">' + sc + '</span></div>';
+      if (hasSkill) bodyHtml += '<div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">' + bh + '</div></div>';
+      if (!hasSocial) bodyHtml += '<div class="mh-row__unrated">Social: Unrated</div>';
+      if (!hasSkill) bodyHtml += '<div class="mh-row__unrated">Skill: Unrated</div>';
     }
 
-    var resultHtml = '<div class="mh-row__result">' + r + (timeStr ? '<div class="mh-row__time">' + timeStr + '</div>' : '') + '</div>';
+    bodyHtml += '<div class="mh-row__result">' + r + (timeStr ? ' <span class="mh-row__time">' + timeStr + '</span>' : '') + '</div>';
 
-    var clickTarget = isTeamGame ? '' : (opp ? opp.id : '');
-    return '<div class="mh-row" onclick="openPlayerCard(\'' + clickTarget + '\')">' + '<div class="mh-row__thumb">' + th + '</div>' + infoHtml + resultHtml + '</div>';
+    var onclick = isTeamGame ? 'openGameSummary(\'' + g.id + '\')' : 'openPlayerCard(\'' + (opp ? opp.id : '') + '\')';
+    return '<div class="mh-row" onclick="' + onclick + '">' + '<div class="mh-row__thumb">' + th + '</div><div class="mh-row__body">' + bodyHtml + '</div></div>';
   }).join('');
 }
+
+/* ══════════════════════════════
+   GAME SUMMARY SHEET
+   ══════════════════════════════ */
+var gameSummaryData = null;
+
+async function openGameSummary(gameId) {
+  if (!gameId) return;
+  var overlay = document.getElementById('gameSummaryOverlay');
+  overlay.classList.add('active');
+
+  // Reset to summary view
+  document.getElementById('gameSummaryView').classList.remove('hidden');
+  document.getElementById('gameSummaryCardView').classList.remove('active');
+
+  // Show loading
+  document.getElementById('gameSummaryContext').innerHTML = '<span style="color:#555;">Loading...</span>';
+  document.getElementById('gameSummaryResult').innerHTML = '';
+  document.getElementById('gameSummaryTeams').innerHTML = '';
+
+  try {
+    // Fetch game session
+    var { data: game } = await supabase.from('game_sessions')
+      .select('*, courts(name)')
+      .eq('id', gameId).single();
+    if (!game) { closeGameSummary(); return; }
+
+    // Fetch all players
+    var { data: players } = await supabase.from('game_players')
+      .select('*, profiles(id, name, first_name, last_name, avatar_url, avatar_cutout_url, selected_cover)')
+      .eq('game_id', gameId);
+    if (!players) players = [];
+
+    gameSummaryData = { game: game, players: players };
+    renderGameSummary();
+  } catch (err) {
+    console.error('Failed to load game summary:', err);
+    closeGameSummary();
+  }
+}
+
+function renderGameSummary() {
+  if (!gameSummaryData) return;
+  var g = gameSummaryData.game;
+  var players = gameSummaryData.players;
+
+  var courtName = g.courts?.name || 'Unknown Court';
+  var timeStr = g.ended_at ? timeAgo(new Date(g.ended_at)) : '';
+
+  // Context bar
+  document.getElementById('gameSummaryContext').innerHTML =
+    '<span class="game-summary__format">' + g.format.toUpperCase() + '</span>' +
+    '<span class="game-summary__meta">' + courtName + (timeStr ? ' · ' + timeStr : '') + '</span>';
+
+  // Result
+  var myTeam = players.find(function(p) { return p.user_id === currentUser.id; });
+  var myTeamLetter = myTeam ? myTeam.team : 'a';
+  var result = 'DRAW';
+  var resultClass = 'draw';
+  if (g.winner === 'team_' + myTeamLetter) { result = 'WIN'; resultClass = 'win'; }
+  else if (g.winner && g.winner !== 'draw') { result = 'LOSE'; resultClass = 'lose'; }
+
+  document.getElementById('gameSummaryResult').innerHTML =
+    '<div class="game-summary__result-banner game-summary__result-banner--' + resultClass + '">' + result + '</div>';
+
+  // Teams
+  var teamA = players.filter(function(p) { return p.team === 'a'; });
+  var teamB = players.filter(function(p) { return p.team === 'b'; });
+  var isMyTeamA = myTeamLetter === 'a';
+
+  var teamsHtml = '';
+  teamsHtml += '<div class="game-summary__team-label game-summary__team-label--' + (isMyTeamA ? 'you' : 'a') + '">' + (isMyTeamA ? '🏀 YOUR TEAM' : 'TEAM A') + '</div>';
+  teamsHtml += teamA.map(function(p) { return renderSummaryPlayer(p); }).join('');
+  teamsHtml += '<div class="game-summary__vs">VS</div>';
+  teamsHtml += '<div class="game-summary__team-label game-summary__team-label--' + (!isMyTeamA ? 'you' : 'b') + '">' + (!isMyTeamA ? '🏀 YOUR TEAM' : 'OPPONENTS') + '</div>';
+  teamsHtml += teamB.map(function(p) { return renderSummaryPlayer(p); }).join('');
+
+  document.getElementById('gameSummaryTeams').innerHTML = teamsHtml;
+}
+
+function renderSummaryPlayer(p) {
+  var profile = p.profiles;
+  var nm = profile ? (profile.first_name && profile.last_name ? profile.first_name + ' ' + profile.last_name : profile.name) : 'Unknown Player';
+  var ini = nm.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+  var isYou = p.user_id === currentUser.id;
+
+  var avatarHtml;
+  if (profile?.avatar_url) {
+    avatarHtml = '<img src="' + profile.avatar_url + '" alt="">';
+  } else {
+    avatarHtml = ini;
+  }
+
+  var youBadge = isYou ? '<span class="game-summary__you-badge">YOU</span>' : '';
+  var onclick = isYou ? '' : ' onclick="showSummaryPlayerCard(\'' + p.user_id + '\')"';
+
+  return '<div class="game-summary__player"' + onclick + '>' +
+    '<div class="game-summary__player-avatar">' + avatarHtml + '</div>' +
+    '<div class="game-summary__player-name">' + nm + '</div>' +
+    youBadge +
+  '</div>';
+}
+
+async function showSummaryPlayerCard(uid) {
+  if (!uid) return;
+  var summaryView = document.getElementById('gameSummaryView');
+  var cardView = document.getElementById('gameSummaryCardView');
+  var cardEl = document.getElementById('gameSummaryCard');
+
+  // Hide summary, show card view
+  summaryView.classList.add('hidden');
+  cardView.classList.add('active');
+  cardEl.innerHTML = '<div style="text-align:center;padding:60px 0;color:#666;font-family:Montserrat,sans-serif;font-size:14px;">Loading...</div>';
+
+  try {
+    var { data: player } = await supabase.from('profiles')
+      .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating')
+      .eq('id', uid).single();
+    if (!player) { showGameSummaryView(); return; }
+
+    var { data: stats } = await supabase.from('player_division_stats')
+      .select('*').eq('user_id', uid);
+
+    var pDivStats = {};
+    var bestDiv = '1v1', bestGames = 0;
+    if (stats) stats.forEach(function(s) {
+      pDivStats[s.division] = s;
+      if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
+    });
+
+    gameSummaryData._cardPlayer = player;
+    gameSummaryData._cardDivStats = pDivStats;
+    gameSummaryData._cardActiveDivision = bestGames > 0 ? bestDiv : '1v1';
+
+    renderSummaryCard();
+  } catch (err) {
+    console.error('Failed to load player card:', err);
+    showGameSummaryView();
+  }
+}
+
+function renderSummaryCard() {
+  if (!gameSummaryData?._cardPlayer) return;
+  var p = gameSummaryData._cardPlayer;
+  var ds = gameSummaryData._cardDivStats[gameSummaryData._cardActiveDivision];
+  var cardEl = document.getElementById('gameSummaryCard');
+
+  cardEl.innerHTML = CareerCard.render({
+    cardId: 'gsc',
+    firstName: p.first_name || p.name?.split(' ')[0] || '',
+    lastName: p.last_name || p.name?.split(' ').slice(1).join(' ') || '',
+    cutoutUrl: p.avatar_cutout_url,
+    coverSlug: p.selected_cover || 'crossover',
+    wins: ds?.wins || 0,
+    losses: ds?.losses || 0,
+    draws: ds?.draws || 0,
+    skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
+    socialRating: p.social_rating ? Number(p.social_rating).toFixed(1) : '—',
+    divisionLabel: gameSummaryData._cardActiveDivision.toUpperCase(),
+    activeDivision: gameSummaryData._cardActiveDivision,
+    showTabs: true,
+    onTabClick: 'switchSummaryCardDiv',
+    showDeltas: false
+  });
+  requestAnimationFrame(function() { CareerCard.fitNames('gsc'); });
+}
+
+function switchSummaryCardDiv(dv) {
+  if (!gameSummaryData) return;
+  gameSummaryData._cardActiveDivision = dv;
+  renderSummaryCard();
+}
+
+function showGameSummaryView() {
+  document.getElementById('gameSummaryCardView').classList.remove('active');
+  document.getElementById('gameSummaryView').classList.remove('hidden');
+}
+
+function closeGameSummary() {
+  document.getElementById('gameSummaryOverlay').classList.remove('active');
+  gameSummaryData = null;
+}
+
+
 
 /* ── Player Card Sheet ── */
 var playerSheetData = null;

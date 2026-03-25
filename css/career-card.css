@@ -1,0 +1,184 @@
+/* ═══════════════════════════════════════
+   CAREER CARD — Shared Component
+   Used across: Career page, Profile page,
+   Rating overlay (A), Public card (C)
+   ═══════════════════════════════════════ */
+
+/* Wrapper + gradient border */
+.cc-border {
+  width: 345px; max-width: 100%;
+  margin: 0 auto;
+  padding: 1px;
+  border-radius: 17px;
+  background: linear-gradient(180deg, #F74501 0%, #0040FF 100%);
+  box-shadow: 0 8px 32px 0 black;
+}
+.cc {
+  position: relative;
+  width: 100%; height: 595px;
+  border-radius: 16px;
+  overflow: clip;
+  border: none;
+  background: #000;
+}
+
+/* Cover / Player / Overlay — 319×319 square */
+.cc__cover {
+  position: absolute;
+  left: 12px; top: 89px;
+  width: 319px; height: 319px;
+  background-size: cover; background-position: center;
+  z-index: 0;
+}
+.cc__player-frame {
+  position: absolute;
+  left: 50%; top: 89px;
+  transform: translateX(-50%);
+  width: 319px; height: 319px;
+  overflow: hidden;
+  z-index: 1;
+}
+.cc__player-frame img {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  max-width: none;
+  object-fit: cover;
+}
+.cc__overlay {
+  position: absolute;
+  left: 12px; top: 89px;
+  width: 319px; height: 319px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 20%, black 100%);
+  z-index: 2;
+}
+
+/* Name rows — flexbox: text + gradient bar */
+.cc__name-row {
+  position: absolute;
+  left: 11px; right: 12px;
+  display: flex; align-items: center;
+  gap: 8px;
+  z-index: 3; height: 32px;
+}
+.cc__name-row--1 { top: 11px; }
+.cc__name-row--2 { top: 49px; }
+.cc__name-text {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800; font-size: 40px;
+  line-height: 32px; color: #fff;
+  white-space: nowrap; flex-shrink: 0;
+}
+.cc__accent-bar {
+  flex: 1; min-width: 0;
+  height: 25px;
+  background-image: url('https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/gradient-bar-min.png');
+  background-size: cover;
+  background-position: center;
+}
+.cc__accent-bar--hidden { display: none; }
+.cc__name-row--2 .cc__accent-bar { transform: scaleX(-1); }
+
+/* W / L / D columns */
+.cc__wld { position: absolute; left: 0; right: 0; top: 372px; z-index: 3; }
+.cc__wld-col { position: absolute; width: 88px; text-align: center; }
+.cc__wld-col--w { left: calc(50% - 115.5px - 44px); }
+.cc__wld-col--l { left: calc(50% + 0.5px - 44px); }
+.cc__wld-col--d { left: calc(50% + 115.5px - 44px); }
+.cc__wld-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800; font-size: 40px;
+  line-height: 32px; color: #fff;
+}
+.cc__wld-value {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800; font-size: 40px;
+  line-height: 32px; color: #fff;
+  margin-top: 8px;
+}
+.cc__wld-delta {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700; font-size: 14px;
+  line-height: 20px; color: #34d399;
+  margin-top: 4px;
+}
+
+/* Rating rows — Skill on top, Social on bottom */
+.cc__skill-row {
+  position: absolute;
+  left: 12px; right: 12px; top: 484px;
+  padding-left: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 3;
+}
+.cc__social-row {
+  position: absolute;
+  left: 12px; right: 12px; top: 517px;
+  padding-left: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 3;
+}
+.cc__rating-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600; font-size: 16px;
+  line-height: 24px; color: #fff;
+}
+.cc__rating-val {
+  display: flex; align-items: center; gap: 4px;
+}
+.cc__rating-num {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600; font-size: 16px;
+  line-height: 24px; color: #fff;
+  width: 32px;
+}
+.cc__rating-delta {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600; font-size: 12px;
+  line-height: 16px; color: #34d399;
+  display: flex; align-items: center; gap: 2px;
+  white-space: nowrap;
+}
+.cc__rating-delta--down { color: #f87171; }
+.cc__skill-icon {
+  display: flex; gap: 2px; align-items: center; width: 16px;
+}
+.cc__skill-bar-item {
+  flex: 1; height: 16px; background: #F74501;
+}
+
+/* Division tabs inside card */
+.cc__div-tabs {
+  position: absolute;
+  left: 50%; top: 558px;
+  transform: translateX(-50%);
+  width: 319px;
+  display: flex; gap: 8px;
+  z-index: 3;
+}
+.cc__div-tab {
+  flex: 1;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600; font-size: 14px;
+  line-height: 24px; text-align: center;
+  color: #fff; background: transparent;
+  border: 1px solid #434343;
+  border-radius: 999px;
+  padding: 0 8px; cursor: pointer;
+  transition: all 0.2s;
+}
+.cc__div-tab--active {
+  background: #fff; color: #000;
+}
+
+/* Empty state */
+.cc__placeholder {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; color: #666; text-align: center; padding: 20px;
+}
+.cc__placeholder-icon { font-size: 40px; }
+.cc__placeholder-text {
+  font-size: 14px; font-family: 'Montserrat', sans-serif; line-height: 1.5;
+}

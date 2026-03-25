@@ -71,14 +71,14 @@ html, body { height: auto; overflow: auto; }
 .player-sheet__close-btn:hover { background: rgba(255,255,255,0.15); }
 
 /* ── Cover Picker ── */
-.cover-picker-overlay { position: fixed; inset: 0; z-index: 300; background: #000; display: none; flex-direction: column; }
+.cover-picker-overlay { position: fixed; inset: 0; z-index: 300; background: #000; display: none; flex-direction: column; overflow: hidden; }
 .cover-picker-overlay.active { display: flex; }
 .cover-picker-overlay.active .cover-picker { animation: coverSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
 @keyframes coverSlideIn { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.cover-picker { flex: 1; display: flex; flex-direction: column; max-width: 600px; width: 100%; margin: 0 auto; }
+.cover-picker { flex: 1; display: flex; flex-direction: column; max-width: 600px; width: 100%; margin: 0 auto; min-height: 0; overflow: hidden; }
 .cover-picker__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 16px; line-height: 24px; color: #fff; text-align: center; padding: 20px 16px 4px; flex-shrink: 0; }
-.cover-picker__balance { font-family: 'Montserrat', sans-serif; font-size: 13px; color: #999; text-align: center; padding: 4px 16px 16px; }
-.cover-picker__grid { flex: 1; overflow-y: auto; padding: 0 16px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 0px; align-content: start; }
+.cover-picker__balance { font-family: 'Montserrat', sans-serif; font-size: 13px; color: #999; text-align: center; padding: 4px 16px 16px; flex-shrink: 0; }
+.cover-picker__grid { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 0px; align-content: start; min-height: 0; }
 .cover-picker__item { position: relative; aspect-ratio: 1.17; overflow: hidden; cursor: pointer; border: 4px solid transparent; transition: border-color 0.2s; }
 .cover-picker__item.selected { border-color: #fff; }
 .cover-picker__item.locked img { filter: brightness(0.35); }

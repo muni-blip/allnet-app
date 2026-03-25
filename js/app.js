@@ -104,7 +104,8 @@ async function showRatingOverlay(latestUpdate, allUpdates) {
   overlay._ratingData = {
     profile: currentProfile, divStats,
     activeDivision: latestUpdate.division,
-    allUpdates
+    allUpdates,
+    shouldAnimate: true  // first render triggers animation
   };
 
   renderRatingOverlayCard();
@@ -115,9 +116,18 @@ function renderRatingOverlayCard() {
   const overlay = document.getElementById('ratingOverlay');
   const cardEl = document.getElementById('ratingOverlayCard');
   if (!overlay?._ratingData || !cardEl) return;
-  const { profile, divStats, activeDivision, allUpdates } = overlay._ratingData;
+  const { profile, divStats, activeDivision, allUpdates, shouldAnimate } = overlay._ratingData;
   const ds = divStats[activeDivision];
   const divUpdate = allUpdates.find(u => u.division === activeDivision);
+
+  const wins = ds?.wins || 0, losses = ds?.losses || 0, draws = ds?.draws || 0;
+  const skillVal = ds?.skill_rating ? Number(ds.skill_rating) : 0;
+  const socialVal = profile.social_rating ? Number(profile.social_rating) : 0;
+  const skDelta = divUpdate?.skill_delta != null ? Number(divUpdate.skill_delta) : null;
+  const soDelta = divUpdate?.social_delta != null ? Number(divUpdate.social_delta) : null;
+  const wDelta = divUpdate?.wins_delta || 0;
+  const lDelta = divUpdate?.losses_delta || 0;
+  const dDelta = divUpdate?.draws_delta || 0;
 
   cardEl.innerHTML = CareerCard.render({
     cardId: 'rov',
@@ -125,21 +135,43 @@ function renderRatingOverlayCard() {
     lastName: profile.last_name || profile.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: profile.avatar_cutout_url,
     coverSlug: profile.selected_cover || 'crossover',
-    wins: ds?.wins || 0, losses: ds?.losses || 0, draws: ds?.draws || 0,
-    skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
-    socialRating: profile.social_rating ? Number(profile.social_rating).toFixed(1) : '—',
+    wins: wins, losses: losses, draws: draws,
+    skillRating: skillVal ? skillVal.toFixed(1) : '—',
+    socialRating: socialVal ? socialVal.toFixed(1) : '—',
     divisionLabel: activeDivision.toUpperCase(),
     activeDivision: activeDivision,
     showTabs: true,
     onTabClick: 'switchRatingOverlayDiv',
     showDeltas: true,
-    skillDelta: divUpdate?.skill_delta != null ? Number(divUpdate.skill_delta) : null,
-    socialDelta: divUpdate?.social_delta != null ? Number(divUpdate.social_delta) : null,
-    winsDelta: divUpdate?.wins_delta || 0,
-    lossesDelta: divUpdate?.losses_delta || 0,
-    drawsDelta: divUpdate?.draws_delta || 0
+    skillDelta: skDelta,
+    socialDelta: soDelta,
+    winsDelta: wDelta,
+    lossesDelta: lDelta,
+    drawsDelta: dDelta
   });
-  requestAnimationFrame(() => CareerCard.fitNames('rov'));
+
+  requestAnimationFrame(() => {
+    CareerCard.fitNames('rov');
+
+    // Animate numbers on first show (not on tab switch)
+    if (shouldAnimate && divUpdate) {
+      overlay._ratingData.shouldAnimate = false;
+
+      setTimeout(() => {
+        CareerCard.animateValues('rov', {
+          winsFrom:   wins - wDelta,   winsTo:   wins,
+          lossesFrom: losses - lDelta, lossesTo: losses,
+          drawsFrom:  draws - dDelta,  drawsTo:  draws,
+          skillFrom:  skDelta != null ? skillVal - skDelta : skillVal,
+          skillTo:    skillVal,
+          socialFrom: soDelta != null ? socialVal - soDelta : socialVal,
+          socialTo:   socialVal,
+          duration:   1400,
+          stagger:    250
+        });
+      }, 300); // slight delay after overlay appears
+    }
+  });
 }
 
 function switchRatingOverlayDiv(div) {

@@ -194,10 +194,89 @@ var CareerCard = (function() {
     }
   }
 
+  /* ── Rolodex number animation ──
+     Counts from old→new with easeOutCubic.
+     Call after render() + fitNames().
+     opts: { winsFrom, winsTo, lossesFrom, lossesTo, drawsFrom, drawsTo,
+             skillFrom, skillTo, socialFrom, socialTo, duration, stagger }
+  */
+  function animateValues(cardId, opts) {
+    var container = document.getElementById(cardId);
+    if (!container) return;
+
+    var duration = opts.duration || 1400;
+    var stagger  = opts.stagger  || 200;
+    var anims = [];
+
+    // W / L / D — integer values
+    var wEl = container.querySelector('.cc__wld-col--w .cc__wld-value');
+    var lEl = container.querySelector('.cc__wld-col--l .cc__wld-value');
+    var dEl = container.querySelector('.cc__wld-col--d .cc__wld-value');
+
+    if (wEl && opts.winsFrom != null)   anims.push({ el: wEl, from: opts.winsFrom,   to: opts.winsTo,   dec: 0, delay: 0 });
+    if (lEl && opts.lossesFrom != null) anims.push({ el: lEl, from: opts.lossesFrom, to: opts.lossesTo, dec: 0, delay: 0 });
+    if (dEl && opts.drawsFrom != null)  anims.push({ el: dEl, from: opts.drawsFrom,  to: opts.drawsTo,  dec: 0, delay: 0 });
+
+    // Skill rating — 1 decimal
+    var skillNum = container.querySelector('.cc__skill-row .cc__rating-num');
+    if (skillNum && opts.skillFrom != null) anims.push({ el: skillNum, from: opts.skillFrom, to: opts.skillTo, dec: 1, delay: stagger });
+
+    // Social rating — 1 decimal
+    var socialNum = container.querySelector('.cc__social-row .cc__rating-num');
+    if (socialNum && opts.socialFrom != null) anims.push({ el: socialNum, from: opts.socialFrom, to: opts.socialTo, dec: 1, delay: stagger * 2 });
+
+    // Hide deltas initially, reveal after animation
+    var deltas = container.querySelectorAll('.cc__wld-delta, .cc__rating-delta');
+    deltas.forEach(function(d) { d.style.opacity = '0'; d.style.transition = 'none'; });
+
+    // Set old values immediately
+    anims.forEach(function(a) {
+      a.el.textContent = a.dec > 0 ? Number(a.from).toFixed(a.dec) : String(Math.round(a.from));
+    });
+
+    // easeOutCubic: fast start, gentle settle
+    function ease(t) { return 1 - Math.pow(1 - t, 3); }
+
+    // Run each animation with its delay
+    anims.forEach(function(a) {
+      setTimeout(function() {
+        var start = performance.now();
+        function tick(now) {
+          var elapsed = now - start;
+          var progress = Math.min(elapsed / duration, 1);
+          var current = a.from + (a.to - a.from) * ease(progress);
+
+          if (a.dec > 0) {
+            a.el.textContent = current.toFixed(a.dec);
+          } else {
+            a.el.textContent = String(Math.round(current));
+          }
+
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          }
+        }
+        requestAnimationFrame(tick);
+      }, a.delay);
+    });
+
+    // Fade in deltas after all animations finish
+    var totalTime = (stagger * 2) + duration + 100;
+    setTimeout(function() {
+      deltas.forEach(function(d, i) {
+        setTimeout(function() {
+          d.style.transition = 'opacity 0.4s ease';
+          d.style.opacity = '1';
+        }, i * 120);
+      });
+    }, totalTime);
+  }
+
   // Public API
   return {
     render: render,
     fitNames: fitNames,
+    animateValues: animateValues,
     getCoverUrl: getCoverUrl,
     COVERS: COVERS
   };

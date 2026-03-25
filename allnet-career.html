@@ -78,14 +78,16 @@ html, body { height: auto; overflow: auto; }
 .cover-picker { flex: 1; display: flex; flex-direction: column; max-width: 600px; width: 100%; margin: 0 auto; min-height: 0; overflow: hidden; }
 .cover-picker__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 16px; line-height: 24px; color: #fff; text-align: center; padding: 20px 16px 4px; flex-shrink: 0; }
 .cover-picker__balance { font-family: 'Montserrat', sans-serif; font-size: 13px; color: #999; text-align: center; padding: 4px 16px 16px; flex-shrink: 0; }
-.cover-picker__grid { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; min-height: 0; }
-.cover-picker__item { position: relative; aspect-ratio: 1; overflow: hidden; cursor: pointer; border-radius: 4px; }
+.cover-picker__grid { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; align-content: start; min-height: 0; }
+
+/* Each tile: fixed aspect ratio box, everything inside is absolute */
+.cover-picker__item { position: relative; width: 100%; padding-bottom: 100%; overflow: hidden; cursor: pointer; border-radius: 4px; background: #111; }
 .cover-picker__item::after { content: ''; position: absolute; inset: 0; border: 4px solid transparent; transition: border-color 0.2s; z-index: 4; pointer-events: none; border-radius: 4px; }
 .cover-picker__item.selected::after { border-color: #fff; }
-.cover-picker__item.locked img { filter: brightness(0.35); }
-.cover-picker__item img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-.cover-picker__item-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 10px; background: linear-gradient(transparent, rgba(0,0,0,0.85)); font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; justify-content: space-between; gap: 4px; z-index: 2; }
-.cover-picker__item-name { flex: 1; }
+.cover-picker__item.locked .cover-picker__item-img { filter: brightness(0.35); }
+.cover-picker__item-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; z-index: 0; }
+.cover-picker__item-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 8px; background: linear-gradient(transparent 0%, rgba(0,0,0,0.8) 100%); font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; justify-content: space-between; gap: 4px; z-index: 2; }
+.cover-picker__item-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cover-picker__rarity { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.08em; flex-shrink: 0; }
 .cover-picker__rarity--common { background: rgba(107,107,107,0.2); color: #6B6B6B; }
 .cover-picker__rarity--rare { background: rgba(59,130,246,0.15); color: #3B82F6; }
@@ -94,7 +96,7 @@ html, body { height: auto; overflow: auto; }
 .cover-picker__lock-icon { font-size: 20px; }
 .cover-picker__lock-price { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 4px; }
 .cover-picker__lock-price.cant-afford { color: #EF4444; }
-.cover-picker__actions { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; gap: 16px; padding: 20px 0 36px; background: linear-gradient(transparent, #000 40%); z-index: 2; }
+.cover-picker__actions { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; gap: 16px; padding: 20px 0 36px; background: linear-gradient(transparent, #000 40%); z-index: 10; }
 .cover-picker__btn { width: 48px; height: 48px; border-radius: 999px; background: #000; border: 1px solid #222; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
 .cover-picker__btn:hover { border-color: #fff; }
 .cover-picker__btn svg { width: 24px; height: 24px; }
@@ -123,7 +125,7 @@ html, body { height: auto; overflow: auto; }
   .cover-picker-overlay.active .cover-picker { animation: coverSlideRight 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
   @keyframes coverSlideRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
   .cover-picker { max-width: 400px; background: #000; border-left: 1px solid #222; margin: 0; }
-  .cover-picker__actions { max-width: 400px; right: 0; left: auto; }
+  .cover-picker__actions { width: 400px; right: 0; left: auto; }
 }
 </style>
 </head>
@@ -505,7 +507,7 @@ function renderCoverGrid() {
     var rarityBadge = '<span class="cover-picker__rarity ' + rarityClass + '">' + item.rarity.toUpperCase() + '</span>';
 
     return '<div class="cover-picker__item' + (isSelected ? ' selected' : '') + (owned ? '' : ' locked') + '" onclick="handleCoverTap(\'' + item.slug + '\')">' +
-      '<img src="' + url + '" alt="' + item.name + '">' +
+      '<img class="cover-picker__item-img" src="' + url + '" alt="' + item.name + '">' +
       lockHtml +
       '<div class="cover-picker__item-label"><span class="cover-picker__item-name">' + item.name + '</span>' + rarityBadge + '</div>' +
     '</div>';

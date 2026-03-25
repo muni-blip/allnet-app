@@ -194,10 +194,12 @@ var CareerCard = (function() {
     }
   }
 
-  /* ── Rolodex number animation ──
-     Counts from old→new with easeOutCubic.
-     Call after render() + fitNames().
-     containerId: the ID of the .cc element (e.g. 'ratingOverlayCard')
+  /* ── Rolodex digit-strip animation ──
+     Each digit gets its own vertical strip (0–9) that physically
+     scrolls via translateY. Color flashes white→green→white (positive)
+     or white→red→white (negative).
+
+     containerId: the element ID of the .cc card container
      opts: { winsFrom, winsTo, lossesFrom, lossesTo, drawsFrom, drawsTo,
              skillFrom, skillTo, socialFrom, socialTo, duration, stagger }
   */
@@ -205,67 +207,122 @@ var CareerCard = (function() {
     var container = document.getElementById(containerId);
     if (!container) return;
 
-    var duration = opts.duration || 1400;
-    var stagger  = opts.stagger  || 200;
-    var anims = [];
+    var duration = opts.duration || 1200;
+    var stagger  = opts.stagger  || 250;
 
-    // W / L / D — integer values
-    var wEl = container.querySelector('.cc__wld-col--w .cc__wld-value');
-    var lEl = container.querySelector('.cc__wld-col--l .cc__wld-value');
-    var dEl = container.querySelector('.cc__wld-col--d .cc__wld-value');
-
-    if (wEl && opts.winsFrom != null)   anims.push({ el: wEl, from: opts.winsFrom,   to: opts.winsTo,   dec: 0, delay: 0 });
-    if (lEl && opts.lossesFrom != null) anims.push({ el: lEl, from: opts.lossesFrom, to: opts.lossesTo, dec: 0, delay: 0 });
-    if (dEl && opts.drawsFrom != null)  anims.push({ el: dEl, from: opts.drawsFrom,  to: opts.drawsTo,  dec: 0, delay: 0 });
-
-    // Skill rating — 1 decimal
-    var skillNum = container.querySelector('.cc__skill-row .cc__rating-num');
-    if (skillNum && opts.skillFrom != null) anims.push({ el: skillNum, from: opts.skillFrom, to: opts.skillTo, dec: 1, delay: stagger });
-
-    // Social rating — 1 decimal
-    var socialNum = container.querySelector('.cc__social-row .cc__rating-num');
-    if (socialNum && opts.socialFrom != null) anims.push({ el: socialNum, from: opts.socialFrom, to: opts.socialTo, dec: 1, delay: stagger * 2 });
-
-    // Hide deltas during animation, show instantly after
+    // Hide deltas until animation finishes
     var deltas = container.querySelectorAll('.cc__wld-delta, .cc__rating-delta');
     deltas.forEach(function(d) { d.style.visibility = 'hidden'; });
 
-    // Set old values immediately
-    anims.forEach(function(a) {
-      a.el.textContent = a.dec > 0 ? Number(a.from).toFixed(a.dec) : String(Math.round(a.from));
+    // Collect targets
+    var targets = [];
+    var wEl = container.querySelector('.cc__wld-col--w .cc__wld-value');
+    var lEl = container.querySelector('.cc__wld-col--l .cc__wld-value');
+    var dEl = container.querySelector('.cc__wld-col--d .cc__wld-value');
+    if (wEl && opts.winsFrom != null)   targets.push({ el: wEl, from: opts.winsFrom,   to: opts.winsTo,   dec: 0, delay: 0 });
+    if (lEl && opts.lossesFrom != null) targets.push({ el: lEl, from: opts.lossesFrom, to: opts.lossesTo, dec: 0, delay: 0 });
+    if (dEl && opts.drawsFrom != null)  targets.push({ el: dEl, from: opts.drawsFrom,  to: opts.drawsTo,  dec: 0, delay: 0 });
+
+    var skillNum = container.querySelector('.cc__skill-row .cc__rating-num');
+    if (skillNum && opts.skillFrom != null) targets.push({ el: skillNum, from: opts.skillFrom, to: opts.skillTo, dec: 1, delay: stagger });
+
+    var socialNum = container.querySelector('.cc__social-row .cc__rating-num');
+    if (socialNum && opts.socialFrom != null) targets.push({ el: socialNum, from: opts.socialFrom, to: opts.socialTo, dec: 1, delay: stagger * 2 });
+
+    // Build rolodex for each target
+    targets.forEach(function(t) {
+      _buildRolodex(t.el, t.from, t.to, t.dec, t.delay, duration);
     });
 
-    // easeOutCubic: fast start, gentle settle
-    function ease(t) { return 1 - Math.pow(1 - t, 3); }
-
-    // Run each animation with its delay
-    anims.forEach(function(a) {
-      setTimeout(function() {
-        var start = performance.now();
-        function tick(now) {
-          var elapsed = now - start;
-          var progress = Math.min(elapsed / duration, 1);
-          var current = a.from + (a.to - a.from) * ease(progress);
-
-          if (a.dec > 0) {
-            a.el.textContent = current.toFixed(a.dec);
-          } else {
-            a.el.textContent = String(Math.round(current));
-          }
-
-          if (progress < 1) {
-            requestAnimationFrame(tick);
-          }
-        }
-        requestAnimationFrame(tick);
-      }, a.delay);
-    });
-
-    // Show deltas instantly after all animations complete
-    var totalTime = (stagger * 2) + duration + 50;
+    // Show deltas after everything settles
+    var totalTime = (stagger * 2) + duration + 150;
     setTimeout(function() {
       deltas.forEach(function(d) { d.style.visibility = 'visible'; });
     }, totalTime);
+  }
+
+  /* ── Build rolodex columns for a single number element ── */
+  function _buildRolodex(el, fromVal, toVal, decimals, delay, duration) {
+    var fromStr = decimals > 0 ? Number(fromVal).toFixed(decimals) : String(Math.round(fromVal));
+    var toStr   = decimals > 0 ? Number(toVal).toFixed(decimals)   : String(Math.round(toVal));
+
+    // Pad to same length
+    var maxLen = Math.max(fromStr.length, toStr.length);
+    while (fromStr.length < maxLen) fromStr = ' ' + fromStr;
+    while (toStr.length < maxLen)   toStr   = ' ' + toStr;
+
+    // Character height from line-height
+    var cs = window.getComputedStyle(el);
+    var charH = parseInt(cs.lineHeight);
+    if (!charH || isNaN(charH)) charH = parseInt(cs.fontSize) || 32;
+
+    var delta = toVal - fromVal;
+    var flashColor = delta > 0 ? '#34d399' : (delta < 0 ? '#f87171' : null);
+
+    // Build one column per character
+    var html = '';
+    for (var i = 0; i < maxLen; i++) {
+      var fc = fromStr[i];
+      var tc = toStr[i];
+
+      // Decimal point — static
+      if (fc === '.' || tc === '.') {
+        html += '<div style="height:' + charH + 'px;display:flex;align-items:center;justify-content:center;">.</div>';
+        continue;
+      }
+
+      // Same digit or both spaces — static
+      if (fc === tc) {
+        var ch = (tc === ' ') ? '' : tc;
+        html += '<div style="height:' + charH + 'px;display:flex;align-items:center;justify-content:center;">' + ch + '</div>';
+        continue;
+      }
+
+      // Animated digit column
+      var fd = (fc === ' ') ? 0 : parseInt(fc);
+      var td = (tc === ' ') ? 0 : parseInt(tc);
+
+      // Vertical strip: digits 0 through 9
+      var strip = '';
+      for (var d = 0; d <= 9; d++) {
+        strip += '<div style="height:' + charH + 'px;display:flex;align-items:center;justify-content:center;">' + d + '</div>';
+      }
+
+      html += '<div style="height:' + charH + 'px;overflow:hidden;">' +
+        '<div class="cc__rolo-strip" data-rolo-to="' + td + '" data-rolo-h="' + charH + '" ' +
+        'style="transform:translateY(' + (-fd * charH) + 'px);">' +
+        strip + '</div></div>';
+    }
+
+    // Replace element content with rolodex columns
+    el.style.display = 'inline-flex';
+    el.style.justifyContent = 'center';
+    el.innerHTML = html;
+
+    // Animate after delay
+    setTimeout(function() {
+      // Scroll each digit strip to its target
+      var strips = el.querySelectorAll('.cc__rolo-strip');
+      strips.forEach(function(strip, idx) {
+        var td = parseInt(strip.getAttribute('data-rolo-to'));
+        var h  = parseInt(strip.getAttribute('data-rolo-h'));
+        strip.style.transition = 'transform ' + duration + 'ms cubic-bezier(0.16, 1, 0.3, 1)';
+        // Per-digit stagger for slot-machine cascade
+        setTimeout(function() {
+          strip.style.transform = 'translateY(' + (-td * h) + 'px)';
+        }, idx * 80);
+      });
+
+      // Color flash: white → green/red → white
+      if (flashColor) {
+        el.style.transition = 'color ' + Math.round(duration * 0.25) + 'ms ease';
+        el.style.color = flashColor;
+        setTimeout(function() {
+          el.style.transition = 'color ' + Math.round(duration * 0.5) + 'ms ease';
+          el.style.color = '';
+        }, Math.round(duration * 0.35));
+      }
+    }, delay);
   }
 
   // Public API

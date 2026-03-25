@@ -67,10 +67,11 @@ html, body { height: auto; overflow: auto; }
   position: absolute;
   left: 11px; right: 12px;
   display: flex; align-items: center;
+  gap: 8px;
   z-index: 3; height: 32px;
 }
 .cc__name-row--1 { top: 11px; }
-.cc__name-row--2 { top: 43px; }
+.cc__name-row--2 { top: 49px; }
 .cc__name-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800; font-size: 40px;
@@ -80,7 +81,7 @@ html, body { height: auto; overflow: auto; }
 .cc__accent-bar {
   flex: 1; min-width: 0;
   height: 25px;
-  background-image: url('data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAyAZwDASIAAhEBAxEB/8QAHAAAAwEBAAMBAAAAAAAAAAAAAAIDAQQFBgcI/8QAIBABAQEBAAICAwEBAAAAAAAAAAECEjFhAxETIVFBcf/EABsBAQEBAQEBAQEAAAAAAAAAAAMCBAEABwYI/8QAGhEBAQEBAQEBAAAAAAAAAAAAAAECAxITEf/aAAwDAQACEQMRAD8A/OX4mfi9O78UZfjj8z9H7n4uG/H6Z+P07r8TL8Tv0cvFw34y343dfj9Evx+lToi8nFfj9Fvxu2/GnfjVNjvJx6+NPWHbrCesEmxa5OPWE9ZdmsJawWbBrm5NYTs/rr1lLeSTQNYc2oSxfU+iahc6Bco2FqmoWwsotQljIZn0bNFqNjZ5ZGnzQ2Gh4SHy04o6pk2SZPmtnOh1FYeJ5p81t56DqK58GynmnjbjQNRTJk808v2140Kw8aSU0rTjQrDw0qcppT50O5OIWVv2WaRYeWf1pG/dhZtFhgXr+jqEmk2GBeh0uaT+GBeh9qmnPwwL0Ole3PwwL0Onvb34YF6Z096e/HnPxl/G6ufTLl/NXt92+blvxsvxuq5Lc+le03m5bikuPTruS6wqbRebjuInrDs1hPWVzYdc3HrCWsO3eUd5LNA1zcesJbz/AF17ylvJ86ZtYcm8o6y69ZQ3k2dMu8ObeUrHRuJbhs1l1lDUTsW1P0TUPmg1Eqw1jDZobGf62Moh80OoaHzSNlaMaFYpD5qcppWnGhWLSmlSzTyteNi1lWU+ajKaVrx0FcrSmmkZTzTVjqK5WmjSoSt6p89R3K/2PtKb9t7PnsO4V6bNIdtmzTqi5Xmm9IdN6JOyLhX7b0j1R2Sdk3C32PtHtva52T4V6g69o9/pnap2T4X69jpHodx37OeVuh0j3B3Hfs95W6HSPbO3vs94e5/TPpSyFv6r+cpX3n8JcsuVC2K/U3KdhLn+LUlVKixHUT3lbRNLlDY5tT6T+TK+0teDZrPuObUR3HRtHZs1l3HPuIfJHTtDfhozWTcc24jqOjaOmjLJqIUl8qb8k0bNZtJWEsU15JTQGoxkaynzRWNjYWG8mzoVhoeVI0p86HYpKaVOU0p87RYrKaVGU000Z6DuVpWzSM03o+eo7laabN+0e/Q6n9Nnqi5X6HVQ6n9b17NOyLhbpvXtDsdEnZFwv1/xvTn6b1/1c7ouF+2dI9M6v9JO6bh0dDuufqt7qp3T4X7rO/aHQ6VO7l5r9+x37c/Q7d+6fDo79jv25+/Y6e+73h0d+x37c/Y79vfd7w+jF15AfCY+4MZQFOUtJQFQdJrynsBcFUdp6ANlm2htD5P8APll2jv/AFHYB8su3PvyjoBoyx6R35JrwAbLNpPXklANkGi3w0AuRVk8tgBoOtbPIBcorYaAGyOthgDRNENPIBYiiieQDRFYACxBgAqJKACjAAdjlAAXE0AB2OUAB1wAB54AB55//9k=');
+  background-image: url('https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/gradient-bar-min.png');
   background-size: cover;
   background-position: center;
 }
@@ -334,11 +335,12 @@ function fitNameRows(){
   var canvas=document.createElement('canvas');
   var ctx=canvas.getContext('2d');
   var rowWidth=320; // 343 - 11 left - 12 right
+  var gapPx=8;
   var minBar=24;
   var maxFont=40;
   var minFont=18;
 
-  // First name row
+  // First name row: [text] [8px gap] [bar]
   var fnEl=document.getElementById('ccFirstName');
   var barO=document.getElementById('ccBarOrange');
   if(fnEl&&barO){
@@ -348,16 +350,16 @@ function fitNameRows(){
     while(fs>=minFont){
       ctx.font='800 '+fs+'px Montserrat';
       tw=ctx.measureText(fn).width;
-      if(tw+minBar<=rowWidth)break;
+      if(tw+gapPx+minBar<=rowWidth)break;
       fs--;
     }
     fnEl.style.fontSize=fs+'px';
-    var remaining=rowWidth-tw;
+    var remaining=rowWidth-tw-gapPx;
     if(remaining<minBar){barO.classList.add('cc__accent-bar--hidden')}
     else{barO.classList.remove('cc__accent-bar--hidden')}
   }
 
-  // Last name row
+  // Last name row: [bar] [8px gap] [text]
   var lnEl=document.getElementById('ccLastName');
   var barB=document.getElementById('ccBarBlue');
   if(lnEl&&barB){
@@ -367,11 +369,11 @@ function fitNameRows(){
     while(fs>=minFont){
       ctx.font='800 '+fs+'px Montserrat';
       tw=ctx.measureText(ln).width;
-      if(tw+minBar<=rowWidth)break;
+      if(tw+gapPx+minBar<=rowWidth)break;
       fs--;
     }
     lnEl.style.fontSize=fs+'px';
-    var remaining=rowWidth-tw;
+    var remaining=rowWidth-tw-gapPx;
     if(remaining<minBar){barB.classList.add('cc__accent-bar--hidden')}
     else{barB.classList.remove('cc__accent-bar--hidden')}
   }

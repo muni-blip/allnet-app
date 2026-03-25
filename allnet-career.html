@@ -50,11 +50,11 @@ html, body { height: auto; overflow: auto; }
   overflow: hidden;
   z-index: 1;
 }
-/* Player image zoomed to ~198% and offset for chest-crop effect */
+/* Player image fills the 319×319 square naturally */
 .cc__player-frame img {
   position: absolute;
-  left: -45%; top: -25%;
-  width: 198%; height: 198%;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
   max-width: none;
   object-fit: cover;
 }
@@ -130,8 +130,8 @@ html, body { height: auto; overflow: auto; }
 }
 .cc__rating-label {
   font-family: 'Montserrat', sans-serif;
-  font-weight: 600; font-size: 24px;
-  line-height: 32px; color: #fff;
+  font-weight: 600; font-size: 16px;
+  line-height: 24px; color: #fff;
 }
 .cc__rating-val {
   display: flex; align-items: center; gap: 4px;
@@ -196,7 +196,7 @@ html, body { height: auto; overflow: auto; }
 .mh-row { width: 343px; height: 108px; max-width: 100%; background: #181818; border: 1px solid #2e2e2e; position: relative; margin-bottom: 16px; cursor: pointer; overflow: hidden; }
 .mh-row__thumb { position: absolute; left: -1px; top: -1px; width: 108px; height: 108px; overflow: hidden; background: #111; }
 .mh-row__thumb-cover { position: absolute; inset: 0; background-size: cover; background-position: center; }
-.mh-row__thumb-cutout { position: absolute; left: -45%; top: -25%; width: 198%; height: 198%; max-width: none; object-fit: cover; z-index: 1; }
+.mh-row__thumb-cutout { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 .mh-row__thumb-initials { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 20px; color: #666; }
 .mh-row__info { position: absolute; left: 119px; top: 11px; }
 .mh-row__name { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 16px; line-height: 24px; color: #fff; }

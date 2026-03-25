@@ -197,11 +197,12 @@ var CareerCard = (function() {
   /* ── Rolodex number animation ──
      Counts from old→new with easeOutCubic.
      Call after render() + fitNames().
+     containerId: the ID of the .cc element (e.g. 'ratingOverlayCard')
      opts: { winsFrom, winsTo, lossesFrom, lossesTo, drawsFrom, drawsTo,
              skillFrom, skillTo, socialFrom, socialTo, duration, stagger }
   */
-  function animateValues(cardId, opts) {
-    var container = document.getElementById(cardId);
+  function animateValues(containerId, opts) {
+    var container = document.getElementById(containerId);
     if (!container) return;
 
     var duration = opts.duration || 1400;

@@ -158,7 +158,7 @@ function renderRatingOverlayCard() {
       overlay._ratingData.shouldAnimate = false;
 
       setTimeout(() => {
-        CareerCard.animateValues('rov', {
+        CareerCard.animateValues('ratingOverlayCard', {
           winsFrom:   wins - wDelta,   winsTo:   wins,
           lossesFrom: losses - lDelta, lossesTo: losses,
           drawsFrom:  draws - dDelta,  drawsTo:  draws,

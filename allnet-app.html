@@ -13,7 +13,12 @@
 /* ═══ Variant A: Rating Update Overlay (container only — card internals from career-card.css) ═══ */
 .rating-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
 .rating-overlay.active{display:flex;}
+.rating-overlay.active .cc-border{animation:ccSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;}
+@keyframes ccSlideUp{from{opacity:0;transform:translateY(60px);}to{opacity:1;transform:translateY(0);}}
 .rating-overlay__header{font-family:'Montserrat',sans-serif;font-size:14px;color:#999;margin-bottom:16px;text-align:center;}
+.rating-overlay.active .rating-overlay__header{animation:ccFadeIn 0.4s 0.1s ease both;}
+.rating-overlay.active .rating-overlay__done{animation:ccFadeIn 0.4s 0.3s ease both;}
+@keyframes ccFadeIn{from{opacity:0;}to{opacity:1;}}
 .rating-overlay__done{width:100%;max-width:345px;margin-top:20px;padding:16px;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#F74501;color:#fff;border:none;border-radius:10px;cursor:pointer;transition:opacity .2s;}
 .rating-overlay__done:hover{opacity:0.9;}
 

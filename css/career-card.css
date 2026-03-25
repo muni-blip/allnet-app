@@ -95,6 +95,7 @@
   font-weight: 800; font-size: 40px;
   line-height: 32px; color: #fff;
   margin-top: 8px;
+  font-variant-numeric: tabular-nums;
 }
 .cc__wld-delta {
   font-family: 'Montserrat', sans-serif;

@@ -185,6 +185,109 @@ html, body { height: auto; overflow: auto; }
 
 .spray-btn:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
 
+/* ── Media Carousel ── */
+.match-card__media {
+  position: relative;
+  width: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.match-card__media-track {
+  display: flex;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.match-card__media-slide {
+  min-width: 100%;
+  position: relative;
+}
+
+.match-card__media-slide img {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.match-card__media-slide video {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.match-card__media-caption {
+  padding: 10px 16px;
+  background: var(--bg-card);
+}
+
+.match-card__media-author {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.match-card__media-author-avatar {
+  width: 18px; height: 18px; border-radius: 50%;
+  overflow: hidden; flex-shrink: 0;
+  background: var(--border); display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 700; color: #fff;
+}
+
+.match-card__media-author-avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+.match-card__media-text {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.match-card__media-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0;
+  background: var(--bg-card);
+}
+
+.match-card__media-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border-light);
+  transition: background 0.2s;
+}
+
+.match-card__media-dot--active {
+  background: var(--orange);
+}
+
+.match-card__media-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+
+.match-card__media-nav--prev { left: 8px; }
+.match-card__media-nav--next { right: 8px; }
+
 /* Empty state */
 .feed-empty {
   text-align: center; padding: 80px 20px; color: var(--text-muted);
@@ -373,13 +476,61 @@ function renderPlayer(player) {
 }
 
 // ── Render Match Card ──
-function renderMatchCard(match) {
+function renderMatchCard(match, media) {
   const teamA = typeof match.team_a === 'string' ? JSON.parse(match.team_a) : match.team_a;
   const teamB = typeof match.team_b === 'string' ? JSON.parse(match.team_b) : match.team_b;
   const isDraw = match.winner === 'draw';
   const winnerTeam = isDraw ? teamA : (match.winner === 'a' ? teamA : teamB);
   const loserTeam = isDraw ? teamB : (match.winner === 'a' ? teamB : teamA);
   const time = timeAgo(new Date(match.played_at));
+
+  // Build media carousel if media exists
+  let mediaHtml = '';
+  if (media && media.length > 0) {
+    const carouselId = 'carousel_' + match.id.replace(/-/g, '');
+    const slides = media.map((m, idx) => {
+      const profile = liveProfiles[m.user_id];
+      const authorName = profile ? (profile.first_name || profile.name?.split(' ')[0] || 'Player') : 'Player';
+      const authorAvatar = profile?.avatar_url
+        ? `<img src="${profile.avatar_url}" alt="">`
+        : (authorName[0] || '?');
+      const mediaIcon = m.media_type === 'video' ? '🎥' : '📸';
+
+      const mediaEl = m.media_type === 'video'
+        ? `<video src="${m.media_url}" playsinline controls preload="metadata" poster=""></video>`
+        : `<img src="${m.media_url}" alt="Game highlight" loading="lazy">`;
+
+      const captionHtml = m.caption
+        ? `<div class="match-card__media-text">${m.caption}</div>`
+        : '';
+
+      return `<div class="match-card__media-slide">
+        ${mediaEl}
+        <div class="match-card__media-caption">
+          <div class="match-card__media-author">
+            <div class="match-card__media-author-avatar">${authorAvatar}</div>
+            ${mediaIcon} ${authorName}
+          </div>
+          ${captionHtml}
+        </div>
+      </div>`;
+    }).join('');
+
+    const dotsHtml = media.length > 1
+      ? `<div class="match-card__media-dots">${media.map((_, i) => `<div class="match-card__media-dot${i === 0 ? ' match-card__media-dot--active' : ''}" data-idx="${i}"></div>`).join('')}</div>`
+      : '';
+
+    const navHtml = media.length > 1
+      ? `<button class="match-card__media-nav match-card__media-nav--prev" onclick="slideCarousel('${carouselId}', -1)">‹</button>
+         <button class="match-card__media-nav match-card__media-nav--next" onclick="slideCarousel('${carouselId}', 1)">›</button>`
+      : '';
+
+    mediaHtml = `<div class="match-card__media" id="${carouselId}" data-idx="0" data-count="${media.length}">
+      ${navHtml}
+      <div class="match-card__media-track">${slides}</div>
+      ${dotsHtml}
+    </div>`;
+  }
 
   return `<div class="match-card">
     <div class="match-card__header">
@@ -390,6 +541,7 @@ function renderMatchCard(match) {
       <span class="match-card__court-icon">📍</span>
       ${match.court_name}
     </div>
+    ${mediaHtml}
     <div class="match-card__teams">
       <div class="match-card__team ${isDraw ? 'match-card__team--loser' : 'match-card__team--winner'}">
         <div class="match-card__team-result ${isDraw ? 'match-card__team-result--l' : 'match-card__team-result--w'}">${isDraw ? 'D' : 'W'}</div>
@@ -409,6 +561,42 @@ function renderMatchCard(match) {
     </div>
   </div>`;
 }
+
+// ── Carousel Navigation ──
+function slideCarousel(carouselId, direction) {
+  const el = document.getElementById(carouselId);
+  if (!el) return;
+  const count = parseInt(el.dataset.count);
+  let idx = parseInt(el.dataset.idx) + direction;
+  if (idx < 0) idx = 0;
+  if (idx >= count) idx = count - 1;
+  el.dataset.idx = idx;
+
+  const track = el.querySelector('.match-card__media-track');
+  track.style.transform = `translateX(-${idx * 100}%)`;
+
+  // Update dots
+  el.querySelectorAll('.match-card__media-dot').forEach((dot, i) => {
+    dot.classList.toggle('match-card__media-dot--active', i === idx);
+  });
+}
+
+// ── Touch Swipe for Carousel ──
+document.addEventListener('touchstart', function(e) {
+  const carousel = e.target.closest('.match-card__media');
+  if (!carousel) return;
+  carousel._touchX = e.touches[0].clientX;
+}, { passive: true });
+
+document.addEventListener('touchend', function(e) {
+  const carousel = e.target.closest('.match-card__media');
+  if (!carousel || !carousel._touchX) return;
+  const diff = carousel._touchX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 40) {
+    slideCarousel(carousel.id, diff > 0 ? 1 : -1);
+  }
+  carousel._touchX = null;
+}, { passive: true });
 
 /* ══════════════════════════════
    LOAD FEED
@@ -468,7 +656,37 @@ async function loadFeed() {
   }
 
   // Render with live data
-  list.innerHTML = data.map(match => renderMatchCard(match)).join('');
+  // Batch-fetch public media for all feed posts
+  const feedIds = data.map(m => m.id);
+  let mediaByFeed = {};
+  if (feedIds.length > 0) {
+    const { data: mediaData } = await supabase
+      .from('game_media')
+      .select('*')
+      .in('match_feed_id', feedIds)
+      .eq('is_public', true)
+      .order('created_at', { ascending: true });
+
+    if (mediaData) {
+      mediaData.forEach(m => {
+        if (!mediaByFeed[m.match_feed_id]) mediaByFeed[m.match_feed_id] = [];
+        mediaByFeed[m.match_feed_id].push(m);
+      });
+
+      // Fetch profiles for media uploaders
+      const mediaUserIds = new Set(mediaData.map(m => m.user_id));
+      mediaUserIds.forEach(uid => userIds.add(uid)); // merge with existing
+      if (mediaUserIds.size > 0) {
+        const { data: mediaProfiles } = await supabase
+          .from('profiles')
+          .select('id, name, first_name, last_name, avatar_url')
+          .in('id', Array.from(mediaUserIds));
+        if (mediaProfiles) mediaProfiles.forEach(p => { if (!liveProfiles[p.id]) liveProfiles[p.id] = p; });
+      }
+    }
+  }
+
+  list.innerHTML = data.map(match => renderMatchCard(match, mediaByFeed[match.id] || [])).join('');
 }
 
 // ── Init ──

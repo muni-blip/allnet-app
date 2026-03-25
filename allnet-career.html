@@ -17,15 +17,20 @@ html, body { height: auto; overflow: auto; }
 
 /* ═══ Career Card — Figma-exact: 343×589 ═══ */
 .cc-wrapper { padding: 20px 16px 0; }
+.cc-border {
+  width: 345px; max-width: 100%;
+  margin: 0 auto;
+  padding: 1px;
+  border-radius: 17px;
+  background: linear-gradient(180deg, #F74501 0%, #0040FF 100%);
+  box-shadow: 0 8px 32px 0 black;
+}
 .cc {
   position: relative;
-  width: 343px; height: 589px;
-  max-width: 100%;
-  margin: 0 auto;
+  width: 100%; height: 589px;
   border-radius: 16px;
   overflow: clip;
-  border: 1px solid #F74501;
-  box-shadow: 0 8px 32px 0 black;
+  border: none;
   background: #000;
 }
 
@@ -86,6 +91,7 @@ html, body { height: auto; overflow: auto; }
   background-position: center;
 }
 .cc__accent-bar--hidden { display: none; }
+.cc__name-row--2 .cc__accent-bar { transform: scaleX(-1); }
 
 /* W/L/D: three 88px columns centered at specific offsets */
 .cc__wld { position: absolute; left: 0; right: 0; top: 366px; z-index: 3; }
@@ -248,7 +254,7 @@ html, body { height: auto; overflow: auto; }
     </nav>
     <div class="nav-drawer__footer"><div class="nav-drawer__user" id="navUser" style="display:none;"><div class="nav-drawer__user-avatar" id="navAvatar">U</div><div class="nav-drawer__user-info"><div class="nav-drawer__user-name" id="navUserName">Player</div><div class="nav-drawer__user-stars" id="navUserStars">⭐ 0</div></div></div></div>
   </div>
-  <div class="cc-wrapper"><div class="cc" id="careerCard"><div class="cc__placeholder"><div class="cc__placeholder-icon">📷</div><div class="cc__placeholder-text">Upload a photo to generate your career card</div></div></div></div>
+  <div class="cc-wrapper"><div class="cc-border"><div class="cc" id="careerCard"><div class="cc__placeholder"><div class="cc__placeholder-icon">📷</div><div class="cc__placeholder-text">Upload a photo to generate your career card</div></div></div></div></div>
   <div class="cc-actions"><button class="cc-action-btn" onclick="openPhotoModal()">CHANGE PHOTO</button><button class="cc-action-btn" onclick="openCoverPicker()">UPDATE COVER</button></div>
   <div class="match-history"><div class="match-history__title" id="matchHistoryTitle">MATCH HISTORY (0)</div><div id="matchHistoryList"><div class="match-history__empty">No matches yet.</div></div></div>
 </div>

@@ -27,24 +27,24 @@ html, body { height: auto; overflow: auto; }
 }
 .cc {
   position: relative;
-  width: 100%; height: 589px;
+  width: 100%; height: 595px;
   border-radius: 16px;
   overflow: clip;
   border: none;
   background: #000;
 }
 
-/* Cover/Player/Overlay: 319×319 inset at left:11, top:83 */
+/* Cover/Player/Overlay: 319×319 square, 8px below second name row */
 .cc__cover {
   position: absolute;
-  left: 11px; top: 83px;
+  left: 12px; top: 89px;
   width: 319px; height: 319px;
   background-size: cover; background-position: center;
   z-index: 0;
 }
 .cc__player-frame {
   position: absolute;
-  left: 50%; top: 83px;
+  left: 50%; top: 89px;
   transform: translateX(-50%);
   width: 319px; height: 319px;
   overflow: hidden;
@@ -58,10 +58,10 @@ html, body { height: auto; overflow: auto; }
   max-width: none;
   object-fit: cover;
 }
-/* Gradient overlay: clean transparent→black */
+/* Gradient overlay: sits on the 319×319 square only, fades player to card black */
 .cc__overlay {
   position: absolute;
-  left: 11px; top: 83px;
+  left: 12px; top: 89px;
   width: 319px; height: 319px;
   background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 20%, black 100%);
   z-index: 2;
@@ -94,7 +94,7 @@ html, body { height: auto; overflow: auto; }
 .cc__name-row--2 .cc__accent-bar { transform: scaleX(-1); }
 
 /* W/L/D: three 88px columns centered at specific offsets */
-.cc__wld { position: absolute; left: 0; right: 0; top: 366px; z-index: 3; }
+.cc__wld { position: absolute; left: 0; right: 0; top: 372px; z-index: 3; }
 .cc__wld-col { position: absolute; width: 88px; text-align: center; }
 .cc__wld-col--w { left: calc(50% - 115.5px - 44px); }
 .cc__wld-col--l { left: calc(50% + 0.5px - 44px); }
@@ -114,7 +114,7 @@ html, body { height: auto; overflow: auto; }
 /* Social Rating: top 478 */
 .cc__social-row {
   position: absolute;
-  left: 11px; top: 478px; width: 319px;
+  left: 11px; top: 484px; width: 319px;
   padding-left: 8px;
   display: flex; align-items: center; justify-content: space-between;
   z-index: 3;
@@ -122,7 +122,7 @@ html, body { height: auto; overflow: auto; }
 /* Skill Rating: top 511 */
 .cc__skill-row {
   position: absolute;
-  left: 50%; top: 511px; width: 319px;
+  left: 50%; top: 517px; width: 319px;
   transform: translateX(-50%);
   padding-left: 8px;
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -153,7 +153,7 @@ html, body { height: auto; overflow: auto; }
 /* Division tabs: top 552, 319px, 5 pills */
 .cc__div-tabs {
   position: absolute;
-  left: 50%; top: 552px;
+  left: 50%; top: 558px;
   transform: translateX(-50%);
   width: 319px;
   display: flex; gap: 8px;

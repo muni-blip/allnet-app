@@ -168,6 +168,35 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
 .career-card__new-badge { font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--green); background:var(--green-glow); padding:2px 6px; border-radius:4px; margin-left:4px; }
 .career-card__empty-state { text-align:center; padding:12px 20px; font-size:12px; color:var(--text-muted); }
 .review-question__hint { font-size:12px; color:var(--text-muted); margin-bottom:10px; margin-top:-6px; }
+
+/* ═══════════════════════════════════════════════
+   SCREEN: POST-REVIEW MEDIA UPLOAD
+   ═══════════════════════════════════════════════ */
+.upload-context { display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:24px; }
+.upload-context__badge { font-family:var(--font-mono); font-size:11px; color:var(--green); background:var(--green-glow); padding:4px 10px; border-radius:100px; font-weight:600; }
+.upload-context__text { font-size:13px; color:var(--text-secondary); }
+.upload-area { width:100%; aspect-ratio:4/5; max-height:420px; background:var(--bg-card); border:2px dashed var(--border-light); border-radius:var(--radius-lg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; cursor:pointer; transition:var(--transition); margin-bottom:20px; position:relative; overflow:hidden; }
+.upload-area:hover { border-color:var(--orange); }
+.upload-area.has-media { border-style:solid; border-color:var(--border); cursor:default; }
+.upload-area__icon { font-size:40px; opacity:0.6; }
+.upload-area__text { font-size:14px; color:var(--text-muted); font-weight:500; }
+.upload-area__hint { font-size:12px; color:var(--text-muted); opacity:0.6; }
+.upload-area__preview { position:absolute; inset:0; object-fit:cover; width:100%; height:100%; border-radius:calc(var(--radius-lg) - 2px); }
+.upload-area__preview-video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border-radius:calc(var(--radius-lg) - 2px); background:#000; }
+.upload-area__remove { position:absolute; top:12px; right:12px; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.2); color:white; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; backdrop-filter:blur(4px); }
+.upload-area__remove:hover { background:rgba(239,68,68,0.8); }
+.upload-caption { width:100%; padding:14px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); color:var(--text-primary); font-family:var(--font-body); font-size:14px; resize:none; outline:none; transition:var(--transition); margin-bottom:6px; }
+.upload-caption:focus { border-color:var(--orange); }
+.upload-caption::placeholder { color:var(--text-muted); }
+.upload-char-count { font-family:var(--font-mono); font-size:11px; color:var(--text-muted); text-align:right; margin-bottom:16px; }
+.upload-toggle { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:24px; }
+.upload-toggle__label { font-size:14px; font-weight:600; }
+.upload-toggle__desc { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.upload-toggle__switch { width:48px; height:28px; border-radius:14px; background:var(--green); border:none; position:relative; cursor:pointer; transition:background 0.2s; flex-shrink:0; }
+.upload-toggle__switch.off { background:var(--border-light); }
+.upload-toggle__switch::after { content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:white; transition:transform 0.2s; }
+.upload-toggle__switch.off::after { transform:translateX(0); }
+.upload-toggle__switch:not(.off)::after { transform:translateX(20px); }
 </style>
 </head>
 <body>
@@ -260,6 +289,42 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
     </div>
     <div class="btn-row"><button class="btn btn--secondary" id="reviewPrevBtn" style="display:none;" onclick="prevPlayerReview()">← Previous</button><button class="btn btn--primary" id="reviewNextBtn" disabled onclick="submitPlayerReview()">Next Player →</button></div>
   </div>
+
+  <!-- ═══ SCREEN: POST-REVIEW MEDIA UPLOAD ═══ -->
+  <div class="screen" id="screenUpload">
+    <div class="section-label">// Share a Highlight</div>
+    <h1 class="screen-title">Post from this game</h1>
+    <p class="screen-sub">Add a photo or video from the run. One upload per game.</p>
+
+    <div class="upload-context">
+      <span class="upload-context__badge" id="uploadFormatBadge">1v1</span>
+      <span class="upload-context__text" id="uploadCourtText">at Great Park · Game Complete</span>
+    </div>
+
+    <div class="upload-area" id="uploadArea" onclick="triggerUploadInput()">
+      <div class="upload-area__icon" id="uploadIcon">📸</div>
+      <div class="upload-area__text" id="uploadText">Tap to add a photo or video</div>
+      <div class="upload-area__hint" id="uploadHint">Photo or video up to 60s</div>
+    </div>
+    <input type="file" id="uploadMediaInput" accept="image/*,video/*" style="display:none;" onchange="handleMediaUpload(this)">
+
+    <textarea class="upload-caption" id="uploadCaption" rows="2" maxlength="200" placeholder="Write a caption..." oninput="updateCharCount()"></textarea>
+    <div class="upload-char-count"><span id="uploadCharCount">0</span>/200</div>
+
+    <div class="upload-toggle">
+      <div>
+        <div class="upload-toggle__label">Public Post</div>
+        <div class="upload-toggle__desc" id="uploadToggleDesc">Visible on the Activity feed</div>
+      </div>
+      <button class="upload-toggle__switch" id="uploadPublicToggle" onclick="toggleUploadPublic()"></button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn--secondary" onclick="skipUpload()">Skip</button>
+      <button class="btn btn--primary" id="uploadPostBtn" onclick="submitUpload()" disabled>Post & Continue</button>
+    </div>
+  </div>
+
   <div class="screen" id="screenCardUpdate">
     <div class="card-update">
       <div class="card-update__label">Your career card has updated!</div>
@@ -337,7 +402,7 @@ const hist=['screenChoose'];
 
 function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');hist.push(id);updateBack(id);}
 function goBack(){G.joinTimeouts.forEach(t=>clearTimeout(t));G.joinTimeouts=[];if(hist.length>1){hist.pop();const p=hist[hist.length-1];document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(p).classList.add('active');updateBack(p);}else window.location.href='allnet-app.html';}
-function updateBack(id){const b=document.getElementById('backBtn');if(id==='screenChoose'){b.textContent='← Map';b.style.display='';b.onclick=()=>window.location.href='allnet-app.html';}else if(['screenActive','screenReview','screenCardUpdate'].includes(id)){b.style.display='none';}else{b.style.display='';b.textContent='← Back';b.onclick=goBack;}}
+function updateBack(id){const b=document.getElementById('backBtn');if(id==='screenChoose'){b.textContent='← Map';b.style.display='';b.onclick=()=>window.location.href='allnet-app.html';}else if(['screenActive','screenReview','screenCardUpdate','screenUpload'].includes(id)){b.style.display='none';}else{b.style.display='';b.textContent='← Back';b.onclick=goBack;}}
 
 function selectFormat(f,el){document.querySelectorAll('.format-option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');G.format=f;document.getElementById('setupNextBtn').disabled=false;}
 
@@ -497,7 +562,7 @@ function submitPlayerReview(){
   G.reviews[G.currentReviewIdx].social=G.currentReview.social;
   G.reviews[G.currentReviewIdx].arrivedLate=G.currentReview.arrivedLate;
   G.reviews[G.currentReviewIdx].wouldPlayAgain=G.currentReview.wouldPlayAgain;
-  if(G.currentReviewIdx<G.reviews.length-1){G.currentReviewIdx++;renderReview();document.getElementById('screenReview').scrollTop=0;}else{finalizeGame();}
+  if(G.currentReviewIdx<G.reviews.length-1){G.currentReviewIdx++;renderReview();document.getElementById('screenReview').scrollTop=0;}else{showUploadScreen();}
 }
 
 function finalizeGame(){
@@ -661,7 +726,8 @@ function switchCardDivision(div){
 
 function resetGame(){
   G.joinTimeouts.forEach(t=>clearTimeout(t));clearInterval(G.timerInterval);
-  G.format=null;G.codeA=null;G.codeB=null;G.teamA=[];G.teamB=[];G.teamSize=0;G.timerSeconds=0;G.joinTimeouts=[];G.winner=null;G.reviews=[];G.currentReviewIdx=0;G.currentReview={skill:null,social:null,arrivedLate:null,wouldPlayAgain:null};
+  G.format=null;G.codeA=null;G.codeB=null;G.teamA=[];G.teamB=[];G.teamSize=0;G.timerSeconds=0;G.joinTimeouts=[];G.winner=null;G.reviews=[];G.currentReviewIdx=0;G.currentReview={skill:null,social:null,arrivedLate:null,wouldPlayAgain:null};G.uploadData=null;
+  uploadMediaFile=null;uploadMediaType=null;uploadIsPublic=true;
   document.querySelectorAll('.format-option').forEach(o=>o.classList.remove('selected'));
   document.getElementById('setupNextBtn').disabled=true;document.getElementById('joinInput').value='';document.getElementById('joinBtn').disabled=true;document.getElementById('readyBtn').disabled=true;
   document.getElementById('waitingIndicator').style.display='';document.getElementById('lobbyTitle').textContent='Waiting for players';document.getElementById('backBtn').style.display='';
@@ -669,6 +735,174 @@ function resetGame(){
   document.getElementById('cardWinChange').textContent='';document.getElementById('cardLossChange').textContent='';document.getElementById('cardDrawChange').textContent='';
   document.getElementById('cardSkillChange').style.color='';document.getElementById('cardSocialChange').style.color='';document.getElementById('gameTimer').textContent='00:00';
   hist.length=0;hist.push('screenChoose');updateBack('screenChoose');
+}
+
+/* ══════════════════════════════
+   POST-REVIEW MEDIA UPLOAD
+   ══════════════════════════════ */
+let uploadMediaFile = null;
+let uploadMediaType = null; // 'photo' or 'video'
+let uploadIsPublic = true;
+
+function showUploadScreen() {
+  // Populate context
+  document.getElementById('uploadFormatBadge').textContent = G.format.toUpperCase();
+  const courtParam = new URLSearchParams(window.location.search).get('court') || 'Court';
+  document.getElementById('uploadCourtText').textContent = 'at ' + courtParam + ' · Game Complete';
+
+  // Reset state
+  uploadMediaFile = null;
+  uploadMediaType = null;
+  uploadIsPublic = true;
+  document.getElementById('uploadCaption').value = '';
+  document.getElementById('uploadCharCount').textContent = '0';
+  document.getElementById('uploadPostBtn').disabled = true;
+  document.getElementById('uploadPublicToggle').classList.remove('off');
+  document.getElementById('uploadToggleDesc').textContent = 'Visible on the Activity feed';
+  document.getElementById('uploadMediaInput').value = '';
+
+  // Reset upload area
+  const area = document.getElementById('uploadArea');
+  area.classList.remove('has-media');
+  area.innerHTML = '<div class="upload-area__icon" id="uploadIcon">📸</div><div class="upload-area__text" id="uploadText">Tap to add a photo or video</div><div class="upload-area__hint" id="uploadHint">Photo or video up to 60s</div>';
+  area.onclick = triggerUploadInput;
+
+  goTo('screenUpload');
+}
+
+function triggerUploadInput() {
+  if (uploadMediaFile) return; // already has media
+  document.getElementById('uploadMediaInput').click();
+}
+
+function handleMediaUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const isVideo = file.type.startsWith('video/');
+  const isImage = file.type.startsWith('image/');
+
+  if (!isVideo && !isImage) {
+    alert('Please upload a photo or video file.');
+    return;
+  }
+
+  // Video size/duration check (60s limit enforced by user trust + server-side later)
+  if (isVideo && file.size > 100 * 1024 * 1024) {
+    alert('Video must be under 100 MB.');
+    input.value = '';
+    return;
+  }
+
+  if (isImage && file.size > 20 * 1024 * 1024) {
+    alert('Photo must be under 20 MB.');
+    input.value = '';
+    return;
+  }
+
+  uploadMediaFile = file;
+  uploadMediaType = isVideo ? 'video' : 'photo';
+
+  const area = document.getElementById('uploadArea');
+  area.classList.add('has-media');
+  area.onclick = null;
+
+  if (isImage) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      area.innerHTML = '<img class="upload-area__preview" src="' + e.target.result + '" alt="Preview"><button class="upload-area__remove" onclick="removeUploadMedia(event)">✕</button>';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    const url = URL.createObjectURL(file);
+    area.innerHTML = '<video class="upload-area__preview-video" src="' + url + '" playsinline muted autoplay loop></video><button class="upload-area__remove" onclick="removeUploadMedia(event)">✕</button>';
+  }
+
+  document.getElementById('uploadPostBtn').disabled = false;
+}
+
+function removeUploadMedia(e) {
+  e.stopPropagation();
+  uploadMediaFile = null;
+  uploadMediaType = null;
+  document.getElementById('uploadMediaInput').value = '';
+
+  const area = document.getElementById('uploadArea');
+  area.classList.remove('has-media');
+  area.innerHTML = '<div class="upload-area__icon" id="uploadIcon">📸</div><div class="upload-area__text" id="uploadText">Tap to add a photo or video</div><div class="upload-area__hint" id="uploadHint">Photo or video up to 60s</div>';
+  area.onclick = triggerUploadInput;
+
+  document.getElementById('uploadPostBtn').disabled = true;
+}
+
+function updateCharCount() {
+  const val = document.getElementById('uploadCaption').value;
+  document.getElementById('uploadCharCount').textContent = val.length;
+}
+
+function toggleUploadPublic() {
+  uploadIsPublic = !uploadIsPublic;
+  const toggle = document.getElementById('uploadPublicToggle');
+  const desc = document.getElementById('uploadToggleDesc');
+  if (uploadIsPublic) {
+    toggle.classList.remove('off');
+    desc.textContent = 'Visible on the Activity feed';
+  } else {
+    toggle.classList.add('off');
+    desc.textContent = 'Only on your career card match history';
+  }
+}
+
+async function submitUpload() {
+  const btn = document.getElementById('uploadPostBtn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
+  try {
+    let mediaUrl = null;
+
+    if (uploadMediaFile && currentUser) {
+      const ext = uploadMediaFile.name.split('.').pop().toLowerCase() || (uploadMediaType === 'video' ? 'mp4' : 'jpg');
+      const ts = Date.now();
+      const path = currentUser.id + '/games/' + (dbGameId || 'demo') + '/' + ts + '.' + ext;
+
+      const { error: storageErr } = await supabase.storage
+        .from('game-media')
+        .upload(path, uploadMediaFile, { upsert: true, contentType: uploadMediaFile.type });
+
+      if (storageErr) {
+        console.error('Media upload error:', storageErr);
+        btn.disabled = false;
+        btn.textContent = 'Post & Continue';
+        alert('Upload failed. Try again or skip.');
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('game-media').getPublicUrl(path);
+      mediaUrl = publicUrl;
+    }
+
+    // Store upload data in game state for finalizeGame to use
+    G.uploadData = {
+      mediaUrl: mediaUrl,
+      mediaType: uploadMediaType,
+      caption: document.getElementById('uploadCaption').value.trim() || null,
+      isPublic: uploadIsPublic
+    };
+
+    console.log('Media uploaded:', G.uploadData);
+  } catch (err) {
+    console.error('Upload error:', err);
+    G.uploadData = null;
+  }
+
+  // Proceed to finalize
+  finalizeGame();
+}
+
+function skipUpload() {
+  G.uploadData = null;
+  finalizeGame();
 }
 
 /* ══════════════════════════════
@@ -863,7 +1097,7 @@ finalizeGame = async function() {
 
     const courtParam = new URLSearchParams(window.location.search).get('court') || 'Unknown Court';
 
-    const { error: feedError } = await supabase.from('match_feed').insert({
+    const { data: feedData, error: feedError } = await supabase.from('match_feed').insert({
       court_id: dbCourtId || null,
       court_name: courtParam,
       format: G.format,
@@ -871,10 +1105,27 @@ finalizeGame = async function() {
       team_b: teamBData,
       winner: feedWinner,
       played_at: new Date().toISOString()
-    });
+    }).select('id').single();
 
     if (feedError) console.error('match_feed insert error:', feedError);
-    else console.log('Match posted to Activity feed');
+    else console.log('Match posted to Activity feed, id:', feedData?.id);
+
+    // Persist media upload if user submitted one
+    if (G.uploadData && G.uploadData.mediaUrl && feedData?.id && currentUser) {
+      try {
+        const { error: mediaError } = await supabase.from('game_media').insert({
+          match_feed_id: feedData.id,
+          game_id: dbGameId || null,
+          user_id: currentUser.id,
+          media_url: G.uploadData.mediaUrl,
+          media_type: G.uploadData.mediaType,
+          caption: G.uploadData.caption,
+          is_public: G.uploadData.isPublic
+        });
+        if (mediaError) console.error('game_media insert error:', mediaError);
+        else console.log('Media attached to feed post:', G.uploadData.mediaType, 'public:', G.uploadData.isPublic);
+      } catch (err) { console.error('game_media error:', err); }
+    }
   } catch (err) { console.error('match_feed error:', err); }
 
   // Complete game in game_sessions DB

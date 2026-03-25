@@ -182,6 +182,8 @@ async function loadDivisionStats() {
 }
 
 /* ── Match History ── */
+var oppDivisionStats = {}; // { odp_userId_division: { skill_rating, ... } }
+
 async function loadMatchHistory() {
   var pgRes = await supabase.from('game_players').select('game_id,team').eq('user_id', currentUser.id);
   var pg = pgRes.data;
@@ -195,10 +197,27 @@ async function loadMatchHistory() {
   var ap = apRes.data;
   var oids = new Set(); if (ap) ap.forEach(function(a) { if (a.user_id !== currentUser.id) oids.add(a.user_id); });
   var op = {};
-  if (oids.size > 0) { var prRes = await supabase.from('profiles').select('id,name,first_name,last_name,avatar_url,avatar_cutout_url,selected_cover,social_rating,skill_rating').in('id', Array.from(oids)); if (prRes.data) prRes.data.forEach(function(p) { op[p.id] = p; }); }
+  if (oids.size > 0) {
+    var prRes = await supabase.from('profiles').select('id,name,first_name,last_name,avatar_url,avatar_cutout_url,selected_cover,social_rating,skill_rating').in('id', Array.from(oids));
+    if (prRes.data) prRes.data.forEach(function(p) { op[p.id] = p; });
+
+    // Fetch per-division stats for all opponents
+    var dsRes = await supabase.from('player_division_stats').select('user_id,division,skill_rating').in('user_id', Array.from(oids));
+    if (dsRes.data) dsRes.data.forEach(function(ds) {
+      oppDivisionStats[ds.user_id + '_' + ds.division] = ds;
+    });
+  }
   var rows = games.map(function(g) { var mt = tm[g.id]; var r = 'DRAW'; if (g.winner === 'team_' + mt) r = 'WIN'; else if (g.winner && g.winner !== 'draw' && g.winner !== 'null') r = 'LOSE'; var o = null; if (ap) { var x = ap.find(function(a) { return a.game_id === g.id && a.user_id !== currentUser.id && a.team !== mt; }) || ap.find(function(a) { return a.game_id === g.id && a.user_id !== currentUser.id; }); if (x) o = op[x.user_id]; } return { game: g, result: r, opp: o }; });
   updateMH(rows);
 }
+
+// Division thumbnail images for team games
+var DIV_THUMBS = {
+  '2v2': 'img/2v2.png',
+  '3v3': 'img/3v3.png',
+  '4v4': 'img/4v4.png',
+  '5v5': 'img/5v5.png'
+};
 
 function updateMH(rows) {
   document.getElementById('matchHistoryTitle').textContent = 'MATCH HISTORY (' + rows.length + ')';
@@ -206,15 +225,38 @@ function updateMH(rows) {
   if (!rows.length) { el.innerHTML = '<div class="match-history__empty">No matches yet.</div>'; return; }
   el.innerHTML = rows.map(function(item) {
     var g = item.game, r = item.result, opp = item.opp;
-    var nm = opp ? (opp.first_name && opp.last_name ? opp.first_name + ' ' + opp.last_name : opp.name) : 'Unknown Player';
+    var isTeamGame = g.format !== '1v1';
+    var nm = isTeamGame ? g.format.toUpperCase() : (opp ? (opp.first_name && opp.last_name ? opp.first_name + ' ' + opp.last_name : opp.name) : 'Unknown Player');
+
+    // Social rating from profile
     var sv = opp && opp.social_rating ? Number(opp.social_rating) : 0; var sc = opp && opp.social_rating ? '(' + Math.round(sv) + ')' : '';
     var fs = Math.round(sv); var sh = ''; for (var i = 0; i < 5; i++) sh += starSvg(i < fs);
-    var skv = opp && opp.skill_rating ? Math.round(Number(opp.skill_rating)) : 0;
+
+    // Skill rating from per-division stats (not overall profile rating)
+    var divStat = opp ? oppDivisionStats[opp.id + '_' + g.format] : null;
+    var skv = divStat && divStat.skill_rating ? Math.round(Number(divStat.skill_rating)) : 0;
     var bh = ''; for (var i = 0; i < 5; i++) bh += '<div class="mh-row__skill-bar ' + (i < skv ? 'mh-row__skill-bar--filled' : 'mh-row__skill-bar--empty') + '"></div>';
-    var cs = opp && opp.selected_cover ? opp.selected_cover : 'crossover', cu = COVERS[cs] || COVERS.crossover, ct = opp ? opp.avatar_cutout_url : null;
-    var ini = nm.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
-    var th = ct ? '<div class="mh-row__thumb-cover" style="background-image:url(\'' + cu + '\')"></div><img class="mh-row__thumb-cutout" src="' + ct + '" alt="" onerror="this.style.display=\'none\'">' : opp && opp.avatar_url ? '<img src="' + opp.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="mh-row__thumb-initials">' + ini + '</div>';
-    return '<div class="mh-row" onclick="openPlayerCard(\'' + (opp ? opp.id : '') + '\')">' + '<div class="mh-row__thumb">' + th + '</div>' + '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__stars"><div class="mh-row__stars-icons">' + sh + '</div><span class="mh-row__stars-count">' + sc + '</span></div><div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">' + bh + '</div></div></div><div class="mh-row__result">' + r + '</div></div>';
+
+    // Thumbnail: division image for team games, opponent avatar for 1v1
+    var th;
+    if (isTeamGame && DIV_THUMBS[g.format]) {
+      th = '<img src="' + DIV_THUMBS[g.format] + '" style="width:100%;height:100%;object-fit:cover;" alt="' + g.format + '">';
+    } else {
+      var cs = opp && opp.selected_cover ? opp.selected_cover : 'crossover', cu = COVERS[cs] || COVERS.crossover, ct = opp ? opp.avatar_cutout_url : null;
+      var ini = nm.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+      th = ct ? '<div class="mh-row__thumb-cover" style="background-image:url(\'' + cu + '\')"></div><img class="mh-row__thumb-cutout" src="' + ct + '" alt="" onerror="this.style.display=\'none\'">' : opp && opp.avatar_url ? '<img src="' + opp.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="mh-row__thumb-initials">' + ini + '</div>';
+    }
+
+    // For team games, show format + court info instead of opponent social/skill
+    var infoHtml;
+    if (isTeamGame) {
+      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__skill"><span class="mh-row__skill-label">' + g.format.toUpperCase() + ' DIVISION</span></div></div>';
+    } else {
+      infoHtml = '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__stars"><div class="mh-row__stars-icons">' + sh + '</div><span class="mh-row__stars-count">' + sc + '</span></div><div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">' + bh + '</div></div></div>';
+    }
+
+    var clickTarget = isTeamGame ? '' : (opp ? opp.id : '');
+    return '<div class="mh-row" onclick="openPlayerCard(\'' + clickTarget + '\')">' + '<div class="mh-row__thumb">' + th + '</div>' + infoHtml + '<div class="mh-row__result">' + r + '</div></div>';
   }).join('');
 }
 

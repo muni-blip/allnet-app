@@ -226,9 +226,9 @@ var CareerCard = (function() {
     var socialNum = container.querySelector('.cc__social-row .cc__rating-num');
     if (socialNum && opts.socialFrom != null) anims.push({ el: socialNum, from: opts.socialFrom, to: opts.socialTo, dec: 1, delay: stagger * 2 });
 
-    // Hide deltas initially, reveal after animation
+    // Hide deltas during animation, show instantly after
     var deltas = container.querySelectorAll('.cc__wld-delta, .cc__rating-delta');
-    deltas.forEach(function(d) { d.style.opacity = '0'; d.style.transition = 'none'; });
+    deltas.forEach(function(d) { d.style.visibility = 'hidden'; });
 
     // Set old values immediately
     anims.forEach(function(a) {
@@ -261,15 +261,10 @@ var CareerCard = (function() {
       }, a.delay);
     });
 
-    // Fade in deltas after all animations finish
-    var totalTime = (stagger * 2) + duration + 100;
+    // Show deltas instantly after all animations complete
+    var totalTime = (stagger * 2) + duration + 50;
     setTimeout(function() {
-      deltas.forEach(function(d, i) {
-        setTimeout(function() {
-          d.style.transition = 'opacity 0.4s ease';
-          d.style.opacity = '1';
-        }, i * 120);
-      });
+      deltas.forEach(function(d) { d.style.visibility = 'visible'; });
     }, totalTime);
   }
 

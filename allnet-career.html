@@ -6,190 +6,20 @@
 <title>AllNet — Your Career Card</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/career-card.css">
 <style>
 html, body { height: auto; overflow: auto; }
 .career-page { min-height: 100vh; background: #000; padding-bottom: 60px; }
 
-/* Top Bar */
 .career-topbar { position: sticky; top: 0; z-index: 100; padding: 14px 16px; background: rgba(0,0,0,0.95); backdrop-filter: blur(16px); display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
 .career-topbar__menu { width: 48px; height: 48px; border-radius: 999px; background: #000; border: 1px solid #222; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
 .career-topbar__title { flex: 1; font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600; color: #fff; text-align: center; line-height: 24px; }
 
-/* ═══ Career Card — Figma-exact: 343×589 ═══ */
 .cc-wrapper { padding: 20px 16px 0; }
-.cc-border {
-  width: 345px; max-width: 100%;
-  margin: 0 auto;
-  padding: 1px;
-  border-radius: 17px;
-  background: linear-gradient(180deg, #F74501 0%, #0040FF 100%);
-  box-shadow: 0 8px 32px 0 black;
-}
-.cc {
-  position: relative;
-  width: 100%; height: 595px;
-  border-radius: 16px;
-  overflow: clip;
-  border: none;
-  background: #000;
-}
-
-/* Cover/Player/Overlay: 319×319 square, 8px below second name row */
-.cc__cover {
-  position: absolute;
-  left: 12px; top: 89px;
-  width: 319px; height: 319px;
-  background-size: cover; background-position: center;
-  z-index: 0;
-}
-.cc__player-frame {
-  position: absolute;
-  left: 50%; top: 89px;
-  transform: translateX(-50%);
-  width: 319px; height: 319px;
-  overflow: hidden;
-  z-index: 1;
-}
-/* Player image fills the 319×319 square naturally */
-.cc__player-frame img {
-  position: absolute;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  max-width: none;
-  object-fit: cover;
-}
-/* Gradient overlay: sits on the 319×319 square only, fades player to card black */
-.cc__overlay {
-  position: absolute;
-  left: 12px; top: 89px;
-  width: 319px; height: 319px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 20%, black 100%);
-  z-index: 2;
-}
-
-/* Name rows: flexbox for dynamic text + gradient bar */
-.cc__name-row {
-  position: absolute;
-  left: 11px; right: 12px;
-  display: flex; align-items: center;
-  gap: 8px;
-  z-index: 3; height: 32px;
-}
-.cc__name-row--1 { top: 11px; }
-.cc__name-row--2 { top: 49px; }
-.cc__name-text {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 800; font-size: 40px;
-  line-height: 32px; color: #fff;
-  white-space: nowrap; flex-shrink: 0;
-}
-.cc__accent-bar {
-  flex: 1; min-width: 0;
-  height: 25px;
-  background-image: url('https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/gradient-bar-min.png');
-  background-size: cover;
-  background-position: center;
-}
-.cc__accent-bar--hidden { display: none; }
-.cc__name-row--2 .cc__accent-bar { transform: scaleX(-1); }
-
-/* W/L/D: three 88px columns centered at specific offsets */
-.cc__wld { position: absolute; left: 0; right: 0; top: 372px; z-index: 3; }
-.cc__wld-col { position: absolute; width: 88px; text-align: center; }
-.cc__wld-col--w { left: calc(50% - 115.5px - 44px); }
-.cc__wld-col--l { left: calc(50% + 0.5px - 44px); }
-.cc__wld-col--d { left: calc(50% + 115.5px - 44px); }
-.cc__wld-label {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 800; font-size: 40px;
-  line-height: 32px; color: #fff;
-}
-.cc__wld-value {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 800; font-size: 40px;
-  line-height: 32px; color: #fff;
-  margin-top: 8px;
-}
-
-/* Social Rating: top 478 */
-.cc__social-row {
-  position: absolute;
-  left: 11px; top: 484px; width: 319px;
-  padding-left: 8px;
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 3;
-}
-/* Skill Rating: top 511 */
-.cc__skill-row {
-  position: absolute;
-  left: 50%; top: 517px; width: 319px;
-  transform: translateX(-50%);
-  padding-left: 8px;
-  display: flex; align-items: flex-start; justify-content: space-between;
-  z-index: 3;
-}
-.cc__rating-label {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600; font-size: 16px;
-  line-height: 24px; color: #fff;
-}
-.cc__rating-val {
-  display: flex; align-items: center; gap: 4px;
-}
-.cc__rating-num {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600; font-size: 16px;
-  line-height: 24px; color: #fff;
-  width: 32px;
-}
-.cc__skill-icon {
-  display: flex; gap: 2px; align-items: center; width: 16px;
-}
-.cc__skill-bar-item {
-  flex: 1; height: 16px; background: #F74501;
-  border-radius: 0;
-}
-
-/* Division tabs: top 552, 319px, 5 pills */
-.cc__div-tabs {
-  position: absolute;
-  left: 50%; top: 558px;
-  transform: translateX(-50%);
-  width: 319px;
-  display: flex; gap: 8px;
-  z-index: 3;
-}
-.cc__div-tab {
-  flex: 1;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 600; font-size: 14px;
-  line-height: 24px; text-align: center;
-  color: #fff; background: transparent;
-  border: 1px solid #434343;
-  border-radius: 999px;
-  padding: 0 8px; cursor: pointer;
-  transition: all 0.2s;
-}
-.cc__div-tab--active {
-  background: #fff; color: #000;
-}
-
-/* Empty state */
-.cc__placeholder {
-  position: absolute; inset: 0; z-index: 3;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 12px; color: #666; text-align: center; padding: 20px;
-}
-.cc__placeholder-icon { font-size: 40px; }
-.cc__placeholder-text { font-size: 14px; font-family: 'Montserrat', sans-serif; line-height: 1.5; }
-
-/* Actions */
 .cc-actions { display: flex; gap: 16px; padding: 40px 16px 0; max-width: 375px; margin: 0 auto; }
 .cc-action-btn { flex: 1; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; background: transparent; border: 1px solid #5a5a5a; padding: 12px 32px; cursor: pointer; transition: all 0.2s; }
 .cc-action-btn:hover { border-color: #fff; }
 
-/* Match History */
 .match-history { padding: 40px 16px 0; }
 .match-history__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; margin-bottom: 16px; }
 .match-history__empty { text-align: center; padding: 32px 16px; color: #666; font-size: 14px; font-family: 'Montserrat', sans-serif; }
@@ -213,7 +43,6 @@ html, body { height: auto; overflow: auto; }
 .mh-row__skill-bar--empty { background: rgba(247,69,1,0.2); }
 .mh-row__result { position: absolute; left: 119px; top: 79px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; line-height: 16px; color: #c4c4c4; }
 
-/* Photo Modal */
 .photo-modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; padding: 20px; }
 .photo-modal-overlay.active { display: flex; }
 .photo-modal { background: #1a1a1a; border-radius: 16px; padding: 28px 24px; max-width: 340px; width: 100%; text-align: center; }
@@ -261,206 +90,144 @@ html, body { height: auto; overflow: auto; }
 <div class="photo-modal-overlay" id="photoModal"><div class="photo-modal"><div class="photo-modal__title">Change Photo</div><div class="photo-modal__text">Upload a new photo. We'll remove the background automatically.</div><div class="photo-modal__preview" id="photoPreview"><img id="photoPreviewImg" src="" alt=""></div><div class="photo-modal__processing" id="photoProcessing"><div class="photo-modal__spinner">⚡</div><div class="photo-modal__status" id="photoStatus">Removing background...</div></div><input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)"><button class="photo-modal__upload-btn" id="photoUploadBtn" onclick="document.getElementById('photoInput').click()">Choose Photo</button><button class="photo-modal__cancel-btn" onclick="closePhotoModal()">Cancel</button></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
+<script src="js/career-card.js"></script>
 <script>
-let currentUser=null,currentProfile=null,divisionStats={},activeDivision='1v1';
-const SUPABASE_COVERS_URL='https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
-const COVERS={crossover:SUPABASE_COVERS_URL+'/Crossover.png',rally:SUPABASE_COVERS_URL+'/Rally.png',flowstate:SUPABASE_COVERS_URL+'/Flowstate.png',fastbreak:SUPABASE_COVERS_URL+'/Fastbreak.png',shatter:SUPABASE_COVERS_URL+'/Shatter.png',showtime:SUPABASE_COVERS_URL+'/Showtime.png',fadeaway:SUPABASE_COVERS_URL+'/Fadeaway.png'};
-function openNavDrawer(){document.getElementById('navOverlay').classList.add('open');document.getElementById('navDrawer').classList.add('open')}
-function closeNavDrawer(){document.getElementById('navOverlay').classList.remove('open');document.getElementById('navDrawer').classList.remove('open')}
-function updateNavDrawerUser(){const n=document.getElementById('navUser');if(!n||!currentUser||!currentProfile)return;n.style.display='flex';document.getElementById('navUserName').textContent=currentProfile.name||'Player';document.getElementById('navUserStars').textContent='⭐ '+(currentProfile.stars_balance||0).toLocaleString();const a=document.getElementById('navAvatar');if(a&&currentProfile.avatar_url)a.innerHTML='<img src="'+currentProfile.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';else if(a)a.textContent=currentProfile.initials||'U'}
-function starSvg(f){return f?'<svg class="mh-row__star" viewBox="0 0 8 8" fill="#facc15"><polygon points="4,0.5 5.1,2.8 7.6,3.1 5.8,4.8 6.2,7.3 4,6.1 1.8,7.3 2.2,4.8 0.4,3.1 2.9,2.8"/></svg>':'<svg class="mh-row__star mh-row__star--empty" viewBox="0 0 8 8" fill="#444"><polygon points="4,0.5 5.1,2.8 7.6,3.1 5.8,4.8 6.2,7.3 4,6.1 1.8,7.3 2.2,4.8 0.4,3.1 2.9,2.8"/></svg>'}
+/* ══════════════════════════════
+   CAREER PAGE — uses CareerCard component
+   ══════════════════════════════ */
+var currentUser = null, currentProfile = null, divisionStats = {}, activeDivision = '1v1';
 
-function renderCard(){
-  const c=document.getElementById('careerCard');if(!c)return;
-  const cut=currentProfile?.avatar_cutout_url;
-  const cover=currentProfile?.selected_cover||'crossover';
-  const coverFile=COVERS[cover]||COVERS.crossover;
-  const fn=(currentProfile?.first_name||currentProfile?.name?.split(' ')[0]||'').toUpperCase();
-  const ln=(currentProfile?.last_name||currentProfile?.name?.split(' ').slice(1).join(' ')||'').toUpperCase();
-  const ds=divisionStats[activeDivision];
-  const w=ds?.wins||0, l=ds?.losses||0, d=ds?.draws||0;
-  const sk=ds?.skill_rating?Number(ds.skill_rating).toFixed(1):'—';
-  const so=currentProfile?.social_rating?Number(currentProfile.social_rating).toFixed(1):'—';
-  const dl=activeDivision.toUpperCase();
+// Expose COVERS from component for match history thumbnails
+var COVERS = CareerCard.COVERS;
 
-  if(!cut){
-    c.innerHTML='<div class="cc__cover" style="background-image:url(\''+coverFile+'\')"></div><div class="cc__overlay"></div><div class="cc__placeholder"><div class="cc__placeholder-icon">📷</div><div class="cc__placeholder-text">Upload a photo to generate your career card</div></div>';
-    return;
-  }
-
-  const divs=['1v1','2v2','3v3','4v4','5v5'];
-  const tabs=divs.map(function(dv){return '<button class="cc__div-tab'+(dv===activeDivision?' cc__div-tab--active':'')+'" onclick="switchDivision(\''+dv+'\')">'+dv+'</button>'}).join('');
-
-  c.innerHTML=
-    '<div class="cc__cover" style="background-image:url(\''+coverFile+'\')"></div>'+
-    '<div class="cc__player-frame"><img src="'+cut+'" alt="'+fn+' '+ln+'" onerror="this.style.display=\'none\'"></div>'+
-    '<div class="cc__overlay"></div>'+
-
-    '<div class="cc__name-row cc__name-row--1" id="ccNameRow1">'+
-      '<span class="cc__name-text" id="ccFirstName">'+fn+'</span>'+
-      '<div class="cc__accent-bar" id="ccBarOrange"></div>'+
-    '</div>'+
-
-    '<div class="cc__name-row cc__name-row--2" id="ccNameRow2">'+
-      '<div class="cc__accent-bar" id="ccBarBlue"></div>'+
-      '<span class="cc__name-text" id="ccLastName">'+ln+'</span>'+
-    '</div>'+
-
-    '<div class="cc__wld">'+
-      '<div class="cc__wld-col cc__wld-col--w"><div class="cc__wld-label">W</div><div class="cc__wld-value">'+w+'</div></div>'+
-      '<div class="cc__wld-col cc__wld-col--l"><div class="cc__wld-label">L</div><div class="cc__wld-value">'+l+'</div></div>'+
-      '<div class="cc__wld-col cc__wld-col--d"><div class="cc__wld-label">D</div><div class="cc__wld-value">'+d+'</div></div>'+
-    '</div>'+
-
-    '<div class="cc__social-row">'+
-      '<span class="cc__rating-label">SOCIAL RATING</span>'+
-      '<span class="cc__rating-val">'+
-        '<svg width="16" height="16" viewBox="0 0 16 16" fill="#facc15"><polygon points="8,1 10.2,5.6 15.2,6.2 11.6,9.6 12.4,14.6 8,12.2 3.6,14.6 4.4,9.6 0.8,6.2 5.8,5.6"/></svg>'+
-        '<span class="cc__rating-num">'+so+'</span>'+
-      '</span>'+
-    '</div>'+
-
-    '<div class="cc__skill-row">'+
-      '<span class="cc__rating-label">'+dl+' SKILL RATING</span>'+
-      '<span class="cc__rating-val">'+
-        '<span class="cc__skill-icon"><div class="cc__skill-bar-item"></div><div class="cc__skill-bar-item"></div></span>'+
-        '<span class="cc__rating-num">'+sk+'</span>'+
-      '</span>'+
-    '</div>'+
-
-    '<div class="cc__div-tabs">'+tabs+'</div>';
-
-  // Wait for DOM update then fit name sizes
-  requestAnimationFrame(fitNameRows);
+function openNavDrawer() { document.getElementById('navOverlay').classList.add('open'); document.getElementById('navDrawer').classList.add('open'); }
+function closeNavDrawer() { document.getElementById('navOverlay').classList.remove('open'); document.getElementById('navDrawer').classList.remove('open'); }
+function updateNavDrawerUser() {
+  var n = document.getElementById('navUser');
+  if (!n || !currentUser || !currentProfile) return;
+  n.style.display = 'flex';
+  document.getElementById('navUserName').textContent = currentProfile.name || 'Player';
+  document.getElementById('navUserStars').textContent = '⭐ ' + (currentProfile.stars_balance || 0).toLocaleString();
+  var a = document.getElementById('navAvatar');
+  if (a && currentProfile.avatar_url) a.innerHTML = '<img src="' + currentProfile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  else if (a) a.textContent = currentProfile.initials || 'U';
 }
 
-function switchDivision(dv){activeDivision=dv;renderCard()}
-
-/* Dynamic name sizing: measures text, scales font if needed, hides bar if <24px */
-function fitNameRows(){
-  var canvas=document.createElement('canvas');
-  var ctx=canvas.getContext('2d');
-  var rowWidth=320; // 343 - 11 left - 12 right
-  var gapPx=8;
-  var minBar=24;
-  var maxFont=40;
-  var minFont=18;
-
-  // First name row: [text] [8px gap] [bar]
-  var fnEl=document.getElementById('ccFirstName');
-  var barO=document.getElementById('ccBarOrange');
-  if(fnEl&&barO){
-    var fn=fnEl.textContent;
-    var fs=maxFont;
-    var tw=0;
-    while(fs>=minFont){
-      ctx.font='800 '+fs+'px Montserrat';
-      tw=ctx.measureText(fn).width;
-      if(tw+gapPx+minBar<=rowWidth)break;
-      fs--;
-    }
-    fnEl.style.fontSize=fs+'px';
-    var remaining=rowWidth-tw-gapPx;
-    if(remaining<minBar){barO.classList.add('cc__accent-bar--hidden')}
-    else{barO.classList.remove('cc__accent-bar--hidden')}
-  }
-
-  // Last name row: [bar] [8px gap] [text]
-  var lnEl=document.getElementById('ccLastName');
-  var barB=document.getElementById('ccBarBlue');
-  if(lnEl&&barB){
-    var ln=lnEl.textContent;
-    var fs=maxFont;
-    var tw=0;
-    while(fs>=minFont){
-      ctx.font='800 '+fs+'px Montserrat';
-      tw=ctx.measureText(ln).width;
-      if(tw+gapPx+minBar<=rowWidth)break;
-      fs--;
-    }
-    lnEl.style.fontSize=fs+'px';
-    var remaining=rowWidth-tw-gapPx;
-    if(remaining<minBar){barB.classList.add('cc__accent-bar--hidden')}
-    else{barB.classList.remove('cc__accent-bar--hidden')}
-  }
+function starSvg(f) {
+  return f ? '<svg class="mh-row__star" viewBox="0 0 8 8" fill="#facc15"><polygon points="4,0.5 5.1,2.8 7.6,3.1 5.8,4.8 6.2,7.3 4,6.1 1.8,7.3 2.2,4.8 0.4,3.1 2.9,2.8"/></svg>'
+           : '<svg class="mh-row__star mh-row__star--empty" viewBox="0 0 8 8" fill="#444"><polygon points="4,0.5 5.1,2.8 7.6,3.1 5.8,4.8 6.2,7.3 4,6.1 1.8,7.3 2.2,4.8 0.4,3.1 2.9,2.8"/></svg>';
 }
 
-async function loadDivisionStats(){
-  const{data}=await supabase.from('player_division_stats').select('*').eq('user_id',currentUser.id);
-  if(data)data.forEach(function(r){divisionStats[r.division]=r});
-  var best='1v1',bg=0;
-  for(var dv in divisionStats){if(divisionStats[dv].games_count>bg){bg=divisionStats[dv].games_count;best=dv}}
-  if(bg>0)activeDivision=best;
+/* ── Render card using shared component ── */
+function renderCard() {
+  var c = document.getElementById('careerCard');
+  if (!c) return;
+
+  var ds = divisionStats[activeDivision];
+
+  c.innerHTML = CareerCard.render({
+    cardId: 'cc',
+    firstName: currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '',
+    lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
+    cutoutUrl: currentProfile?.avatar_cutout_url,
+    coverSlug: currentProfile?.selected_cover || 'crossover',
+    wins: ds?.wins || 0,
+    losses: ds?.losses || 0,
+    draws: ds?.draws || 0,
+    skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
+    socialRating: currentProfile?.social_rating ? Number(currentProfile.social_rating).toFixed(1) : '—',
+    divisionLabel: activeDivision.toUpperCase(),
+    activeDivision: activeDivision,
+    showTabs: true,
+    onTabClick: 'switchDivision',
+    showDeltas: false
+  });
+
+  requestAnimationFrame(function() { CareerCard.fitNames('cc'); });
 }
 
-async function loadMatchHistory(){
-  var pgRes=await supabase.from('game_players').select('game_id,team').eq('user_id',currentUser.id);
-  var pg=pgRes.data;
-  if(!pg||!pg.length){updateMH([]);return}
-  var gids=pg.map(function(p){return p.game_id}),tm={};
-  pg.forEach(function(p){tm[p.game_id]=p.team});
-  var gRes=await supabase.from('game_sessions').select('id,format,winner,ended_at').in('id',gids).in('status',['completed','nulled']).order('ended_at',{ascending:false}).limit(50);
-  var games=gRes.data;
-  if(!games||!games.length){updateMH([]);return}
-  var apRes=await supabase.from('game_players').select('game_id,user_id,team').in('game_id',gids);
-  var ap=apRes.data;
-  var oids=new Set();if(ap)ap.forEach(function(a){if(a.user_id!==currentUser.id)oids.add(a.user_id)});
-  var op={};
-  if(oids.size>0){var prRes=await supabase.from('profiles').select('id,name,first_name,last_name,avatar_url,avatar_cutout_url,selected_cover,social_rating,skill_rating').in('id',Array.from(oids));if(prRes.data)prRes.data.forEach(function(p){op[p.id]=p})}
-  var rows=games.map(function(g){var mt=tm[g.id];var r='DRAW';if(g.winner==='team_'+mt)r='WIN';else if(g.winner&&g.winner!=='draw'&&g.winner!=='null')r='LOSE';var o=null;if(ap){var x=ap.find(function(a){return a.game_id===g.id&&a.user_id!==currentUser.id&&a.team!==mt})||ap.find(function(a){return a.game_id===g.id&&a.user_id!==currentUser.id});if(x)o=op[x.user_id]}return{game:g,result:r,opp:o}});
+function switchDivision(dv) { activeDivision = dv; renderCard(); }
+
+async function loadDivisionStats() {
+  var res = await supabase.from('player_division_stats').select('*').eq('user_id', currentUser.id);
+  if (res.data) res.data.forEach(function(r) { divisionStats[r.division] = r; });
+  var best = '1v1', bg = 0;
+  for (var dv in divisionStats) { if (divisionStats[dv].games_count > bg) { bg = divisionStats[dv].games_count; best = dv; } }
+  if (bg > 0) activeDivision = best;
+}
+
+/* ── Match History ── */
+async function loadMatchHistory() {
+  var pgRes = await supabase.from('game_players').select('game_id,team').eq('user_id', currentUser.id);
+  var pg = pgRes.data;
+  if (!pg || !pg.length) { updateMH([]); return; }
+  var gids = pg.map(function(p) { return p.game_id; }), tm = {};
+  pg.forEach(function(p) { tm[p.game_id] = p.team; });
+  var gRes = await supabase.from('game_sessions').select('id,format,winner,ended_at').in('id', gids).in('status', ['completed','nulled']).order('ended_at', { ascending: false }).limit(50);
+  var games = gRes.data;
+  if (!games || !games.length) { updateMH([]); return; }
+  var apRes = await supabase.from('game_players').select('game_id,user_id,team').in('game_id', gids);
+  var ap = apRes.data;
+  var oids = new Set(); if (ap) ap.forEach(function(a) { if (a.user_id !== currentUser.id) oids.add(a.user_id); });
+  var op = {};
+  if (oids.size > 0) { var prRes = await supabase.from('profiles').select('id,name,first_name,last_name,avatar_url,avatar_cutout_url,selected_cover,social_rating,skill_rating').in('id', Array.from(oids)); if (prRes.data) prRes.data.forEach(function(p) { op[p.id] = p; }); }
+  var rows = games.map(function(g) { var mt = tm[g.id]; var r = 'DRAW'; if (g.winner === 'team_' + mt) r = 'WIN'; else if (g.winner && g.winner !== 'draw' && g.winner !== 'null') r = 'LOSE'; var o = null; if (ap) { var x = ap.find(function(a) { return a.game_id === g.id && a.user_id !== currentUser.id && a.team !== mt; }) || ap.find(function(a) { return a.game_id === g.id && a.user_id !== currentUser.id; }); if (x) o = op[x.user_id]; } return { game: g, result: r, opp: o }; });
   updateMH(rows);
 }
 
-function updateMH(rows){
-  document.getElementById('matchHistoryTitle').textContent='MATCH HISTORY ('+rows.length+')';
-  var el=document.getElementById('matchHistoryList');
-  if(!rows.length){el.innerHTML='<div class="match-history__empty">No matches yet.</div>';return}
-  el.innerHTML=rows.map(function(item){
-    var g=item.game,r=item.result,opp=item.opp;
-    var nm=opp?(opp.first_name&&opp.last_name?opp.first_name+' '+opp.last_name:opp.name):'Unknown Player';
-    var sv=opp&&opp.social_rating?Number(opp.social_rating):0;var sc=opp&&opp.social_rating?'('+Math.round(sv)+')':'';
-    var fs=Math.round(sv);var sh='';for(var i=0;i<5;i++)sh+=starSvg(i<fs);
-    var skv=opp&&opp.skill_rating?Math.round(Number(opp.skill_rating)):0;
-    var bh='';for(var i=0;i<5;i++)bh+='<div class="mh-row__skill-bar '+(i<skv?'mh-row__skill-bar--filled':'mh-row__skill-bar--empty')+'"></div>';
-    var cs=opp&&opp.selected_cover?opp.selected_cover:'crossover',cu=COVERS[cs]||COVERS.crossover,ct=opp?opp.avatar_cutout_url:null;
-    var ini=nm.split(' ').map(function(w){return w[0]}).join('').toUpperCase().slice(0,2);
-    var th=ct?'<div class="mh-row__thumb-cover" style="background-image:url(\''+cu+'\')"></div><img class="mh-row__thumb-cutout" src="'+ct+'" alt="" onerror="this.style.display=\'none\'">':opp&&opp.avatar_url?'<img src="'+opp.avatar_url+'" style="width:100%;height:100%;object-fit:cover;">':'<div class="mh-row__thumb-initials">'+ini+'</div>';
-    return '<div class="mh-row" onclick="openPlayerCard(\''+(opp?opp.id:'')+'\')">'+'<div class="mh-row__thumb">'+th+'</div>'+'<div class="mh-row__info"><div class="mh-row__name">'+nm+'</div><div class="mh-row__stars"><div class="mh-row__stars-icons">'+sh+'</div><span class="mh-row__stars-count">'+sc+'</span></div><div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">'+bh+'</div></div></div><div class="mh-row__result">'+r+'</div></div>';
+function updateMH(rows) {
+  document.getElementById('matchHistoryTitle').textContent = 'MATCH HISTORY (' + rows.length + ')';
+  var el = document.getElementById('matchHistoryList');
+  if (!rows.length) { el.innerHTML = '<div class="match-history__empty">No matches yet.</div>'; return; }
+  el.innerHTML = rows.map(function(item) {
+    var g = item.game, r = item.result, opp = item.opp;
+    var nm = opp ? (opp.first_name && opp.last_name ? opp.first_name + ' ' + opp.last_name : opp.name) : 'Unknown Player';
+    var sv = opp && opp.social_rating ? Number(opp.social_rating) : 0; var sc = opp && opp.social_rating ? '(' + Math.round(sv) + ')' : '';
+    var fs = Math.round(sv); var sh = ''; for (var i = 0; i < 5; i++) sh += starSvg(i < fs);
+    var skv = opp && opp.skill_rating ? Math.round(Number(opp.skill_rating)) : 0;
+    var bh = ''; for (var i = 0; i < 5; i++) bh += '<div class="mh-row__skill-bar ' + (i < skv ? 'mh-row__skill-bar--filled' : 'mh-row__skill-bar--empty') + '"></div>';
+    var cs = opp && opp.selected_cover ? opp.selected_cover : 'crossover', cu = COVERS[cs] || COVERS.crossover, ct = opp ? opp.avatar_cutout_url : null;
+    var ini = nm.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+    var th = ct ? '<div class="mh-row__thumb-cover" style="background-image:url(\'' + cu + '\')"></div><img class="mh-row__thumb-cutout" src="' + ct + '" alt="" onerror="this.style.display=\'none\'">' : opp && opp.avatar_url ? '<img src="' + opp.avatar_url + '" style="width:100%;height:100%;object-fit:cover;">' : '<div class="mh-row__thumb-initials">' + ini + '</div>';
+    return '<div class="mh-row" onclick="openPlayerCard(\'' + (opp ? opp.id : '') + '\')">' + '<div class="mh-row__thumb">' + th + '</div>' + '<div class="mh-row__info"><div class="mh-row__name">' + nm + '</div><div class="mh-row__stars"><div class="mh-row__stars-icons">' + sh + '</div><span class="mh-row__stars-count">' + sc + '</span></div><div class="mh-row__skill"><span class="mh-row__skill-label">SKILL LEVEL</span><div class="mh-row__skill-bars">' + bh + '</div></div></div><div class="mh-row__result">' + r + '</div></div>';
   }).join('');
 }
 
-function openPlayerCard(uid){if(!uid)return;console.log('Open player card:',uid)}
-function openPhotoModal(){document.getElementById('photoModal').classList.add('active');document.getElementById('photoPreview').classList.remove('has-image');document.getElementById('photoProcessing').classList.remove('active');var b=document.getElementById('photoUploadBtn');b.textContent='Choose Photo';b.disabled=false;b.style.display=''}
-function closePhotoModal(){document.getElementById('photoModal').classList.remove('active')}
+function openPlayerCard(uid) { if (!uid) return; console.log('Open player card:', uid); }
 
-async function handlePhotoSelect(e){
-  var f=e.target.files[0];if(!f)return;
-  var reader=new FileReader();reader.onload=function(ev){document.getElementById('photoPreviewImg').src=ev.target.result;document.getElementById('photoPreview').classList.add('has-image')};reader.readAsDataURL(f);
-  var btn=document.getElementById('photoUploadBtn'),proc=document.getElementById('photoProcessing'),stat=document.getElementById('photoStatus');
-  btn.disabled=true;btn.textContent='Uploading...';
-  try{
-    var ext=f.name.split('.').pop(),path=currentUser.id+'/avatar-'+Date.now()+'.'+ext;
-    var upRes=await supabase.storage.from('avatars').upload(path,f,{upsert:true});if(upRes.error)throw upRes.error;
-    var urlData=supabase.storage.from('avatars').getPublicUrl(path);
-    await supabase.from('profiles').update({avatar_url:urlData.data.publicUrl}).eq('id',currentUser.id);
-    currentProfile.avatar_url=urlData.data.publicUrl;
-    btn.style.display='none';proc.classList.add('active');stat.textContent='Removing background...';
-    var tk=null;var sd=await supabase.auth.getSession();tk=sd.data.session?sd.data.session.access_token:null;
-    if(!tk){var rd=await supabase.auth.refreshSession();tk=rd.data.session?rd.data.session.access_token:null}
-    var res=await fetch(SUPABASE_URL+'/functions/v1/avatar-process',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tk,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({imagePath:path})});
-    var result=await res.json();if(!res.ok)throw new Error(result.error||'Processing failed');
-    currentProfile.avatar_cutout_url=result.cutoutUrl;stat.textContent='Done!';
-    setTimeout(function(){closePhotoModal();renderCard();updateNavDrawerUser()},600);
-  }catch(err){console.error('Photo error:',err);proc.classList.remove('active');btn.style.display='';btn.disabled=false;btn.textContent='Try Again';alert('Photo upload failed: '+err.message)}
+/* ── Photo Upload ── */
+function openPhotoModal() { document.getElementById('photoModal').classList.add('active'); document.getElementById('photoPreview').classList.remove('has-image'); document.getElementById('photoProcessing').classList.remove('active'); var b = document.getElementById('photoUploadBtn'); b.textContent = 'Choose Photo'; b.disabled = false; b.style.display = ''; }
+function closePhotoModal() { document.getElementById('photoModal').classList.remove('active'); }
+
+async function handlePhotoSelect(e) {
+  var f = e.target.files[0]; if (!f) return;
+  var reader = new FileReader(); reader.onload = function(ev) { document.getElementById('photoPreviewImg').src = ev.target.result; document.getElementById('photoPreview').classList.add('has-image'); }; reader.readAsDataURL(f);
+  var btn = document.getElementById('photoUploadBtn'), proc = document.getElementById('photoProcessing'), stat = document.getElementById('photoStatus');
+  btn.disabled = true; btn.textContent = 'Uploading...';
+  try {
+    var ext = f.name.split('.').pop(), path = currentUser.id + '/avatar-' + Date.now() + '.' + ext;
+    var upRes = await supabase.storage.from('avatars').upload(path, f, { upsert: true }); if (upRes.error) throw upRes.error;
+    var urlData = supabase.storage.from('avatars').getPublicUrl(path);
+    await supabase.from('profiles').update({ avatar_url: urlData.data.publicUrl }).eq('id', currentUser.id);
+    currentProfile.avatar_url = urlData.data.publicUrl;
+    btn.style.display = 'none'; proc.classList.add('active'); stat.textContent = 'Removing background...';
+    var tk = null; var sd = await supabase.auth.getSession(); tk = sd.data.session ? sd.data.session.access_token : null;
+    if (!tk) { var rd = await supabase.auth.refreshSession(); tk = rd.data.session ? rd.data.session.access_token : null; }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/avatar-process', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tk, 'apikey': SUPABASE_ANON_KEY }, body: JSON.stringify({ imagePath: path }) });
+    var result = await res.json(); if (!res.ok) throw new Error(result.error || 'Processing failed');
+    currentProfile.avatar_cutout_url = result.cutoutUrl; stat.textContent = 'Done!';
+    setTimeout(function() { closePhotoModal(); renderCard(); updateNavDrawerUser(); }, 600);
+  } catch (err) { console.error('Photo error:', err); proc.classList.remove('active'); btn.style.display = ''; btn.disabled = false; btn.textContent = 'Try Again'; alert('Photo upload failed: ' + err.message); }
 }
-function openCoverPicker(){window.location.href='allnet-stars.html'}
+function openCoverPicker() { window.location.href = 'allnet-stars.html'; }
 
-async function initCareerPage(){
-  var sess=await supabase.auth.getSession();
-  if(!sess.data.session){window.location.href='allnet-app.html';return}
-  currentUser=sess.data.session.user;currentProfile=await getUserProfile(currentUser.id);
-  if(!currentProfile){window.location.href='allnet-app.html';return}
-  updateNavDrawerUser();await loadDivisionStats();renderCard();loadMatchHistory();
+/* ── Init ── */
+async function initCareerPage() {
+  var sess = await supabase.auth.getSession();
+  if (!sess.data.session) { window.location.href = 'allnet-app.html'; return; }
+  currentUser = sess.data.session.user; currentProfile = await getUserProfile(currentUser.id);
+  if (!currentProfile) { window.location.href = 'allnet-app.html'; return; }
+  updateNavDrawerUser(); await loadDivisionStats(); renderCard(); loadMatchHistory();
 }
 initCareerPage();
 </script>

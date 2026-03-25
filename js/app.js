@@ -205,6 +205,153 @@ const map = new mapboxgl.Map({
 
 map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
+/* ══════════════════════════════
+   RADIUS CIRCLE + USER PIN
+   Visual radius overlay & basketball pin marker
+   ══════════════════════════════ */
+let userPinMarker = null;
+let radiusSourceAdded = false;
+
+// Basketball pin SVG (inline from you-pin.svg)
+const USER_PIN_SVG = `<svg width="36" height="48" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 12C24 18.6274 16 32 12 32C7.5 32 0 18.6274 0 12C0 5.37258 5.37258 0 12 0C18.6274 0 24 5.37258 24 12Z" fill="white"/>
+<g clip-path="url(#clip0_pin)">
+<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="url(#paint0_pin)"/>
+<mask id="mask0_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
+<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
+</mask>
+<g mask="url(#mask0_pin)"><path d="M1.947 12.819C1.947 12.819 4.647 15.706 11.961 15.706C19.275 15.706 22.038 12.819 22.038 12.819" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+<mask id="mask1_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
+<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
+</mask>
+<g mask="url(#mask1_pin)"><path d="M12 2.011V21.944" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+<mask id="mask2_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
+<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
+</mask>
+<g mask="url(#mask2_pin)"><path d="M3.956 5.997C3.956 5.997 7.503 7.534 8.664 12.024C9.825 16.513 6.656 21.378 6.656 21.378" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+<mask id="mask3_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
+<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
+</mask>
+<g mask="url(#mask3_pin)"><path d="M20.013 5.997C20.013 5.997 16.466 7.534 15.305 12.024C14.144 16.513 17.313 21.378 17.313 21.378" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+</g>
+<defs>
+<radialGradient id="paint0_pin" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.937 6.318) scale(10.227)">
+<stop offset="0.006" stop-color="#F8981D"/><stop offset="1" stop-color="#F47C20"/>
+</radialGradient>
+<clipPath id="clip0_pin"><rect width="20" height="20" fill="white" transform="translate(2 2)"/></clipPath>
+</defs>
+</svg>`;
+
+function createGeoJSONCircle(lng, lat, radiusMi, points) {
+  points = points || 64;
+  const km = radiusMi * 1.60934;
+  const ret = [];
+  const distanceX = km / (111.32 * Math.cos(lat * Math.PI / 180));
+  const distanceY = km / 110.574;
+  for (let i = 0; i < points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    ret.push([lng + (distanceX * Math.cos(theta)), lat + (distanceY * Math.sin(theta))]);
+  }
+  ret.push(ret[0]); // close the ring
+  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ret] } };
+}
+
+function showRadiusVisuals() {
+  if (userLat === null || userLng === null || !nearMeActive || radiusMiles === 0) return;
+
+  const circleGeoJSON = createGeoJSONCircle(userLng, userLat, radiusMiles);
+
+  // ── Radius circle layer ──
+  if (radiusSourceAdded) {
+    map.getSource('radius-circle')?.setData(circleGeoJSON);
+    map.getSource('radius-pulse')?.setData(circleGeoJSON);
+    // Make sure layers are visible
+    map.setLayoutProperty('radius-fill', 'visibility', 'visible');
+    map.setLayoutProperty('radius-stroke', 'visibility', 'visible');
+    map.setLayoutProperty('radius-pulse-fill', 'visibility', 'visible');
+  } else {
+    map.addSource('radius-circle', { type: 'geojson', data: circleGeoJSON });
+    map.addSource('radius-pulse', { type: 'geojson', data: circleGeoJSON });
+
+    // Pulse layer (animated — sits below the main circle)
+    map.addLayer({
+      id: 'radius-pulse-fill',
+      type: 'fill',
+      source: 'radius-pulse',
+      paint: { 'fill-color': '#F74501', 'fill-opacity': 0 }
+    });
+
+    // Semi-transparent orange fill
+    map.addLayer({
+      id: 'radius-fill',
+      type: 'fill',
+      source: 'radius-circle',
+      paint: { 'fill-color': '#F74501', 'fill-opacity': 0.10 }
+    });
+
+    // Orange border stroke
+    map.addLayer({
+      id: 'radius-stroke',
+      type: 'line',
+      source: 'radius-circle',
+      paint: { 'line-color': '#F74501', 'line-width': 2, 'line-opacity': 0.7 }
+    });
+
+    radiusSourceAdded = true;
+  }
+
+  // ── User location pin ──
+  if (!userPinMarker) {
+    const pinEl = document.createElement('div');
+    pinEl.innerHTML = USER_PIN_SVG;
+    pinEl.style.cssText = 'cursor:pointer;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));';
+    userPinMarker = new mapboxgl.Marker({ element: pinEl, anchor: 'bottom' })
+      .setLngLat([userLng, userLat])
+      .addTo(map);
+  } else {
+    userPinMarker.setLngLat([userLng, userLat]);
+    userPinMarker.addTo(map);
+  }
+
+  // Fire radar pulse
+  triggerRadarPulse();
+}
+
+function hideRadiusVisuals() {
+  if (radiusSourceAdded) {
+    try {
+      map.setLayoutProperty('radius-fill', 'visibility', 'none');
+      map.setLayoutProperty('radius-stroke', 'visibility', 'none');
+      map.setLayoutProperty('radius-pulse-fill', 'visibility', 'none');
+    } catch (e) { /* layer may not exist yet */ }
+  }
+  if (userPinMarker) {
+    userPinMarker.remove();
+  }
+}
+
+function triggerRadarPulse() {
+  if (!radiusSourceAdded) return;
+  // Animate opacity: flash in then fade out over ~1.2s
+  let start = null;
+  const duration = 1200;
+  function step(ts) {
+    if (!start) start = ts;
+    const progress = (ts - start) / duration;
+    if (progress >= 1) {
+      map.setPaintProperty('radius-pulse-fill', 'fill-opacity', 0);
+      return;
+    }
+    // Quick rise, slow fade
+    const opacity = progress < 0.2
+      ? (progress / 0.2) * 0.25   // ramp up to 0.25
+      : 0.25 * (1 - ((progress - 0.2) / 0.8)); // fade out
+    map.setPaintProperty('radius-pulse-fill', 'fill-opacity', opacity);
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 function renderMarkers() {
   markers.forEach(m => m.remove());
   markers = [];
@@ -310,6 +457,7 @@ function onRadiusChange(value) {
     // "Map Area" mode — show courts in current viewport, no radius filter
     nearMeActive = false;
     sel.classList.remove('active');
+    hideRadiusVisuals();
     renderMarkers();
     return;
   }
@@ -319,6 +467,7 @@ function onRadiusChange(value) {
       nearMeActive = true;
       sel.classList.add('active');
       renderMarkers();
+      showRadiusVisuals();
       const zoom = radiusMiles <= 5 ? 13 : radiusMiles <= 10 ? 12 : radiusMiles <= 15 ? 11 : 10;
       map.flyTo({ center: [userLng, userLat], zoom, duration: 800 });
     });
@@ -326,6 +475,7 @@ function onRadiusChange(value) {
     nearMeActive = true;
     sel.classList.add('active');
     renderMarkers();
+    showRadiusVisuals();
     const zoom = radiusMiles <= 5 ? 13 : radiusMiles <= 10 ? 12 : radiusMiles <= 15 ? 11 : 10;
     map.flyTo({ center: [userLng, userLat], zoom, duration: 800 });
   }
@@ -460,6 +610,7 @@ function searchThisArea() {
   radiusMiles = 0;
   document.getElementById('radiusSelect').value = '0';
   document.getElementById('radiusSelect').classList.remove('active');
+  hideRadiusVisuals();
 
   // Reset filter to "All Courts"
   currentFilter = 'all';

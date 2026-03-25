@@ -219,6 +219,62 @@ html, body { height: auto; overflow: auto; }
   display: block;
 }
 
+.match-card__video-wrap {
+  position: relative;
+  width: 100%;
+  background: #000;
+}
+
+.match-card__video-wrap video {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  display: block;
+}
+
+.match-card__video-mute {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
+}
+
+.match-card__video-mute:hover { background: rgba(0,0,0,0.8); }
+
+.match-card__video-pause {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.match-card__video-pause-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.match-card__video-pause.paused .match-card__video-pause-icon {
+  opacity: 1;
+}
+
 .match-card__media-caption {
   padding: 10px 16px;
   background: var(--bg-card);
@@ -497,7 +553,13 @@ function renderMatchCard(match, media) {
       const mediaIcon = m.media_type === 'video' ? '🎥' : '📸';
 
       const mediaEl = m.media_type === 'video'
-        ? `<video src="${m.media_url}" playsinline controls preload="metadata" poster=""></video>`
+        ? `<div class="match-card__video-wrap">
+            <video src="${m.media_url}" playsinline autoplay loop muted preload="metadata"></video>
+            <button class="match-card__video-mute" onclick="toggleVideoMute(this, event)">🔇</button>
+            <div class="match-card__video-pause" onclick="toggleVideoPlay(this, event)">
+              <div class="match-card__video-pause-icon">▶</div>
+            </div>
+          </div>`
         : `<img src="${m.media_url}" alt="Game highlight" loading="lazy">`;
 
       const captionHtml = m.caption
@@ -579,6 +641,42 @@ function slideCarousel(carouselId, direction) {
   el.querySelectorAll('.match-card__media-dot').forEach((dot, i) => {
     dot.classList.toggle('match-card__media-dot--active', i === idx);
   });
+
+  // Pause all videos, play the visible one if it's a video
+  el.querySelectorAll('video').forEach(v => { v.pause(); });
+  const activeSlide = el.querySelectorAll('.match-card__media-slide')[idx];
+  const activeVideo = activeSlide?.querySelector('video');
+  if (activeVideo) {
+    activeVideo.play().catch(() => {});
+    const pauseOverlay = activeSlide.querySelector('.match-card__video-pause');
+    if (pauseOverlay) pauseOverlay.classList.remove('paused');
+  }
+}
+
+// ── Video Controls ──
+function toggleVideoPlay(overlayEl, e) {
+  e.stopPropagation();
+  const wrap = overlayEl.closest('.match-card__video-wrap');
+  const video = wrap?.querySelector('video');
+  if (!video) return;
+
+  if (video.paused) {
+    video.play().catch(() => {});
+    overlayEl.classList.remove('paused');
+  } else {
+    video.pause();
+    overlayEl.classList.add('paused');
+  }
+}
+
+function toggleVideoMute(btn, e) {
+  e.stopPropagation();
+  const wrap = btn.closest('.match-card__video-wrap');
+  const video = wrap?.querySelector('video');
+  if (!video) return;
+
+  video.muted = !video.muted;
+  btn.textContent = video.muted ? '🔇' : '🔊';
 }
 
 // ── Touch Swipe for Carousel ──

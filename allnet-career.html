@@ -69,6 +69,31 @@ html, body { height: auto; overflow: auto; }
 .player-sheet__close { display: flex; justify-content: center; margin-top: 16px; }
 .player-sheet__close-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
 .player-sheet__close-btn:hover { background: rgba(255,255,255,0.15); }
+
+/* ── Cover Picker ── */
+.cover-picker-overlay { position: fixed; inset: 0; z-index: 300; background: #000; display: none; flex-direction: column; }
+.cover-picker-overlay.active { display: flex; }
+.cover-picker-overlay.active .cover-picker { animation: coverSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes coverSlideIn { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.cover-picker { flex: 1; display: flex; flex-direction: column; max-width: 600px; width: 100%; margin: 0 auto; }
+.cover-picker__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 16px; line-height: 24px; color: #fff; text-align: center; padding: 20px 16px 16px; flex-shrink: 0; }
+.cover-picker__grid { flex: 1; overflow-y: auto; padding: 0 16px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 0px; align-content: start; }
+.cover-picker__item { position: relative; aspect-ratio: 1.17; overflow: hidden; cursor: pointer; border: 4px solid transparent; transition: border-color 0.2s; }
+.cover-picker__item.selected { border-color: #fff; }
+.cover-picker__item img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover-picker__item-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.7)); font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 0.06em; }
+.cover-picker__actions { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; gap: 16px; padding: 20px 0 36px; background: linear-gradient(transparent, #000 40%); z-index: 2; }
+.cover-picker__btn { width: 48px; height: 48px; border-radius: 999px; background: #000; border: 1px solid #222; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.cover-picker__btn:hover { border-color: #fff; }
+.cover-picker__btn svg { width: 24px; height: 24px; }
+
+@media (min-width: 768px) {
+  .cover-picker-overlay { background: rgba(0,0,0,0.7); align-items: flex-end; }
+  .cover-picker-overlay.active .cover-picker { animation: coverSlideRight 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes coverSlideRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  .cover-picker { max-width: 400px; background: #000; border-left: 1px solid #222; margin: 0; }
+  .cover-picker__actions { max-width: 400px; right: 0; left: auto; }
+}
 </style>
 </head>
 <body>
@@ -100,6 +125,22 @@ html, body { height: auto; overflow: auto; }
   <div class="match-history"><div class="match-history__title" id="matchHistoryTitle">MATCH HISTORY (0)</div><div id="matchHistoryList"><div class="match-history__empty">No matches yet.</div></div></div>
 </div>
 <div class="photo-modal-overlay" id="photoModal"><div class="photo-modal"><div class="photo-modal__title">Change Photo</div><div class="photo-modal__text">Upload a new photo. We'll remove the background automatically.</div><div class="photo-modal__preview" id="photoPreview"><img id="photoPreviewImg" src="" alt=""></div><div class="photo-modal__processing" id="photoProcessing"><div class="photo-modal__spinner">⚡</div><div class="photo-modal__status" id="photoStatus">Removing background...</div></div><input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)"><button class="photo-modal__upload-btn" id="photoUploadBtn" onclick="document.getElementById('photoInput').click()">Choose Photo</button><button class="photo-modal__cancel-btn" onclick="closePhotoModal()">Cancel</button></div></div>
+
+<!-- Cover Picker -->
+<div class="cover-picker-overlay" id="coverPickerOverlay">
+  <div class="cover-picker">
+    <div class="cover-picker__title">Select a cover</div>
+    <div class="cover-picker__grid" id="coverGrid"></div>
+    <div class="cover-picker__actions">
+      <button class="cover-picker__btn" onclick="closeCoverPicker()" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      </button>
+      <button class="cover-picker__btn" onclick="saveCoverSelection()" aria-label="Confirm" id="coverConfirmBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Player Card Sheet -->
 <div class="player-sheet-overlay" id="playerSheetOverlay" onclick="if(event.target===this)closePlayerSheet()">
@@ -358,7 +399,67 @@ async function handlePhotoSelect(e) {
     setTimeout(function() { closePhotoModal(); renderCard(); updateNavDrawerUser(); }, 600);
   } catch (err) { console.error('Photo error:', err); proc.classList.remove('active'); btn.style.display = ''; btn.disabled = false; btn.textContent = 'Try Again'; alert('Photo upload failed: ' + err.message); }
 }
-function openCoverPicker() { window.location.href = 'allnet-stars.html'; }
+/* ── Cover Picker ── */
+var selectedCoverSlug = null;
+
+function openCoverPicker() {
+  selectedCoverSlug = currentProfile?.selected_cover || 'crossover';
+  renderCoverGrid();
+  document.getElementById('coverPickerOverlay').classList.add('active');
+}
+
+function closeCoverPicker() {
+  document.getElementById('coverPickerOverlay').classList.remove('active');
+}
+
+function renderCoverGrid() {
+  var grid = document.getElementById('coverGrid');
+  var allCovers = CareerCard.COVERS;
+  var slugs = Object.keys(allCovers);
+
+  grid.innerHTML = slugs.map(function(slug) {
+    var url = allCovers[slug];
+    var isSelected = slug === selectedCoverSlug;
+    var label = slug.charAt(0).toUpperCase() + slug.slice(1);
+    return '<div class="cover-picker__item' + (isSelected ? ' selected' : '') + '" onclick="selectCover(\'' + slug + '\')">' +
+      '<img src="' + url + '" alt="' + label + '">' +
+      '<div class="cover-picker__item-label">' + label + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function selectCover(slug) {
+  selectedCoverSlug = slug;
+  document.querySelectorAll('.cover-picker__item').forEach(function(el, i) {
+    var coverSlug = Object.keys(CareerCard.COVERS)[i];
+    el.classList.toggle('selected', coverSlug === slug);
+  });
+}
+
+async function saveCoverSelection() {
+  if (!currentUser || !selectedCoverSlug) return;
+  var btn = document.getElementById('coverConfirmBtn');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+
+  try {
+    var { error } = await supabase.from('profiles')
+      .update({ selected_cover: selectedCoverSlug })
+      .eq('id', currentUser.id);
+
+    if (error) throw error;
+
+    currentProfile.selected_cover = selectedCoverSlug;
+    closeCoverPicker();
+    renderCard();
+  } catch (err) {
+    console.error('Failed to save cover:', err);
+    alert('Failed to save cover. Try again.');
+  } finally {
+    btn.style.opacity = '';
+    btn.style.pointerEvents = '';
+  }
+}
 
 /* ── Init ── */
 async function initCareerPage() {

@@ -210,10 +210,6 @@ var CareerCard = (function() {
     var duration = opts.duration || 1200;
     var stagger  = opts.stagger  || 250;
 
-    // Hide deltas until animation finishes
-    var deltas = container.querySelectorAll('.cc__wld-delta, .cc__rating-delta');
-    deltas.forEach(function(d) { d.style.visibility = 'hidden'; });
-
     // Collect targets
     var targets = [];
     var wEl = container.querySelector('.cc__wld-col--w .cc__wld-value');
@@ -233,12 +229,6 @@ var CareerCard = (function() {
     targets.forEach(function(t) {
       _buildRolodex(t.el, t.from, t.to, t.dec, t.delay, duration);
     });
-
-    // Show deltas after everything settles
-    var totalTime = (stagger * 2) + duration + 150;
-    setTimeout(function() {
-      deltas.forEach(function(d) { d.style.visibility = 'visible'; });
-    }, totalTime);
   }
 
   /* ── Build rolodex columns for a single number element ── */

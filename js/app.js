@@ -422,12 +422,36 @@ function renderMarkers() {
 function setFilter(filter, chipEl) {
   if (filter === 'watching' && !currentUser) {
     showSignUpModal('watch');
+    // Reset mobile dropdown back to current filter since we blocked the change
+    const mobileStatus = document.getElementById('mobileStatusFilter');
+    if (mobileStatus) mobileStatus.value = currentFilter;
     return;
   }
   currentFilter = filter;
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  chipEl.classList.add('active');
+  if (chipEl) chipEl.classList.add('active');
+  else {
+    // Sync desktop chips from mobile dropdown
+    document.querySelectorAll('.filter-chip').forEach(c => {
+      if (c.dataset.filter === filter) c.classList.add('active');
+    });
+  }
+  // Sync mobile dropdown
+  const mobileStatus = document.getElementById('mobileStatusFilter');
+  if (mobileStatus) {
+    mobileStatus.value = filter;
+    mobileStatus.classList.toggle('active', filter !== 'all');
+  }
   renderMarkers();
+}
+
+function onMobileStatusChange(value) {
+  setFilter(value, null);
+}
+
+function openNotifications() {
+  // Placeholder — notifications feature coming soon
+  showToast('Notifications coming soon');
 }
 
 /* ══════════════════════════════
@@ -452,11 +476,19 @@ function haversineMiles(lat1, lng1, lat2, lng2) {
 function onRadiusChange(value) {
   radiusMiles = parseInt(value);
   const sel = document.getElementById('radiusSelect');
+  const mobileSel = document.getElementById('mobileRadiusFilter');
+
+  // Sync both dropdowns
+  if (sel) sel.value = value;
+  if (mobileSel) {
+    mobileSel.value = value;
+    mobileSel.classList.toggle('active', radiusMiles > 0);
+  }
 
   if (radiusMiles === 0) {
     // "Map Area" mode — show courts in current viewport, no radius filter
     nearMeActive = false;
-    sel.classList.remove('active');
+    if (sel) sel.classList.remove('active');
     hideRadiusVisuals();
     renderMarkers();
     return;
@@ -1015,8 +1047,19 @@ async function loadUserWatches() {
 
 function updateWatchingChipVisibility() {
   const chip = document.getElementById('watchingChip');
+  const hasWatches = currentUser && userWatches.size > 0;
   if (chip) {
-    chip.style.display = (currentUser && userWatches.size > 0) ? 'flex' : 'none';
+    chip.style.display = hasWatches ? 'flex' : 'none';
+  }
+  // Show/hide Watching option in mobile status dropdown
+  const mobileStatus = document.getElementById('mobileStatusFilter');
+  if (mobileStatus) {
+    const watchOpt = mobileStatus.querySelector('option[value="watching"]');
+    if (watchOpt) watchOpt.style.display = hasWatches ? '' : 'none';
+    // If current filter is watching but no watches, reset to all
+    if (!hasWatches && currentFilter === 'watching') {
+      setFilter('all', null);
+    }
   }
 }
 
@@ -1364,7 +1407,7 @@ async function submitOnboardingName() {
 
     // Update all name/initials displays
     const profileBtn = document.getElementById('profileBtn');
-    if (profileBtn.classList.contains('top-bar__profile') && !profileBtn.querySelector('img')) {
+    if (profileBtn.classList.contains('nav-bar__avatar') && !profileBtn.querySelector('img')) {
       profileBtn.textContent = initials;
     }
     const profileNameEl = document.querySelector('.profile-card__name');
@@ -1496,7 +1539,7 @@ function updateAvatarDisplays(url) {
 
   // Top bar profile button
   const profileBtn = document.getElementById('profileBtn');
-  if (profileBtn && profileBtn.classList.contains('top-bar__profile')) {
+  if (profileBtn && profileBtn.classList.contains('nav-bar__avatar')) {
     profileBtn.innerHTML = html;
   }
   // Profile screen large avatar
@@ -1525,7 +1568,6 @@ function renderCareerCard() {
     lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: currentProfile?.avatar_cutout_url,
     coverSlug: currentProfile?.selected_cover || 'crossover',
-    showPlaceholder: !currentProfile?.avatar_cutout_url,
     wins: currentProfile?.wins || 0,
     losses: currentProfile?.losses || 0,
     draws: currentProfile?.draws || 0,
@@ -1557,7 +1599,6 @@ function switchProfileCardDivision(div) {
     lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: currentProfile?.avatar_cutout_url,
     coverSlug: currentProfile?.selected_cover || 'crossover',
-    showPlaceholder: !currentProfile?.avatar_cutout_url,
     wins: ds?.wins || 0,
     losses: ds?.losses || 0,
     draws: ds?.draws || 0,
@@ -1936,8 +1977,12 @@ async function loadUserProfile(user) {
     console.log('AllNet: getUserProfile returned:', currentProfile ? currentProfile.name : 'null');
     if (currentProfile) {
       const btn = document.getElementById('profileBtn');
-      btn.className = 'top-bar__profile';
+      btn.className = 'nav-bar__avatar';
       btn.innerHTML = buildCompositeAvatar();
+
+      // Show bell icon (placeholder)
+      const bellEl = document.getElementById('navBell');
+      if (bellEl) bellEl.style.display = 'flex';
 
       const profileName = document.querySelector('.profile-card__name');
       if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
@@ -2030,14 +2075,16 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     userCheckins = [];
     checkinCourts = new Set();
     const btn = document.getElementById('profileBtn');
-    btn.className = 'top-bar__cta';
+    btn.className = 'nav-bar__cta';
     btn.textContent = 'Get Started';
     btn.onclick = () => handleProfileClick();
     updateWatchingChipVisibility();
     renderMarkers();
-    // Hide star balance
+    // Hide star balance and bell
     const starsEl = document.getElementById('topBarStars');
     if (starsEl) starsEl.style.display = 'none';
+    const bellEl = document.getElementById('navBell');
+    if (bellEl) bellEl.style.display = 'none';
     updateNavDrawerUser();
   }
 });

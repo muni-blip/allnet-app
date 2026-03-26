@@ -497,20 +497,30 @@ function onRadiusChange(value) {
   if (userLat === null || userLng === null) {
     requestLocation(() => {
       nearMeActive = true;
-      sel.classList.add('active');
+      if (sel) sel.classList.add('active');
       renderMarkers();
       showRadiusVisuals();
-      const zoom = radiusMiles <= 5 ? 13 : radiusMiles <= 10 ? 12 : radiusMiles <= 15 ? 11 : 10;
-      map.flyTo({ center: [userLng, userLat], zoom, duration: 800 });
+      fitMapToRadius();
     });
   } else {
     nearMeActive = true;
-    sel.classList.add('active');
+    if (sel) sel.classList.add('active');
     renderMarkers();
     showRadiusVisuals();
-    const zoom = radiusMiles <= 5 ? 13 : radiusMiles <= 10 ? 12 : radiusMiles <= 15 ? 11 : 10;
-    map.flyTo({ center: [userLng, userLat], zoom, duration: 800 });
+    fitMapToRadius();
   }
+}
+
+function fitMapToRadius() {
+  if (!userLat || !userLng || !radiusMiles || !map) return;
+  // Convert miles to degrees (approximate)
+  var latOffset = radiusMiles / 69.0;
+  var lngOffset = radiusMiles / (69.0 * Math.cos(userLat * Math.PI / 180));
+  var padding = 40;
+  map.fitBounds(
+    [[userLng - lngOffset, userLat - latOffset], [userLng + lngOffset, userLat + latOffset]],
+    { padding: padding, duration: 800 }
+  );
 }
 
 function requestLocation(onSuccess) {
@@ -547,21 +557,8 @@ function autoRequestLocation() {
         userLng = pos.coords.longitude;
         console.log('Auto-location acquired (client-side only)');
 
-        // Check if user is near any courts — if so, center map on them
-        // Stay in "Map Area" mode (viewport-based), don't activate radius filter
-        const nearbyCourts = courts.filter(c =>
-          haversineMiles(userLat, userLng, c.lat, c.lng) <= 25
-        );
-
-        if (nearbyCourts.length > 0) {
-          map.flyTo({ center: [userLng, userLat], zoom: 12, duration: 800 });
-          // Re-render after fly completes to show courts in new viewport
-          map.once('moveend', () => renderMarkers());
-        } else {
-          // User is far from all courts — stay on OC, render viewport courts
-          renderMarkers();
-          console.log('Auto-location: no courts nearby, staying on OC');
-        }
+        // Default to 5mi radius on load
+        onRadiusChange('5');
       },
       (err) => {
         console.log('Auto-location denied or failed, showing courts in viewport');

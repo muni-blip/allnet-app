@@ -212,33 +212,28 @@ map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-righ
 let userPinMarker = null;
 let radiusSourceAdded = false;
 
-// Basketball pin SVG (inline from you-pin.svg)
-const USER_PIN_SVG = `<svg width="36" height="48" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M24 12C24 18.6274 16 32 12 32C7.5 32 0 18.6274 0 12C0 5.37258 5.37258 0 12 0C18.6274 0 24 5.37258 24 12Z" fill="white"/>
+// Basketball pin SVG (inline from you-pin.svg — includes "YOU" text)
+const USER_PIN_SVG = `<svg width="36" height="63" viewBox="0 0 24 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 22C24 28.6274 16 42 12 42C7.5 42 0 28.6274 0 22C0 15.3726 5.37258 10 12 10C18.6274 10 24 15.3726 24 22Z" fill="white"/>
 <g clip-path="url(#clip0_pin)">
-<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="url(#paint0_pin)"/>
-<mask id="mask0_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
-<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
-</mask>
-<g mask="url(#mask0_pin)"><path d="M1.947 12.819C1.947 12.819 4.647 15.706 11.961 15.706C19.275 15.706 22.038 12.819 22.038 12.819" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
-<mask id="mask1_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
-<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
-</mask>
-<g mask="url(#mask1_pin)"><path d="M12 2.011V21.944" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
-<mask id="mask2_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
-<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
-</mask>
-<g mask="url(#mask2_pin)"><path d="M3.956 5.997C3.956 5.997 7.503 7.534 8.664 12.024C9.825 16.513 6.656 21.378 6.656 21.378" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
-<mask id="mask3_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
-<path d="M12 21.375C17.1777 21.375 21.375 17.1777 21.375 12C21.375 6.82233 17.1777 2.625 12 2.625C6.82233 2.625 2.625 6.82233 2.625 12C2.625 17.1777 6.82233 21.375 12 21.375Z" fill="white"/>
-</mask>
-<g mask="url(#mask3_pin)"><path d="M20.013 5.997C20.013 5.997 16.466 7.534 15.305 12.024C14.144 16.513 17.313 21.378 17.313 21.378" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+<path d="M12 31.375C17.1777 31.375 21.375 27.1777 21.375 22C21.375 16.8223 17.1777 12.625 12 12.625C6.82233 12.625 2.625 16.8223 2.625 22C2.625 27.1777 6.82233 31.375 12 31.375Z" fill="url(#paint0_pin)"/>
+<mask id="mask0_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="12" width="20" height="20"><path d="M12 31.375C17.1777 31.375 21.375 27.1777 21.375 22C21.375 16.8223 17.1777 12.625 12 12.625C6.82233 12.625 2.625 16.8223 2.625 22C2.625 27.1777 6.82233 31.375 12 31.375Z" fill="white"/></mask>
+<g mask="url(#mask0_pin)"><path d="M1.947 22.819C1.947 22.819 4.647 25.706 11.961 25.706C19.275 25.706 22.038 22.819 22.038 22.819" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+<mask id="mask1_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="12" width="20" height="20"><path d="M12 31.375C17.1777 31.375 21.375 27.1777 21.375 22C21.375 16.8223 17.1777 12.625 12 12.625C6.82233 12.625 2.625 16.8223 2.625 22C2.625 27.1777 6.82233 31.375 12 31.375Z" fill="white"/></mask>
+<g mask="url(#mask1_pin)"><path d="M12 12.011V31.944" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+<mask id="mask2_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="12" width="20" height="20"><path d="M12 31.375C17.1777 31.375 21.375 27.1777 21.375 22C21.375 16.8223 17.1777 12.625 12 12.625C6.82233 12.625 2.625 16.8223 2.625 22C2.625 27.1777 6.82233 31.375 12 31.375Z" fill="white"/></mask>
+<g mask="url(#mask2_pin)"><path d="M3.956 15.997C3.956 15.997 7.503 17.534 8.664 22.024C9.825 26.513 6.656 31.378 6.656 31.378" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
+<mask id="mask3_pin" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="2" y="12" width="20" height="20"><path d="M12 31.375C17.1777 31.375 21.375 27.1777 21.375 22C21.375 16.8223 17.1777 12.625 12 12.625C6.82233 12.625 2.625 16.8223 2.625 22C2.625 27.1777 6.82233 31.375 12 31.375Z" fill="white"/></mask>
+<g mask="url(#mask3_pin)"><path d="M20.013 15.997C20.013 15.997 16.466 17.534 15.305 22.024C14.144 26.513 17.313 31.378 17.313 31.378" stroke="#BE3A26" stroke-width="0.78" stroke-miterlimit="10"/></g>
 </g>
+<path d="M18.5507 6.13C17.9507 6.13 17.4373 6.023 17.0107 5.81C16.5907 5.59 16.2673 5.283 16.0407 4.89C15.814 4.49 15.7007 4.023 15.7007 3.49V0.22H17.6307V3.43C17.6307 3.817 17.7107 4.107 17.8707 4.3C18.0307 4.493 18.264 4.59 18.5707 4.59C18.8773 4.59 19.1073 4.493 19.2607 4.3C19.4207 4.107 19.5007 3.817 19.5007 3.43V0.22H21.3907V3.49C21.3907 4.023 21.2807 4.49 21.0607 4.89C20.8407 5.283 20.5173 5.59 20.0907 5.81C19.664 6.023 19.1507 6.13 18.5507 6.13Z" fill="white"/>
+<path d="M11.5036 6.13C10.8703 6.13 10.3036 6 9.8036 5.74C9.3036 5.48 8.91027 5.123 8.6236 4.67C8.33694 4.21 8.1936 3.69 8.1936 3.11C8.1936 2.523 8.33694 2.003 8.6236 1.55C8.91027 1.097 9.3036 0.74 9.8036 0.48C10.3036 0.22 10.8703 0.09 11.5036 0.09C12.1369 0.09 12.7036 0.22 13.2036 0.48C13.7036 0.74 14.0969 1.097 14.3836 1.55C14.6703 2.003 14.8136 2.523 14.8136 3.11C14.8136 3.69 14.6703 4.21 14.3836 4.67C14.0969 5.123 13.7036 5.48 13.2036 5.74C12.7036 6 12.1369 6.13 11.5036 6.13ZM11.5036 4.59C11.7703 4.59 12.0036 4.527 12.2036 4.4C12.4103 4.273 12.5703 4.1 12.6836 3.88C12.8036 3.653 12.8636 3.397 12.8636 3.11C12.8636 2.817 12.8036 2.56 12.6836 2.34C12.5703 2.12 12.4103 1.947 12.2036 1.82C12.0036 1.693 11.7703 1.63 11.5036 1.63C11.2436 1.63 11.0103 1.693 10.8036 1.82C10.5969 1.94 10.4336 2.113 10.3136 2.34C10.1936 2.567 10.1336 2.823 10.1336 3.11C10.1336 3.397 10.1936 3.653 10.3136 3.88C10.4336 4.1 10.5969 4.273 10.8036 4.4C11.0103 4.527 11.2436 4.59 11.5036 4.59Z" fill="white"/>
+<path d="M4.13494 6V3.5L4.48494 4.64L1.81494 0.22H3.85494L5.69494 3.28H4.61494L6.45494 0.22H8.38494L5.71494 4.64L6.06494 3.5V6H4.13494Z" fill="white"/>
 <defs>
-<radialGradient id="paint0_pin" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.937 6.318) scale(10.227)">
+<radialGradient id="paint0_pin" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.937 16.318) scale(10.227)">
 <stop offset="0.006" stop-color="#F8981D"/><stop offset="1" stop-color="#F47C20"/>
 </radialGradient>
-<clipPath id="clip0_pin"><rect width="20" height="20" fill="white" transform="translate(2 2)"/></clipPath>
+<clipPath id="clip0_pin"><rect width="20" height="20" fill="white" transform="translate(2 12)"/></clipPath>
 </defs>
 </svg>`;
 
@@ -389,16 +384,23 @@ function renderMarkers() {
     const size = isWatchedView ? 16 : (court.status === 'quiet' ? 12 : 14 + (court.players / 2.5));
 
     const el = document.createElement('div');
-    el.style.cssText = 'display:flex;align-items:center;justify-content:center;cursor:pointer;';
+    el.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;';
 
     const dot = document.createElement('div');
-    dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);transition:transform 0.15s ease;`;
+    dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);transition:transform 0.15s ease;flex-shrink:0;`;
 
     if (court.status !== 'quiet') {
       dot.style.boxShadow = `0 0 ${size}px ${Math.round(size/2)}px ${color}40`;
     }
 
     el.appendChild(dot);
+
+    // Court name label — absolutely positioned below dot so it doesn't affect marker anchor
+    const label = document.createElement('div');
+    const truncName = court.name && court.name.length > 30 ? court.name.slice(0, 28) + '…' : (court.name || '');
+    label.textContent = truncName;
+    label.style.cssText = 'position:absolute;top:100%;left:50%;transform:translateX(-50%);font-family:DM Sans,sans-serif;font-size:10px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.2;max-width:80px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px;pointer-events:none;white-space:normal;word-break:break-word;';
+    el.appendChild(label);
 
     el.addEventListener('mouseenter', () => dot.style.transform = 'scale(1.2)');
     el.addEventListener('mouseleave', () => dot.style.transform = 'scale(1)');
@@ -1196,8 +1198,11 @@ function openProfile() {
   updateProfileStats();
   renderHistory();
   renderWatchedCourts();
-  renderCareerCard();
   document.getElementById('profileScreen').classList.add('open');
+  // Render card after screen is visible so fitNames can measure correctly
+  requestAnimationFrame(function() {
+    renderCareerCard();
+  });
 }
 
 function closeProfile() {

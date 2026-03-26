@@ -794,8 +794,11 @@ function openSheet(court) {
       </div>
       <div class="court-header__status">
         ${watchBtn}
-        <div class="status-dot-lg status-dot-lg--${statusClass}">${statusIcon}</div>
-        <span class="status-label status-label--${statusClass}">${court.status.charAt(0).toUpperCase() + court.status.slice(1)}</span>
+        <div class="court-header__status-group">
+          <div class="status-dot-lg status-dot-lg--${statusClass}">${statusIcon}</div>
+          <span class="status-label status-label--${statusClass}">${court.status.charAt(0).toUpperCase() + court.status.slice(1)}</span>
+        </div>
+        <button class="btn--sheet-close" onclick="closeSheet()" aria-label="Close">✕</button>
       </div>
     </div>
 

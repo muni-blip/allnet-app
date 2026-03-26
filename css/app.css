@@ -515,25 +515,10 @@ html, body {
 
 .bottom-sheet.open { transform: translateY(0); }
 
-.sheet__handle-wrapper {
-  padding: 12px 0 8px;
-  display: flex;
-  justify-content: center;
-  cursor: grab;
-  flex-shrink: 0;
-}
-
-.sheet__handle {
-  width: 36px;
-  height: 4px;
-  border-radius: 4px;
-  background: var(--border-light);
-}
-
 .sheet__body {
   flex: 1;
   overflow-y: auto;
-  padding: 0 20px 32px;
+  padding: 20px 20px 32px;
   min-height: 0;
 }
 
@@ -542,6 +527,7 @@ html, body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
@@ -583,7 +569,7 @@ html, body {
 .court-header__status {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex-shrink: 0;
 }
@@ -615,8 +601,8 @@ html, body {
 .btn--sheet-close:hover { border-color: #666; color: var(--text-primary); }
 
 .status-dot-lg {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -638,6 +624,19 @@ html, body {
 .status-label--active { color: var(--green-live); }
 .status-label--packed { color: var(--orange); }
 .status-label--quiet { color: #3B82F6; }
+
+/* Mobile: stack sheet status items vertically (X → bell → status) */
+@media (max-width: 480px) {
+  .court-header__status {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  /* Reorder: close=1, bell=2, status=3 (HTML is bell, status, close) */
+  .court-header__status .btn--watch { order: 2; }
+  .court-header__status .court-header__status-group { order: 3; }
+  .court-header__status .btn--sheet-close { order: 1; }
+}
 
 /* Pulse stats */
 .pulse-stats {

@@ -351,6 +351,8 @@ html, body {
   overflow: hidden;
 }
 
+.mapboxgl-ctrl-logo { pointer-events: none !important; }
+
 #map {
   width: 100%;
   height: 100%;

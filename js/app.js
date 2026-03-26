@@ -2084,7 +2084,8 @@ async function loadUserProfile(user) {
         courtName: c.courts?.name || 'Unknown',
         time: new Date(c.checked_in_at)
       }));
-      myCheckins.forEach(c => checkinCourts.add(c.court_id));
+      // Only mark courts where user is ACTIVELY checked in (not checked out)
+      myCheckins.filter(c => !c.checked_out_at).forEach(c => checkinCourts.add(c.court_id));
       updateProfileStats();
     }
 

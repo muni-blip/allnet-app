@@ -5,7 +5,8 @@ const courts = [];
 
 const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 let currentFilter = 'all';
-let markers = [];
+let visibleCourtCount = 0;
+let courtsLayersReady = false;
 let userCheckins = [];
 let checkinCourts = new Set();
 
@@ -274,7 +275,7 @@ function showRadiusVisuals() {
       type: 'fill',
       source: 'radius-pulse',
       paint: { 'fill-color': '#F74501', 'fill-opacity': 0 }
-    });
+    }, 'courts-dots');
 
     // Semi-transparent orange fill
     map.addLayer({
@@ -282,7 +283,7 @@ function showRadiusVisuals() {
       type: 'fill',
       source: 'radius-circle',
       paint: { 'fill-color': '#F74501', 'fill-opacity': 0.10 }
-    });
+    }, 'courts-dots');
 
     // Orange border stroke
     map.addLayer({
@@ -290,7 +291,7 @@ function showRadiusVisuals() {
       type: 'line',
       source: 'radius-circle',
       paint: { 'line-color': '#F74501', 'line-width': 2, 'line-opacity': 0.7 }
-    });
+    }, 'courts-dots');
 
     radiusSourceAdded = true;
   }
@@ -348,11 +349,9 @@ function triggerRadarPulse() {
 }
 
 function renderMarkers() {
-  markers.forEach(m => m.remove());
-  markers = [];
-
-  // Get current map viewport bounds for "Map Area" mode
+  // Build a filtered GeoJSON FeatureCollection
   const bounds = map.getBounds();
+  const features = [];
 
   courts.forEach(court => {
     if (currentFilter === 'watching') {
@@ -362,12 +361,10 @@ function renderMarkers() {
     }
 
     if (nearMeActive && userLat !== null && userLng !== null) {
-      // Radius mode: filter by distance from user
       const dist = haversineMiles(userLat, userLng, court.lat, court.lng);
       if (dist > radiusMiles) return;
       court._distance = dist;
     } else if (currentFilter !== 'watching') {
-      // Map Area mode: only show courts within viewport (with small padding)
       const padLng = (bounds.getEast() - bounds.getWest()) * 0.1;
       const padLat = (bounds.getNorth() - bounds.getSouth()) * 0.1;
       if (court.lng < bounds.getWest() - padLng || court.lng > bounds.getEast() + padLng ||
@@ -381,39 +378,29 @@ function renderMarkers() {
       : court.status === 'packed' ? '#FF5A1F'
       : court.status === 'active' ? '#22C55E'
       : '#3B82F6';
-    const size = isWatchedView ? 16 : (court.status === 'quiet' ? 12 : 14 + (court.players / 2.5));
-
-    const el = document.createElement('div');
-    el.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;';
-
-    const dot = document.createElement('div');
-    dot.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.85);transition:transform 0.15s ease;flex-shrink:0;`;
-
-    if (court.status !== 'quiet') {
-      dot.style.boxShadow = `0 0 ${size}px ${Math.round(size/2)}px ${color}40`;
-    }
-
-    el.appendChild(dot);
-
-    // Court name label — absolutely positioned below dot so it doesn't affect marker anchor
-    const label = document.createElement('div');
     const truncName = court.name && court.name.length > 30 ? court.name.slice(0, 28) + '…' : (court.name || '');
-    label.textContent = truncName;
-    label.style.cssText = 'position:absolute;top:100%;left:50%;transform:translateX(-50%);font-family:DM Sans,sans-serif;font-size:10px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.2;max-width:80px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:2px;pointer-events:none;white-space:normal;word-break:break-word;';
-    el.appendChild(label);
 
-    el.addEventListener('mouseenter', () => dot.style.transform = 'scale(1.2)');
-    el.addEventListener('mouseleave', () => dot.style.transform = 'scale(1)');
-    el.addEventListener('click', (e) => { e.stopPropagation(); openSheet(court); });
-
-    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-      .setLngLat([court.lng, court.lat])
-      .addTo(map);
-
-    markers.push(marker);
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [court.lng, court.lat] },
+      properties: {
+        id: court.id,
+        name: truncName,
+        color: color,
+        status: court.status || 'quiet',
+        isWatched: isWatchedView ? 1 : 0
+      }
+    });
   });
 
-  // Track where markers were rendered so we can detect significant panning
+  visibleCourtCount = features.length;
+
+  const geojson = { type: 'FeatureCollection', features: features };
+
+  if (courtsLayersReady) {
+    map.getSource('courts-source').setData(geojson);
+  }
+
   if (typeof updateLastRenderCenter === 'function') updateLastRenderCenter();
   if (typeof hideSearchAreaBtn === 'function') hideSearchAreaBtn();
 }
@@ -572,9 +559,79 @@ function autoRequestLocation() {
 }
 
 map.on('load', () => {
+  // ── Set up native WebGL court layers (GPU-rendered, zero jitter) ──
+  map.addSource('courts-source', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] }
+  });
+
+  // Circle layer — court dots
+  map.addLayer({
+    id: 'courts-dots',
+    type: 'circle',
+    source: 'courts-source',
+    paint: {
+      'circle-radius': 8,
+      'circle-color': ['get', 'color'],
+      'circle-stroke-width': 2,
+      'circle-stroke-color': 'rgba(255,255,255,0.85)'
+    }
+  });
+
+  // Symbol layer — court name labels below dots
+  map.addLayer({
+    id: 'courts-labels',
+    type: 'symbol',
+    source: 'courts-source',
+    layout: {
+      'text-field': ['get', 'name'],
+      'text-size': 11,
+      'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+      'text-anchor': 'top',
+      'text-offset': [0, 1],
+      'text-max-width': 8,
+      'text-allow-overlap': false,
+      'text-optional': true,
+      'text-line-height': 1.2
+    },
+    paint: {
+      'text-color': 'rgba(255,255,255,0.85)',
+      'text-halo-color': 'rgba(0,0,0,0.75)',
+      'text-halo-width': 1
+    }
+  });
+
+  courtsLayersReady = true;
+
+  // Click handler — open court sheet (on both dots and labels)
+  map.on('click', 'courts-dots', (e) => {
+    if (!e.features || !e.features.length) return;
+    const courtId = String(e.features[0].properties.id);
+    const court = courts.find(c => String(c.id) === courtId);
+    if (court) openSheet(court);
+  });
+  map.on('click', 'courts-labels', (e) => {
+    if (!e.features || !e.features.length) return;
+    const courtId = String(e.features[0].properties.id);
+    const court = courts.find(c => String(c.id) === courtId);
+    if (court) openSheet(court);
+  });
+
+  // Hover — pointer cursor on both layers
+  map.on('mouseenter', 'courts-dots', () => {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'courts-dots', () => {
+    map.getCanvas().style.cursor = '';
+  });
+  map.on('mouseenter', 'courts-labels', () => {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'courts-labels', () => {
+    map.getCanvas().style.cursor = '';
+  });
+
   renderMarkers();
-  // Delay autoRequestLocation until courts are loaded
-  // initApp() will call autoRequestLocation after courts are populated
 });
 
 /* ══════════════════════════════
@@ -651,8 +708,8 @@ function searchThisArea() {
   renderMarkers();
   hideSearchAreaBtn();
 
-  // Count visible markers for feedback
-  const count = markers.length;
+  // Count visible courts for feedback
+  const count = visibleCourtCount;
   if (count > 0) {
     showToast(count + ' court' + (count !== 1 ? 's' : '') + ' in this area');
   } else {

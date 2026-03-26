@@ -1462,6 +1462,7 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-secondary);
+  margin-top: 32px;
   margin-bottom: 14px;
 }
 

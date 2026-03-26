@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Stars</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 <style>
 /* ═══ Stars Page Specific Styles ═══ */
@@ -12,77 +12,71 @@ html, body { height: auto; overflow: auto; }
 
 .stars-page {
   min-height: 100vh;
-  background: var(--bg);
+  background: #000;
   padding-bottom: 40px;
 }
 
 .stars-topbar {
   position: sticky; top: 0; z-index: 100;
-  padding: 14px 16px;
-  background: rgba(10,10,10,0.95);
-  backdrop-filter: blur(16px);
+  height: 56px; padding: 0 16px;
+  background: #000;
   display: flex; align-items: center; gap: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #2e2e2e;
 }
 
-.stars-topbar__back {
-  background: none; border: none; color: var(--text-secondary);
-  font-size: 14px; font-weight: 600; cursor: pointer;
-  font-family: var(--font-body); display: flex; align-items: center; gap: 6px;
+.stars-topbar__menu {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: #000; border: 1px solid #2e2e2e;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: var(--transition);
 }
-
-.stars-topbar__back:hover { color: var(--text-primary); }
+.stars-topbar__menu:hover { border-color: #444; }
+.stars-topbar__menu svg { width: 24px; height: 24px; }
 
 .stars-topbar__title {
-  flex: 1; font-family: var(--font-display); font-size: 18px;
-  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-}
-
-.stars-topbar__balance {
-  font-family: var(--font-display); font-size: 16px; font-weight: 700;
-  color: var(--yellow); display: flex; align-items: center; gap: 5px;
+  flex: 1; font-family: 'Montserrat', sans-serif; font-size: 18px;
+  font-weight: 600; color: #fff; text-align: center;
 }
 
 /* Balance Hero */
 .balance-hero {
-  text-align: center; padding: 40px 20px 32px;
-  background: linear-gradient(180deg, rgba(250,204,21,0.06) 0%, transparent 100%);
+  text-align: center; padding: 40px 16px 32px;
+  background: #000;
 }
 
-.balance-hero__label {
-  font-family: var(--font-display); font-size: 12px; font-weight: 600;
-  letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted);
-  margin-bottom: 8px;
+.balance-hero__img {
+  width: 120px; height: 120px; margin: 0 auto 16px;
 }
 
 .balance-hero__amount {
-  font-family: var(--font-display); font-size: 56px; font-weight: 700;
-  color: var(--yellow); line-height: 1; margin-bottom: 6px;
+  font-family: 'Montserrat', sans-serif; font-size: 40px; font-weight: 800;
+  color: #fff; line-height: 32px; margin-bottom: 16px;
 }
 
-.balance-hero__stars-label {
-  font-family: var(--font-display); font-size: 14px; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+.balance-hero__subtitle {
+  font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600;
+  color: #fff;
 }
 
-/* Tabs */
+/* Tabs — pill style */
 .stars-tabs {
-  display: flex; gap: 0; padding: 0 16px;
-  border-bottom: 1px solid var(--border); margin-bottom: 0;
+  display: flex; gap: 8px; padding: 16px 16px;
+  border-bottom: none; margin-bottom: 0;
+  border-top: 1px solid #2e2e2e;
 }
 
 .stars-tab {
-  flex: 1; padding: 12px 8px; text-align: center;
-  font-family: var(--font-display); font-size: 12px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-muted); cursor: pointer; border: none; background: none;
-  border-bottom: 2px solid transparent; transition: var(--transition);
+  flex: 1; padding: 8px 16px; text-align: center;
+  font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600;
+  text-transform: uppercase; white-space: nowrap;
+  color: #fff; cursor: pointer; border: 1px solid #434343; background: none;
+  border-radius: 999px; transition: var(--transition);
 }
 
-.stars-tab:hover { color: var(--text-secondary); }
+.stars-tab:hover { border-color: #666; }
 
 .stars-tab.active {
-  color: var(--yellow); border-bottom-color: var(--yellow);
+  color: #000; background: #fff; border-color: #fff;
 }
 
 .stars-tab--disabled {
@@ -350,26 +344,25 @@ html, body { height: auto; overflow: auto; }
 
   <!-- Top Bar -->
   <div class="stars-topbar">
-    <button class="top-bar__menu" onclick="openNavDrawer()" aria-label="Menu">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect y="3" width="20" height="2" rx="1" fill="white"/><rect y="9" width="20" height="2" rx="1" fill="white"/><rect y="15" width="20" height="2" rx="1" fill="white"/></svg>
+    <button class="stars-topbar__menu" onclick="openNavDrawer()" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13C10.1046 13 11 13.8954 11 15V20C11 21.1046 10.1046 22 9 22H4C2.89543 22 2 21.1046 2 20V15C2 13.8954 2.89543 13 4 13H9ZM20 13C21.1046 13 22 13.8954 22 15V20C22 21.1046 21.1046 22 20 22H15C13.8954 22 13 21.1046 13 20V15C13 13.8954 13.8954 13 15 13H20ZM9 2C10.1046 2 11 2.89543 11 4V9C11 10.1046 10.1046 11 9 11H4C2.89543 11 2 10.1046 2 9V4C2 2.89543 2.89543 2 4 2H9ZM20 2C21.1046 2 22 2.89543 22 4V9C22 10.1046 21.1046 11 20 11H15C13.8954 11 13 10.1046 13 9V4C13 2.89543 13.8954 2 15 2H20Z" fill="url(#menuGradS)"/><defs><linearGradient id="menuGradS" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F8981D"/><stop offset="1" stop-color="#F74501"/></linearGradient></defs></svg>
     </button>
-    <div class="stars-topbar__title">Stars</div>
-    <div class="stars-topbar__balance" id="topBalance">⭐ —</div>
+    <div class="stars-topbar__title">Manage stars</div>
   </div>
 
   <!-- Balance Hero -->
   <div class="balance-hero">
-    <div class="balance-hero__label">Your Balance</div>
+    <img class="balance-hero__img" src="https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/stars-img-min.png" alt="Stars">
     <div class="balance-hero__amount" id="heroBalance">—</div>
-    <div class="balance-hero__stars-label">⭐ Stars</div>
+    <div class="balance-hero__subtitle">Convert to cash or get new sprays and covers</div>
   </div>
 
   <!-- Tabs -->
   <div class="stars-tabs">
-    <button class="stars-tab active" data-tab="overview" onclick="switchTab('overview', this)">Overview</button>
-    <button class="stars-tab" data-tab="covers" onclick="switchTab('covers', this)">Covers</button>
-    <button class="stars-tab stars-tab--disabled" data-tab="sprays" onclick="return false">Sprays</button>
-    <button class="stars-tab stars-tab--disabled" data-tab="cashout" onclick="return false">Cash Out</button>
+    <button class="stars-tab active" data-tab="overview" onclick="switchTab('overview', this)">MAIN</button>
+    <button class="stars-tab stars-tab--disabled" data-tab="sprays" onclick="return false">SPRAYS</button>
+    <button class="stars-tab" data-tab="covers" onclick="switchTab('covers', this)">COVERS</button>
+    <button class="stars-tab stars-tab--disabled" data-tab="cashout" onclick="return false">CASH</button>
   </div>
 
   <!-- Overview Tab -->
@@ -527,7 +520,6 @@ function switchTab(tab, el) {
 // ── Update Balance Displays ──
 function updateBalanceDisplay() {
   document.getElementById('heroBalance').textContent = starsBalance.toLocaleString();
-  document.getElementById('topBalance').textContent = '⭐ ' + starsBalance.toLocaleString();
 }
 
 // ── Load Transactions ──

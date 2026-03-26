@@ -38,68 +38,77 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════
-   APP SHELL
+   APP SHELL — black bg with inset map card
    ═══════════════════════════════════════════════ */
 .app {
   height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
+  background: #000;
+  padding: 56px 12px 12px;
 }
 
-/* ── Top bar ── */
 /* ═══════════════════════════════════════════════
-   NAV BAR — responsive: top on desktop, bottom on mobile
+   NAV BAR — Figma-matched, responsive top/bottom
    ═══════════════════════════════════════════════ */
 .nav-bar {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  padding: 12px 16px;
+  height: 56px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: linear-gradient(to bottom, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.6) 60%, transparent 100%);
+  gap: 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0,0,0,0.85);
   pointer-events: none;
 }
 .nav-bar > * { pointer-events: all; }
 
 .nav-bar__menu {
-  background: none;
-  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #000;
+  border: 0.667px solid #222;
   cursor: pointer;
-  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
   transition: var(--transition);
   flex-shrink: 0;
 }
-.nav-bar__menu:hover { background: rgba(255,255,255,0.08); }
-.nav-bar__menu img { width: 24px; height: 24px; }
+.nav-bar__menu:hover { border-color: #444; }
+.nav-bar__menu svg { width: 16px; height: 16px; }
 
 .nav-bar__logo {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: center;
+}
+.nav-bar__logo svg { height: 20px; width: auto; }
+
+.nav-bar__spacer { flex: 1; }
+
+.nav-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .nav-bar__stars {
-  padding: 6px 12px;
-  border-radius: 100px;
-  background: rgba(250,204,21,0.1);
-  border: 1px solid rgba(250,204,21,0.25);
-  color: var(--yellow);
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
+  padding: 6px 8px 6px 12px;
+  border-radius: 999px;
+  background: #292929;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -109,36 +118,36 @@ html, body {
   flex-shrink: 0;
 }
 .nav-bar__stars:hover {
-  background: rgba(250,204,21,0.18);
-  border-color: rgba(250,204,21,0.4);
-  transform: scale(1.05);
+  background: #333;
+  transform: scale(1.03);
 }
 
 .nav-bar__bell {
   position: relative;
-  background: none;
-  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #292929;
+  border: 0.667px solid #292929;
   cursor: pointer;
-  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
   transition: var(--transition);
   flex-shrink: 0;
 }
-.nav-bar__bell:hover { background: rgba(255,255,255,0.08); }
-.nav-bar__bell svg { width: 22px; height: 22px; }
+.nav-bar__bell:hover { background: #333; }
+.nav-bar__bell svg { width: 16px; height: 16px; }
 .nav-bar__bell-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: -4px;
+  right: -4px;
   min-width: 16px;
   height: 16px;
   border-radius: 8px;
   background: #EF4444;
   color: #fff;
-  font-family: var(--font-display);
+  font-family: 'Montserrat', sans-serif;
   font-size: 9px;
   font-weight: 700;
   display: flex;
@@ -149,19 +158,18 @@ html, body {
 }
 
 .nav-bar__avatar {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
+  font-family: 'Inter', var(--font-body);
   font-size: 12px;
-  font-weight: 700;
-  color: white;
+  font-weight: 400;
+  color: #000;
   cursor: pointer;
-  border: 2px solid rgba(255,255,255,0.15);
   transition: var(--transition);
   overflow: hidden;
   flex-shrink: 0;
@@ -169,21 +177,20 @@ html, body {
 .nav-bar__avatar:hover { transform: scale(1.08); }
 
 .nav-bar__cta {
-  padding: 8px 18px;
+  padding: 6px 14px;
   border-radius: 100px;
-  background: linear-gradient(135deg, var(--orange), #FF8C42);
+  background: #292929;
   color: white;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
   border: none;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
   flex-shrink: 0;
 }
-.nav-bar__cta:hover { transform: scale(1.05); filter: brightness(1.1); }
+.nav-bar__cta:hover { background: #333; }
 
 /* ── Mobile filters: two floating dropdowns ── */
 .mobile-filters {
@@ -192,21 +199,21 @@ html, body {
 
 /* ── Mobile ≤480px: nav-bar moves to bottom, mobile filters appear ── */
 @media (max-width: 480px) {
+  .app {
+    padding: 12px 12px calc(56px + 12px) 12px;
+  }
   .nav-bar {
-    position: fixed;
     top: auto;
     bottom: 0;
-    background: rgba(10,10,10,0.95);
-    backdrop-filter: blur(16px);
-    border-top: 1px solid var(--border);
-    padding: 10px 16px;
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    background: rgba(0,0,0,0.95);
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
   }
+  .nav-bar__logo { flex: 0; }
   .pulse-filter { display: none !important; }
   .mobile-filters {
     display: flex;
     position: fixed;
-    top: max(12px, env(safe-area-inset-top, 12px));
+    top: max(16px, env(safe-area-inset-top, 16px));
     left: 50%;
     transform: translateX(-50%);
     z-index: 50;
@@ -246,21 +253,22 @@ html, body {
     background: var(--bg-card);
     color: var(--text-primary);
   }
-  .locate-btn { bottom: 80px; }
-  .nudge-banner { top: calc(max(12px, env(safe-area-inset-top, 12px)) + 44px); }
+  .locate-btn { bottom: 20px; }
+  .nudge-banner { top: 0; border-radius: 24px 24px 0 0; }
   .sheet__body { padding-bottom: 80px; }
 }
 
 /* ── Check-in Nudge Banner ── */
 .nudge-banner {
   position: absolute;
-  top: 56px;
+  top: 48px;
   left: 0;
   right: 0;
-  z-index: 150;
+  z-index: 60;
   background: rgba(14,14,14,0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -339,6 +347,8 @@ html, body {
   flex: 1;
   position: relative;
   min-height: 0;
+  border-radius: 24px;
+  overflow: hidden;
 }
 
 #map {
@@ -346,10 +356,10 @@ html, body {
   height: 100%;
 }
 
-/* ── Pulse filter bar ── */
+/* ── Pulse filter bar (inside map-view) ── */
 .pulse-filter {
   position: absolute;
-  top: 64px;
+  top: 12px;
   left: 16px;
   right: 16px;
   z-index: 50;
@@ -471,7 +481,7 @@ html, body {
    BOTTOM SHEET
    ═══════════════════════════════════════════════ */
 .sheet-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 300;
   background: rgba(0,0,0,0.5);
@@ -486,7 +496,7 @@ html, body {
 }
 
 .bottom-sheet {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
@@ -1316,7 +1326,7 @@ html, body {
    PROFILE SCREEN
    ═══════════════════════════════════════════════ */
 .profile-screen {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 400;
   background: var(--bg);

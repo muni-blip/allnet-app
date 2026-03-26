@@ -636,6 +636,14 @@ html, body {
   .court-header__status .btn--watch { order: 2; }
   .court-header__status .court-header__status-group { order: 3; }
   .court-header__status .btn--sheet-close { order: 1; }
+  /* Limit court name to 2 lines on mobile */
+  .court-header__name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* Pulse stats */

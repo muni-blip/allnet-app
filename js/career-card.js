@@ -58,9 +58,8 @@ var CareerCard = (function() {
     var soD      = opts.socialDelta;
     var wD       = opts.winsDelta;
 
-    // Empty state — only when viewing own card with no photo AND no stats
-    // (controlled by caller via opts.showPlaceholder)
-    if (!cut && opts.showPlaceholder) {
+    // Empty state
+    if (!cut) {
       return '<div class="cc__cover" style="background-image:url(\'' + coverUrl + '\')"></div>' +
         '<div class="cc__overlay"></div>' +
         '<div class="cc__placeholder">' +
@@ -68,11 +67,6 @@ var CareerCard = (function() {
           '<div class="cc__placeholder-text">Upload a photo to generate your career card</div>' +
         '</div>';
     }
-
-    // Player frame — only if cutout exists
-    var playerFrameHtml = cut
-      ? '<div class="cc__player-frame"><img src="' + cut + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>'
-      : '';
 
     // W/L/D with optional delta
     var wDeltaHtml = (showD && wD && wD > 0) ? '<div class="cc__wld-delta">+' + wD + '</div>' : '';
@@ -116,7 +110,7 @@ var CareerCard = (function() {
 
     return '' +
       '<div class="cc__cover" style="background-image:url(\'' + coverUrl + '\')"></div>' +
-      playerFrameHtml +
+      '<div class="cc__player-frame"><img src="' + cut + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>' +
       '<div class="cc__overlay"></div>' +
 
       // Name row 1: [firstName] [gradient bar]
@@ -157,7 +151,6 @@ var CareerCard = (function() {
   function fitNames(cardId) {
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
-    var rowWidth = 320; // 343 - 11 left - 12 right
     var gapPx = 8;
     var minBar = 24;
     var maxFont = 40;
@@ -167,6 +160,9 @@ var CareerCard = (function() {
     var fnEl = document.getElementById(cardId + '_fn');
     var barO = document.getElementById(cardId + '_barO');
     if (fnEl && barO) {
+      // Dynamically measure actual row width
+      var rowEl = fnEl.parentElement;
+      var rowWidth = rowEl ? rowEl.getBoundingClientRect().width : 320;
       var fn = fnEl.textContent;
       var fs = maxFont;
       while (fs >= minFont) {
@@ -185,16 +181,18 @@ var CareerCard = (function() {
     var lnEl = document.getElementById(cardId + '_ln');
     var barB = document.getElementById(cardId + '_barB');
     if (lnEl && barB) {
+      var rowEl2 = lnEl.parentElement;
+      var rowWidth2 = rowEl2 ? rowEl2.getBoundingClientRect().width : 320;
       var ln = lnEl.textContent;
       var fs2 = maxFont;
       while (fs2 >= minFont) {
         ctx.font = '800 ' + fs2 + 'px Montserrat';
         var tw2 = ctx.measureText(ln).width;
-        if (tw2 + gapPx + minBar <= rowWidth) break;
+        if (tw2 + gapPx + minBar <= rowWidth2) break;
         fs2--;
       }
       lnEl.style.fontSize = fs2 + 'px';
-      var remaining2 = rowWidth - ctx.measureText(ln).width - gapPx;
+      var remaining2 = rowWidth2 - ctx.measureText(ln).width - gapPx;
       if (remaining2 < minBar) barB.classList.add('cc__accent-bar--hidden');
       else barB.classList.remove('cc__accent-bar--hidden');
     }

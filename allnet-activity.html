@@ -804,13 +804,13 @@ function renderMatchCard(match, media) {
       <div class="match-card__team ${isDraw ? 'match-card__team--loser' : 'match-card__team--winner'}">
         <div class="match-card__team-result ${isDraw ? 'match-card__team-result--l' : 'match-card__team-result--w'}">${isDraw ? 'D' : 'W'}</div>
         <div class="match-card__team-players">
-          ${winnerTeam.map(p => renderPlayer(p)).join('')}
+          ${winnerTeam.filter(Boolean).map(p => renderPlayer(p)).join('')}
         </div>
       </div>
       <div class="match-card__team match-card__team--loser">
         <div class="match-card__team-result match-card__team-result--l">${isDraw ? 'D' : 'L'}</div>
         <div class="match-card__team-players">
-          ${loserTeam.map(p => renderPlayer(p)).join('')}
+          ${loserTeam.filter(Boolean).map(p => renderPlayer(p)).join('')}
         </div>
       </div>
     </div>
@@ -913,7 +913,7 @@ function buildPostDetailMatch(match) {
   const posterName = live ? (live.first_name && live.last_name ? live.first_name + ' ' + live.last_name : live.name) : poster.name;
 
   // Opponent name(s)
-  const opponentNames = loserTeam.map(p => {
+  const opponentNames = loserTeam.filter(Boolean).map(p => {
     const ol = p.user_id ? liveProfiles[p.user_id] : null;
     return ol ? (ol.first_name && ol.last_name ? ol.first_name + ' ' + ol.last_name : ol.name) : p.name;
   }).join(', ');
@@ -1142,7 +1142,7 @@ async function loadFeed() {
   data.forEach(match => {
     const teamA = typeof match.team_a === 'string' ? JSON.parse(match.team_a) : match.team_a;
     const teamB = typeof match.team_b === 'string' ? JSON.parse(match.team_b) : match.team_b;
-    [...teamA, ...teamB].forEach(p => { if (p.user_id) userIds.add(p.user_id); });
+    [...teamA, ...teamB].forEach(p => { if (p && p.user_id) userIds.add(p.user_id); });
   });
 
   const feedIds = data.map(m => m.id);

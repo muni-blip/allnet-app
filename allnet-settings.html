@@ -133,6 +133,16 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
             <span class="toggle__track"></span>
           </label>
         </div>
+        <div class="settings-row">
+          <div class="settings-row__info">
+            <div class="settings-row__label">Spray Notifications</div>
+            <div class="settings-row__desc">Get notified when someone sprays a match you played in</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggleSprayAlerts" checked onchange="handleSprayAlertsToggle(this.checked)">
+            <span class="toggle__track"></span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -173,6 +183,9 @@ async function initSettings() {
 
     const toggle = document.getElementById('toggleCourtAlerts');
     toggle.checked = currentProfile.push_court_alerts !== false;
+
+    const sprayToggle = document.getElementById('toggleSprayAlerts');
+    sprayToggle.checked = currentProfile.push_spray_alerts !== false;
   }
 
   // Check browser notification permission
@@ -190,8 +203,21 @@ async function handleCourtAlertsToggle(enabled) {
     status.textContent = enabled ? 'Court alerts enabled' : 'Court alerts disabled';
   } else {
     status.textContent = 'Failed to save — try again';
-    // Revert toggle
     document.getElementById('toggleCourtAlerts').checked = !enabled;
+  }
+  setTimeout(() => { status.textContent = ''; }, 2000);
+}
+
+async function handleSprayAlertsToggle(enabled) {
+  const status = document.getElementById('settingsStatus');
+  status.textContent = 'Saving...';
+
+  const success = await updatePushPreference('push_spray_alerts', enabled);
+  if (success) {
+    status.textContent = enabled ? 'Spray notifications enabled' : 'Spray notifications disabled';
+  } else {
+    status.textContent = 'Failed to save — try again';
+    document.getElementById('toggleSprayAlerts').checked = !enabled;
   }
   setTimeout(() => { status.textContent = ''; }, 2000);
 }

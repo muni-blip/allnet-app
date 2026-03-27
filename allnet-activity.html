@@ -816,7 +816,7 @@ function renderMatchCard(match, media) {
     </div>
     <div class="match-card__sprays">
       <button class="spray-btn ${(spraysByMatch[match.id] || []).length > 0 ? 'has-sprays' : ''}" onclick="event.stopPropagation();openPostDetail('${match.id}')">
-        🎨 ${(spraysByMatch[match.id] || []).length > 0 ? (spraysByMatch[match.id].length + ' Spray' + ((spraysByMatch[match.id].length !== 1) ? 's' : '')) : 'Spray'}
+        <svg width="14" height="14" viewBox="0 0 28 28" fill="none" style="vertical-align:-2px;"><path d="M6.125 6.125H6.13375M9.625 7.875H9.63375M13.125 9.625H13.1338M6.125 9.625H6.13375M9.625 11.375H9.63375M6.125 13.125H6.13375M20.125 11.375V7.875H16.625V11.375M20.125 11.375H16.625M20.125 11.375L21.875 13.125V21.875C21.875 22.4 21.525 22.75 21 22.75H15.75C15.225 22.75 14.875 22.4 14.875 21.875V13.125L16.625 11.375M14.875 15.75L21.875 14M14.875 20.125L21.875 18.375" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg> ${(spraysByMatch[match.id] || []).length > 0 ? (spraysByMatch[match.id].length + ' Spray' + ((spraysByMatch[match.id].length !== 1) ? 's' : '')) : 'Spray'}
       </button>
     </div>
   </div>`;

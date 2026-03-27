@@ -1,232 +1,15 @@
-// ═══════════════════════════════════════════════
-// AllNet — send-court-alert Edge Function
-// Triggered by Supabase webhook on checkins INSERT
-// ═══════════════════════════════════════════════
-// Deploy: supabase functions deploy send-court-alert
-// Set secret: supabase secrets set VAPID_PRIVATE_KEY=UXQbHxh9OHE210pFZ7d9Ip-mBuV3Vxst977DurPs8SE
-// Webhook setup: Database → Webhooks → New → Table: checkins, Event: INSERT
-//   URL: https://orrpowyewsioyxztwkdq.supabase.co/functions/v1/send-court-alert
-//   Headers: Authorization: Bearer <service_role_key>
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import webpush from 'npm:web-push@3.6.7'
 
 const VAPID_PUBLIC_KEY = 'BD2IM8REhP6H-At24B4BY4zVfBNTI51ERUS3zx4SbXpHp8vYOHlDNa9YXF8EyjGAv5xaUB36rQ68hcUdhYqIobA'
 const COOLDOWN_MINUTES = 15
-const ACTIVE_THRESHOLD = 1
-const PACKED_THRESHOLD = 5
 
-// ── Web Push crypto helpers ──
-// Uses Web Crypto API available in Deno/Edge Functions
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData = atob(base64)
-  return Uint8Array.from(rawData, c => c.charCodeAt(0))
-}
-
-function uint8ArrayToUrlBase64(uint8Array) {
-  let binary = ''
-  for (const byte of uint8Array) binary += String.fromCharCode(byte)
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-async function importVapidKeys(publicKeyB64, privateKeyB64) {
-  const publicKeyBytes = urlBase64ToUint8Array(publicKeyB64)
-  const privateKeyBytes = urlBase64ToUint8Array(privateKeyB64)
-
-  // Import public key as raw P-256
-  const publicKey = await crypto.subtle.importKey(
-    'raw', publicKeyBytes,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true, []
-  )
-
-  // Import private key — need to construct JWK from raw 32 bytes
-  const jwk = {
-    kty: 'EC', crv: 'P-256',
-    x: uint8ArrayToUrlBase64(publicKeyBytes.slice(1, 33)),
-    y: uint8ArrayToUrlBase64(publicKeyBytes.slice(33, 65)),
-    d: uint8ArrayToUrlBase64(privateKeyBytes),
-    ext: true
-  }
-  const privateKey = await crypto.subtle.importKey(
-    'jwk', jwk,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true, ['sign']
-  )
-
-  return { publicKey, privateKey }
-}
-
-async function createVapidAuthHeader(endpoint, vapidKeys, subject) {
-  const url = new URL(endpoint)
-  const audience = `${url.protocol}//${url.host}`
-
-  const header = { typ: 'JWT', alg: 'ES256' }
-  const payload = {
-    aud: audience,
-    exp: Math.floor(Date.now() / 1000) + 12 * 3600,
-    sub: subject
-  }
-
-  const enc = new TextEncoder()
-  const headerB64 = uint8ArrayToUrlBase64(enc.encode(JSON.stringify(header)))
-  const payloadB64 = uint8ArrayToUrlBase64(enc.encode(JSON.stringify(payload)))
-  const unsignedToken = `${headerB64}.${payloadB64}`
-
-  const signature = await crypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    vapidKeys.privateKey,
-    enc.encode(unsignedToken)
-  )
-
-  // Convert DER signature to raw r||s format if needed
-  const sigArray = new Uint8Array(signature)
-  const sigB64 = uint8ArrayToUrlBase64(sigArray)
-  const jwt = `${unsignedToken}.${sigB64}`
-
-  // Export public key as raw bytes for p256ecdsa
-  const pubKeyRaw = await crypto.subtle.exportKey('raw', vapidKeys.publicKey)
-  const pubKeyB64 = uint8ArrayToUrlBase64(new Uint8Array(pubKeyRaw))
-
-  return {
-    Authorization: `vapid t=${jwt}, k=${pubKeyB64}`,
-  }
-}
-
-async function encryptPayload(subscription, payload) {
-  const enc = new TextEncoder()
-  const payloadBytes = enc.encode(JSON.stringify(payload))
-
-  // Generate local ECDH key pair
-  const localKeyPair = await crypto.subtle.generateKey(
-    { name: 'ECDH', namedCurve: 'P-256' },
-    true, ['deriveBits']
-  )
-
-  // Import subscriber's public key
-  const clientPublicKeyBytes = urlBase64ToUint8Array(subscription.p256dh)
-  const clientPublicKey = await crypto.subtle.importKey(
-    'raw', clientPublicKeyBytes,
-    { name: 'ECDH', namedCurve: 'P-256' },
-    false, []
-  )
-
-  // Derive shared secret
-  const sharedSecret = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: clientPublicKey },
-    localKeyPair.privateKey, 256
-  )
-
-  // Auth secret from subscription
-  const authSecret = urlBase64ToUint8Array(subscription.auth)
-
-  // Export local public key
-  const localPublicKeyRaw = await crypto.subtle.exportKey('raw', localKeyPair.publicKey)
-  const localPublicKeyBytes = new Uint8Array(localPublicKeyRaw)
-
-  // HKDF-based key derivation (RFC 8291)
-  const sharedSecretKey = await crypto.subtle.importKey(
-    'raw', sharedSecret, { name: 'HKDF' }, false, ['deriveBits']
-  )
-
-  // PRK = HKDF-Extract(auth_secret, ecdh_secret)
-  const authInfo = enc.encode('Content-Encoding: auth\0')
-  const prkBits = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt: authSecret, info: authInfo },
-    sharedSecretKey, 256
-  )
-  const prkKey = await crypto.subtle.importKey(
-    'raw', prkBits, { name: 'HKDF' }, false, ['deriveBits']
-  )
-
-  // Build key_info and nonce_info
-  function buildInfo(type, clientPub, serverPub) {
-    const info = new Uint8Array(
-      enc.encode(`Content-Encoding: ${type}\0P-256\0`).length + 2 + clientPub.length + 2 + serverPub.length
-    )
-    let offset = 0
-    const prefix = enc.encode(`Content-Encoding: ${type}\0P-256\0`)
-    info.set(prefix, offset); offset += prefix.length
-    info[offset++] = 0; info[offset++] = clientPub.length
-    info.set(clientPub, offset); offset += clientPub.length
-    info[offset++] = 0; info[offset++] = serverPub.length
-    info.set(serverPub, offset)
-    return info
-  }
-
-  const keyInfo = buildInfo('aesgcm', clientPublicKeyBytes, localPublicKeyBytes)
-  const nonceInfo = buildInfo('nonce', clientPublicKeyBytes, localPublicKeyBytes)
-
-  // Derive content encryption key (16 bytes) and nonce (12 bytes)
-  const cekBits = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: keyInfo },
-    prkKey, 128
-  )
-  const nonceBits = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: nonceInfo },
-    prkKey, 96
-  )
-
-  // Pad the payload (2 bytes padding length + padding + payload)
-  const paddingLength = 0
-  const padded = new Uint8Array(2 + paddingLength + payloadBytes.length)
-  padded[0] = 0; padded[1] = 0
-  padded.set(payloadBytes, 2 + paddingLength)
-
-  // Encrypt with AES-128-GCM
-  const cekKey = await crypto.subtle.importKey(
-    'raw', cekBits, { name: 'AES-GCM' }, false, ['encrypt']
-  )
-  const encrypted = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: nonceBits },
-    cekKey, padded
-  )
-
-  return {
-    ciphertext: new Uint8Array(encrypted),
-    localPublicKey: localPublicKeyBytes,
-    salt: crypto.getRandomValues(new Uint8Array(16))
-  }
-}
-
-async function sendWebPush(subscription, payload, vapidKeys) {
-  try {
-    const encrypted = await encryptPayload(subscription, payload)
-    const vapidHeaders = await createVapidAuthHeader(
-      subscription.endpoint, vapidKeys, 'mailto:hello@allnetgames.com'
-    )
-
-    const body = encrypted.ciphertext
-    const response = await fetch(subscription.endpoint, {
-      method: 'POST',
-      headers: {
-        ...vapidHeaders,
-        'Content-Type': 'application/octet-stream',
-        'Content-Encoding': 'aesgcm',
-        'Crypto-Key': `dh=${uint8ArrayToUrlBase64(encrypted.localPublicKey)};${vapidHeaders['Crypto-Key'] || ''}`,
-        'Encryption': `salt=${uint8ArrayToUrlBase64(encrypted.salt)}`,
-        'TTL': '86400',
-        'Urgency': 'high',
-      },
-      body
-    })
-
-    if (!response.ok) {
-      const text = await response.text()
-      console.error(`Push failed (${response.status}): ${text}`)
-      return { success: false, status: response.status, endpoint: subscription.endpoint }
-    }
-
-    return { success: true, status: response.status }
-  } catch (err) {
-    console.error('Push send error:', err)
-    return { success: false, error: err.message, endpoint: subscription.endpoint }
-  }
-}
-
-// ── Main handler ──
+// Thresholds: [count, type, titleSuffix, body]
+const THRESHOLDS = [
+  [1, 'court_active', 'is now Active', 'Someone just checked in \u2014 head over to get a run going \uD83C\uDFC0'],
+  [3, 'court_heating_up', 'is heating up', '3 players checked in \u2014 a run is forming \uD83D\uDD25'],
+  [5, 'court_packed', 'is Packed!', '5+ players on court \u2014 games are running \uD83C\uDFC0'],
+]
 
 Deno.serve(async (req) => {
   try {
@@ -238,9 +21,13 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing secrets' }), { status: 500 })
     }
 
-    const body = await req.json()
+    webpush.setVapidDetails(
+      'mailto:hello@allnetgames.com',
+      VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY
+    )
 
-    // Webhook payload: { type: 'INSERT', table: 'checkins', record: { ... } }
+    const body = await req.json()
     const record = body.record
     if (!record?.court_id) {
       return new Response(JSON.stringify({ error: 'No court_id in record' }), { status: 400 })
@@ -248,7 +35,6 @@ Deno.serve(async (req) => {
 
     const courtId = record.court_id
     const checkinUserId = record.user_id
-
     console.log(`Court alert: check-in at ${courtId} by ${checkinUserId}`)
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
@@ -267,18 +53,13 @@ Deno.serve(async (req) => {
 
     console.log(`Court ${courtId}: ${count} active check-ins`)
 
-    // 2. Determine alert type
-    let alertType = null
-    if (count === ACTIVE_THRESHOLD) {
-      alertType = 'active'
-    } else if (count === PACKED_THRESHOLD) {
-      alertType = 'packed'
-    }
-
-    if (!alertType) {
-      // No threshold crossed — skip
+    // 2. Find matching threshold
+    const threshold = THRESHOLDS.find(t => count === t[0])
+    if (!threshold) {
       return new Response(JSON.stringify({ skipped: true, count }))
     }
+
+    const [, notifType, titleSuffix, notifBodyTemplate] = threshold
 
     // 3. Get court name
     const { data: court } = await supabase
@@ -288,6 +69,10 @@ Deno.serve(async (req) => {
       .single()
 
     const courtName = court?.name || 'A court you watch'
+    const notifTitle = `${courtName} ${titleSuffix}`
+    const notifBody = count > 1
+      ? notifBodyTemplate.replace(/\d+ players/, `${count} players`)
+      : notifBodyTemplate
 
     // 4. Get watchers (exclude the person who just checked in)
     const { data: watchers } = await supabase
@@ -303,7 +88,7 @@ Deno.serve(async (req) => {
 
     const watcherIds = watchers.map(w => w.user_id)
 
-    // 5. Check cooldowns — skip users who got a notification for this court in last 15 min
+    // 5. Check cooldowns
     const cooldownCutoff = new Date(Date.now() - COOLDOWN_MINUTES * 60 * 1000).toISOString()
     const { data: recentCooldowns } = await supabase
       .from('notification_cooldowns')
@@ -320,69 +105,98 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ skipped: true, reason: 'all in cooldown' }))
     }
 
-    // 6. Get push subscriptions for eligible watchers
+    // 6. Check push preferences
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, push_court_alerts')
+      .in('id', eligibleWatchers)
+
+    const disabledUsers = new Set(
+      (profiles || []).filter(p => p.push_court_alerts === false).map(p => p.id)
+    )
+    const enabledWatchers = eligibleWatchers.filter(id => !disabledUsers.has(id))
+
+    if (enabledWatchers.length === 0) {
+      console.log('All eligible watchers have court alerts disabled')
+      return new Response(JSON.stringify({ skipped: true, reason: 'all alerts disabled' }))
+    }
+
+    // 7. Get push subscriptions for enabled watchers
     const { data: subscriptions } = await supabase
       .from('push_subscriptions')
       .select('user_id, endpoint, p256dh, auth')
-      .in('user_id', eligibleWatchers)
+      .in('user_id', enabledWatchers)
 
-    if (!subscriptions || subscriptions.length === 0) {
-      console.log('No push subscriptions for eligible watchers')
-      return new Response(JSON.stringify({ skipped: true, reason: 'no subscriptions' }))
-    }
-
-    // 7. Build notification payload
-    const payload = {
-      title: alertType === 'active'
-        ? `${courtName} is now Active`
-        : `${courtName} is Packed!`,
-      body: alertType === 'active'
-        ? `Someone just checked in — head over to get a run going 🏀`
-        : `${count} players on court — games are running 🔥`,
+    // 8. Build push payload
+    const payload = JSON.stringify({
+      title: notifTitle,
+      body: notifBody,
       courtId: courtId,
       url: '/allnet-app.html'
-    }
+    })
 
-    // 8. Import VAPID keys and send pushes
-    const vapidKeys = await importVapidKeys(VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
-
+    // 9. Send pushes via npm:web-push (aes128gcm for Safari/iOS)
     const results = []
     const notifiedUserIds = new Set()
 
-    for (const sub of subscriptions) {
-      const result = await sendWebPush(sub, payload, vapidKeys)
-      results.push(result)
+    if (subscriptions && subscriptions.length > 0) {
+      for (const sub of subscriptions) {
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth }
+        }
 
-      if (result.success) {
-        notifiedUserIds.add(sub.user_id)
-      }
+        try {
+          const result = await webpush.sendNotification(pushSubscription, payload)
+          console.log(`Push sent to ${sub.user_id}: ${result.statusCode}`)
+          results.push({ success: true, status: result.statusCode })
+          notifiedUserIds.add(sub.user_id)
+        } catch (err) {
+          console.error(`Push failed for ${sub.user_id}: ${err.statusCode || err.message}`)
+          results.push({ success: false, status: err.statusCode, error: err.message })
 
-      // If endpoint is gone (410 Gone), clean up the stale subscription
-      if (result.status === 410) {
-        await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
-        console.log(`Cleaned up stale subscription: ${sub.endpoint}`)
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+            console.log(`Cleaned up stale subscription for ${sub.user_id}`)
+          }
+        }
       }
     }
 
-    // 9. Record cooldowns for notified users
-    if (notifiedUserIds.size > 0) {
-      const cooldownRows = Array.from(notifiedUserIds).map(uid => ({
-        court_id: courtId,
-        user_id: uid,
-      }))
-      await supabase.from('notification_cooldowns').insert(cooldownRows)
+    // 10. Write in-app notifications for ALL enabled watchers
+    const notificationRows = enabledWatchers.map(uid => ({
+      user_id: uid,
+      type: notifType,
+      title: notifTitle,
+      body: notifBody,
+      court_id: courtId,
+      read: false
+    }))
+    const { error: notifError } = await supabase.from('notifications').insert(notificationRows)
+    if (notifError) {
+      console.error('Failed to write in-app notifications:', notifError)
+    } else {
+      console.log(`Wrote ${notificationRows.length} in-app notifications`)
     }
+
+    // 11. Record cooldowns
+    const cooldownRows = enabledWatchers.map(uid => ({
+      court_id: courtId,
+      user_id: uid,
+    }))
+    await supabase.from('notification_cooldowns').insert(cooldownRows)
 
     const sent = results.filter(r => r.success).length
     const failed = results.filter(r => !r.success).length
-    console.log(`Sent ${sent} push notifications (${failed} failed) for ${courtName} [${alertType}]`)
+    console.log(`Sent ${sent} push (${failed} failed), ${notificationRows.length} in-app for ${courtName} [${notifType}]`)
 
     return new Response(JSON.stringify({
-      alertType,
+      alertType: notifType,
       courtName,
-      sent,
-      failed,
-      total: subscriptions.length
+      pushSent: sent,
+      pushFailed: failed,
+      inAppWritten: notificationRows.length,
+      total: subscriptions?.length || 0
     }))
 
   } catch (err) {

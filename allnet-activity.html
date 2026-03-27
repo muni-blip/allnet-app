@@ -1146,66 +1146,66 @@ async function loadFeed() {
   });
 
   const feedIds = data.map(m => m.id);
+  let mediaByFeed = {};
 
   // ── PARALLEL ROUND 1: All independent queries at once ──
-  const [profilesRes, mediaRes, sprayItemsRes, spraysRes, invRes] = await Promise.all([
-    // 1. Profiles for team players
-    userIds.size > 0
-      ? supabase.from('profiles').select('id, name, first_name, last_name, initials, avatar_url, avatar_cutout_url, selected_cover').in('id', Array.from(userIds))
-      : Promise.resolve({ data: [] }),
-    // 2. Public media for posts
-    feedIds.length > 0
-      ? supabase.from('game_media').select('*').in('match_feed_id', feedIds).eq('is_public', true).order('created_at', { ascending: true })
-      : Promise.resolve({ data: [] }),
-    // 3. Spray store items (small table, cached after first load)
-    supabase.from('store_items').select('*').eq('type', 'spray'),
-    // 4. Sprays for visible posts
-    feedIds.length > 0
-      ? supabase.from('post_sprays').select('*').in('match_id', feedIds).order('created_at', { ascending: false })
-      : Promise.resolve({ data: [] }),
-    // 5. User inventory (for spray picker)
-    currentUser
-      ? supabase.from('user_inventory').select('item_id').eq('user_id', currentUser.id)
-      : Promise.resolve({ data: [] })
-  ]);
+  try {
+    const [profilesRes, mediaRes, sprayItemsRes, spraysRes, invRes] = await Promise.all([
+      // 1. Profiles for team players
+      userIds.size > 0
+        ? supabase.from('profiles').select('id, name, first_name, last_name, initials, avatar_url, avatar_cutout_url, selected_cover').in('id', Array.from(userIds))
+        : { data: [] },
+      // 2. Public media for posts
+      supabase.from('game_media').select('*').in('match_feed_id', feedIds).eq('is_public', true).order('created_at', { ascending: true }),
+      // 3. Spray store items
+      supabase.from('store_items').select('*').eq('type', 'spray'),
+      // 4. Sprays for visible posts
+      supabase.from('post_sprays').select('*').in('match_id', feedIds).order('created_at', { ascending: false }),
+      // 5. User inventory
+      currentUser
+        ? supabase.from('user_inventory').select('item_id').eq('user_id', currentUser.id)
+        : { data: [] }
+    ]);
 
-  // Process profiles
-  if (profilesRes.data) profilesRes.data.forEach(p => { liveProfiles[p.id] = p; });
+    // Process profiles
+    if (profilesRes.data) profilesRes.data.forEach(p => { liveProfiles[p.id] = p; });
 
-  // Process media
-  let mediaByFeed = {};
-  const extraProfileIds = new Set();
-  if (mediaRes.data) {
-    mediaRes.data.forEach(m => {
-      if (!mediaByFeed[m.match_feed_id]) mediaByFeed[m.match_feed_id] = [];
-      mediaByFeed[m.match_feed_id].push(m);
-      if (m.user_id && !liveProfiles[m.user_id]) extraProfileIds.add(m.user_id);
-    });
-  }
+    // Process media
+    const extraProfileIds = new Set();
+    if (mediaRes.data) {
+      mediaRes.data.forEach(m => {
+        if (!mediaByFeed[m.match_feed_id]) mediaByFeed[m.match_feed_id] = [];
+        mediaByFeed[m.match_feed_id].push(m);
+        if (m.user_id && !liveProfiles[m.user_id]) extraProfileIds.add(m.user_id);
+      });
+    }
 
-  // Process spray items
-  if (sprayItemsRes.data) sprayItemsRes.data.forEach(si => { sprayItems[si.id] = si; });
+    // Process spray items
+    if (sprayItemsRes.data) sprayItemsRes.data.forEach(si => { sprayItems[si.id] = si; });
 
-  // Process sprays
-  if (spraysRes.data) {
-    spraysRes.data.forEach(s => {
-      if (!spraysByMatch[s.match_id]) spraysByMatch[s.match_id] = [];
-      spraysByMatch[s.match_id].push(s);
-      if (currentUser && s.user_id === currentUser.id) userSprayedMatches.add(s.match_id);
-      if (s.user_id && !liveProfiles[s.user_id]) extraProfileIds.add(s.user_id);
-    });
-  }
+    // Process sprays
+    if (spraysRes.data) {
+      spraysRes.data.forEach(s => {
+        if (!spraysByMatch[s.match_id]) spraysByMatch[s.match_id] = [];
+        spraysByMatch[s.match_id].push(s);
+        if (currentUser && s.user_id === currentUser.id) userSprayedMatches.add(s.match_id);
+        if (s.user_id && !liveProfiles[s.user_id]) extraProfileIds.add(s.user_id);
+      });
+    }
 
-  // Process inventory
-  if (invRes.data) userInventory = new Set(invRes.data.map(i => i.item_id));
+    // Process inventory
+    if (invRes.data) userInventory = new Set(invRes.data.map(i => i.item_id));
 
-  // ── PARALLEL ROUND 2: Fetch any missing profiles (media uploaders + sprayers) ──
-  if (extraProfileIds.size > 0) {
-    const { data: extras } = await supabase
-      .from('profiles')
-      .select('id, name, first_name, last_name, initials, avatar_url, avatar_cutout_url, selected_cover')
-      .in('id', Array.from(extraProfileIds));
-    if (extras) extras.forEach(p => { liveProfiles[p.id] = p; });
+    // ── ROUND 2: Fetch any missing profiles ──
+    if (extraProfileIds.size > 0) {
+      const { data: extras } = await supabase
+        .from('profiles')
+        .select('id, name, first_name, last_name, initials, avatar_url, avatar_cutout_url, selected_cover')
+        .in('id', Array.from(extraProfileIds));
+      if (extras) extras.forEach(p => { liveProfiles[p.id] = p; });
+    }
+  } catch (loadErr) {
+    console.error('Feed data load error:', loadErr);
   }
 
   // Store caches and render

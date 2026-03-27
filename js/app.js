@@ -1174,11 +1174,28 @@ let activeCheckin = null;
 let nudgeTimer = null;
 let expireTimer = null;
 
-function startCheckinTimers(courtId, courtName) {
+function startCheckinTimers(courtId, courtName, checkinTime) {
   clearCheckinTimers();
-  activeCheckin = { courtId, courtName, time: Date.now(), checkinId: null };
-  nudgeTimer = setTimeout(() => { showNudgeBanner(courtName); }, NUDGE_MS);
-  expireTimer = setTimeout(() => { autoCheckout(); }, EXPIRE_MS);
+  const startTime = checkinTime || Date.now();
+  activeCheckin = { courtId, courtName, time: startTime, checkinId: null };
+
+  const elapsed = Date.now() - startTime;
+  const nudgeRemaining = Math.max(0, NUDGE_MS - elapsed);
+  const expireRemaining = Math.max(0, EXPIRE_MS - elapsed);
+
+  if (expireRemaining <= 0) {
+    // Already past 120min — auto checkout
+    autoCheckout();
+    return;
+  }
+
+  if (nudgeRemaining <= 0) {
+    // Past 90min but not 120min — show nudge immediately
+    showNudgeBanner(courtName);
+  } else {
+    nudgeTimer = setTimeout(() => { showNudgeBanner(courtName); }, nudgeRemaining);
+  }
+  expireTimer = setTimeout(() => { autoCheckout(); }, expireRemaining);
 }
 
 function clearCheckinTimers() {
@@ -1204,11 +1221,6 @@ function extendCheckin() {
     startCheckinTimers(activeCheckin.courtId, activeCheckin.courtName);
     showToast(activeCheckin.courtName + ' — extended');
   }
-}
-
-function manualCheckout() {
-  performCheckout();
-  showToast('Checked out');
 }
 
 function autoCheckout() {
@@ -1250,7 +1262,16 @@ function performCheckout() {
 }
 
 async function manualCheckout() {
+  // If activeCheckin wasn't restored (edge case), rebuild from checkinCourts
+  if (!activeCheckin && checkinCourts.size > 0) {
+    const courtId = checkinCourts.values().next().value;
+    const court = courts.find(c => c.id === courtId);
+    if (court) {
+      activeCheckin = { courtId, courtName: court.name, time: Date.now(), checkinId: null };
+    }
+  }
   if (!activeCheckin) return;
+
   const courtName = activeCheckin.courtName;
   const courtId = activeCheckin.courtId;
   const confirmed = await showConfirm('Check Out?', `Leave ${courtName}?`, { icon: '👋', confirmText: 'Check Out', cancelText: 'Stay' });
@@ -2110,6 +2131,15 @@ async function loadUserProfile(user) {
       // Only mark courts where user is ACTIVELY checked in (not checked out)
       myCheckins.filter(c => !c.checked_out_at).forEach(c => checkinCourts.add(c.court_id));
       updateProfileStats();
+
+      // Restore activeCheckin and timers from the most recent active check-in
+      const activeDbCheckin = myCheckins.find(c => !c.checked_out_at);
+      if (activeDbCheckin) {
+        const courtName = activeDbCheckin.courts?.name || 'Unknown';
+        const checkinTime = new Date(activeDbCheckin.checked_in_at).getTime();
+        startCheckinTimers(activeDbCheckin.court_id, courtName, checkinTime);
+        console.log('AllNet: Restored active check-in at ' + courtName);
+      }
     }
 
     await loadUserWatches();

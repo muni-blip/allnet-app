@@ -1154,6 +1154,11 @@ async function toggleWatch(courtId) {
       renderMarkers();
       if (court) { court._watching = true; openSheet(court); }
       showToast('You will now be notified when more players check into ' + (court?.name || 'this court'));
+
+      // Request push notification permission on first watch
+      if (typeof PushManager_ !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+        PushManager_.requestPermissionAndSubscribe();
+      }
     }
   }
 }
@@ -1563,6 +1568,11 @@ function closeOnboarding() {
   const nameBtn = document.getElementById('onboardNameBtn');
   nameBtn.disabled = false;
   nameBtn.textContent = 'Continue →';
+
+  // Soft prompt: let new users know about court alerts
+  if (typeof PushManager_ !== 'undefined') {
+    setTimeout(() => PushManager_.showSoftPrompt(), 800);
+  }
 }
 
 /* ══════════════════════════════
@@ -2091,6 +2101,13 @@ async function loadUserProfile(user) {
 
     await loadUserWatches();
     updateNavDrawerUser();
+
+    // Re-subscribe to push notifications silently (if permission was granted before)
+    if (typeof PushManager_ !== 'undefined') {
+      PushManager_.resubscribeSilently().catch(err => console.error('Push resubscribe failed:', err));
+      PushManager_.showA2HSBannerIfNeeded();
+    }
+
     console.log('AllNet: Profile loaded — ' + currentProfile?.name);
   } catch (err) {
     console.error('AllNet: Failed to load profile', err);
@@ -2132,6 +2149,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 
   if (event === 'SIGNED_OUT') {
+    // Clear push subscription before wiping user state
+    if (typeof PushManager_ !== 'undefined') {
+      PushManager_.removeSubscription().catch(err => console.error('Push cleanup failed:', err));
+    }
     currentUser = null;
     currentProfile = null;
     userWatches = new Set();
@@ -2152,5 +2173,33 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// Step 2: Init app — load courts, then check for existing session
+// Step 2: Register service worker for push notifications
+if (typeof PushManager_ !== 'undefined') {
+  PushManager_.init();
+}
+
+// Step 3: Handle notification deep link (?court=xxx)
+function handleCourtDeepLink() {
+  const params = new URLSearchParams(window.location.search);
+  const courtId = params.get('court');
+  if (courtId) {
+    // Wait for courts to load, then open the sheet
+    const checkInterval = setInterval(() => {
+      if (window.courts && window.courts.length > 0) {
+        clearInterval(checkInterval);
+        const court = window.courts.find(c => c.id === courtId);
+        if (court && typeof openSheet === 'function') {
+          openSheet(court);
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    }, 200);
+    // Safety: stop checking after 10 seconds
+    setTimeout(() => clearInterval(checkInterval), 10000);
+  }
+}
+handleCourtDeepLink();
+
+// Step 4: Init app — load courts, then check for existing session
 initApp();

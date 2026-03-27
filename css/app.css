@@ -1322,6 +1322,13 @@ html, body {
 
 .btn--success:hover { background: #1DAE51; }
 
+.btn--checkout {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+.btn--checkout:hover { background: rgba(239,68,68,0.1); }
+
 /* ═══════════════════════════════════════════════
    CHECK-IN CONFIRMATION TOAST
    ═══════════════════════════════════════════════ */

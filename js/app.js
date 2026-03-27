@@ -832,7 +832,8 @@ function openSheet(court) {
 
     <div class="court-actions">
       ${checkinCourts.has(court.id)
-        ? `<button class="btn btn--success" onclick="startGame('${court.name.replace(/'/g, "\\'")}')">🏀 Start a Game</button>`
+        ? `<button class="btn btn--success" onclick="startGame('${court.name.replace(/'/g, "\\'")}')">🏀 Start a Game</button>
+           <button class="btn btn--checkout" onclick="manualCheckout()">Check Out</button>`
         : `<button class="btn btn--primary" onclick="checkIn('${court.id}')">📍 I'm Here</button>`}
       <button class="btn btn--secondary" onclick="getDirections(${court.lat}, ${court.lng})">🧭 Directions</button>
     </div>
@@ -1246,6 +1247,18 @@ function performCheckout() {
     renderMarkers();
     activeCheckin = null;
   }
+}
+
+async function manualCheckout() {
+  if (!activeCheckin) return;
+  const courtName = activeCheckin.courtName;
+  const courtId = activeCheckin.courtId;
+  const confirmed = await showConfirm('Check Out?', `Leave ${courtName}?`, { icon: '👋', confirmText: 'Check Out', cancelText: 'Stay' });
+  if (!confirmed) return;
+  performCheckout();
+  showToast('Checked out of ' + courtName);
+  const court = courts.find(c => c.id === courtId);
+  if (court) openSheet(court);
 }
 
 /* ══════════════════════════════

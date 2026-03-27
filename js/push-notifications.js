@@ -82,12 +82,12 @@ const PushManager_ = (function() {
   // ── Save subscription to Supabase ──
 
   async function saveSubscription(subscription) {
-    if (!subscription || !window.supabase || !window.currentUser) return false;
+    if (!subscription || !supabase || typeof currentUser === 'undefined' || !currentUser) return false;
     const sub = subscription.toJSON();
-    const { error } = await window.supabase
+    const { error } = await supabase
       .from('push_subscriptions')
       .upsert({
-        user_id: window.currentUser.id,
+        user_id: currentUser.id,
         endpoint: sub.endpoint,
         p256dh: sub.keys.p256dh,
         auth: sub.keys.auth
@@ -111,11 +111,11 @@ const PushManager_ = (function() {
     const sub = subscription.toJSON();
 
     // Remove from DB
-    if (window.supabase && window.currentUser) {
-      await window.supabase
+    if (supabase && typeof currentUser !== 'undefined' && currentUser) {
+      await supabase
         .from('push_subscriptions')
         .delete()
-        .eq('user_id', window.currentUser.id)
+        .eq('user_id', currentUser.id)
         .eq('endpoint', sub.endpoint);
     }
 
@@ -227,7 +227,7 @@ const PushManager_ = (function() {
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data?.type === 'OPEN_COURT' && event.data.courtId) {
         // Find the court and open its sheet
-        const court = window.courts?.find(c => c.id === event.data.courtId);
+        const court = (typeof courts !== 'undefined' ? courts : []).find(c => c.id === event.data.courtId);
         if (court && typeof openSheet === 'function') {
           openSheet(court);
         }

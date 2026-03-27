@@ -218,6 +218,79 @@ html, body { height: auto; overflow: auto; }
   border: 1px solid rgba(250,204,21,0.3);
 }
 
+/* Sprays Grid — matches Figma 2×2 picker layout */
+.sprays-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+}
+
+.spray-card {
+  background: #000; border: 1px solid #2e2e2e;
+  overflow: hidden; position: relative;
+  cursor: pointer; transition: var(--transition);
+}
+
+.spray-card:hover { border-color: #444; }
+.spray-card.owned { border-color: var(--green-live); }
+
+.spray-card__preview {
+  width: 100%; height: 146px; object-fit: cover; display: block;
+  background: #111;
+}
+
+.spray-card__info {
+  padding: 10px 12px;
+}
+
+.spray-card__name {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  text-transform: uppercase; margin-bottom: 2px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.spray-card__rarity {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 2px 6px; border-radius: 100px;
+}
+
+.spray-card__rarity--common { background: rgba(107,107,107,0.2); color: var(--text-muted); }
+.spray-card__rarity--rare { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.spray-card__rarity--legendary { background: rgba(255,90,31,0.15); color: var(--orange); }
+
+.spray-card__price {
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.spray-card__price--free { color: var(--green-live); }
+
+.spray-card__btn {
+  width: 100%; padding: 7px; border-radius: var(--radius-sm);
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; border: none; transition: var(--transition);
+}
+
+.spray-card__btn--buy { background: var(--yellow); color: #000; }
+.spray-card__btn--buy:hover { filter: brightness(1.1); }
+.spray-card__btn--buy:disabled {
+  background: var(--border-light); color: var(--text-muted); cursor: not-allowed;
+}
+
+.spray-card__btn--owned {
+  background: transparent; color: var(--green-live);
+  border: 1px solid var(--green-live); cursor: default;
+}
+
+.spray-card__badge {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 4px 8px; border-radius: 100px;
+  backdrop-filter: blur(8px);
+  background: rgba(34,197,94,0.2); color: var(--green-live);
+  border: 1px solid rgba(34,197,94,0.3);
+}
+
 /* Coming Soon Panel */
 .coming-soon {
   text-align: center; padding: 60px 20px;
@@ -325,10 +398,9 @@ html, body { height: auto; overflow: auto; }
         <span class="nav-drawer__link-icon">⭐</span>
         <span class="nav-drawer__link-label">Stars</span>
       </a>
-      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="settings">
+      <a href="allnet-settings.html" class="nav-drawer__link" data-nav="settings">
         <span class="nav-drawer__link-icon">⚙️</span>
         <span class="nav-drawer__link-label">Settings</span>
-        <span class="nav-drawer__link-badge">Soon</span>
       </a>
     </nav>
     <div class="nav-drawer__footer">
@@ -360,7 +432,7 @@ html, body { height: auto; overflow: auto; }
   <!-- Tabs -->
   <div class="stars-tabs">
     <button class="stars-tab active" data-tab="overview" onclick="switchTab('overview', this)">MAIN</button>
-    <button class="stars-tab stars-tab--disabled" data-tab="sprays" onclick="return false">SPRAYS</button>
+    <button class="stars-tab" data-tab="sprays" onclick="switchTab('sprays', this)">SPRAYS</button>
     <button class="stars-tab" data-tab="covers" onclick="switchTab('covers', this)">COVERS</button>
     <button class="stars-tab stars-tab--disabled" data-tab="cashout" onclick="return false">CASH</button>
   </div>
@@ -406,12 +478,9 @@ html, body { height: auto; overflow: auto; }
     </div>
   </div>
 
-  <!-- Sprays Tab -->
   <div class="tab-panel" id="panel-sprays">
-    <div class="coming-soon">
-      <div class="coming-soon__icon">🎨</div>
-      <div class="coming-soon__title">Sprays Coming Soon</div>
-      <div class="coming-soon__desc">React to match results with custom spray animations. Earn stars from games to unlock them.</div>
+    <div class="sprays-grid" id="spraysGrid">
+      <div class="stars-loading">Loading sprays...</div>
     </div>
   </div>
 
@@ -449,6 +518,8 @@ let currentProfile = null;
 let starsBalance = 0;
 let userPurchases = new Set();
 let storeItems = [];
+let sprayItems = [];
+let userInventory = new Set(); // item_ids the user owns (sprays)
 
 // ── Nav Drawer ──
 function openNavDrawer() {
@@ -685,6 +756,101 @@ async function equipCover(slug) {
   }
 }
 
+// ── Load Sprays Store & Inventory ──
+async function loadSpraysStore() {
+  const { data: items } = await supabase
+    .from('store_items')
+    .select('*')
+    .eq('type', 'spray')
+    .order('price_stars', { ascending: true });
+
+  if (!items) return;
+  sprayItems = items;
+
+  // Load user inventory (what they own)
+  const { data: inv } = await supabase
+    .from('user_inventory')
+    .select('item_id')
+    .eq('user_id', currentUser.id);
+
+  if (inv) {
+    userInventory = new Set(inv.map(i => i.item_id));
+  }
+
+  renderSpraysGrid();
+}
+
+function renderSpraysGrid() {
+  const grid = document.getElementById('spraysGrid');
+
+  grid.innerHTML = sprayItems.map(item => {
+    const owned = userInventory.has(item.id);
+    const isFree = item.price_stars === 0;
+    const canAfford = starsBalance >= item.price_stars;
+
+    let btnHtml;
+    if (owned || isFree) {
+      btnHtml = '<button class="spray-card__btn spray-card__btn--owned">✓ Owned</button>';
+    } else {
+      btnHtml = `<button class="spray-card__btn spray-card__btn--buy" ${canAfford ? '' : 'disabled'} onclick="purchaseSpray('${item.id}', '${item.name}', ${item.price_stars})">
+        ${canAfford ? 'Buy for ' + item.price_stars.toLocaleString() + ' ⭐' : 'Need ' + item.price_stars.toLocaleString() + ' ⭐'}
+      </button>`;
+    }
+
+    const badgeHtml = owned ? '<div class="spray-card__badge">Owned</div>' : '';
+
+    return `<div class="spray-card ${owned ? 'owned' : ''}">
+      ${badgeHtml}
+      <img class="spray-card__preview" src="${item.preview_url}" alt="${item.name}" loading="lazy"
+        onerror="this.style.background='#222';this.alt='${item.name}';">
+      <div class="spray-card__info">
+        <div class="spray-card__name">
+          ${item.name}
+          <span class="spray-card__rarity spray-card__rarity--${item.rarity}">${item.rarity}</span>
+        </div>
+        <div class="spray-card__price ${isFree ? 'spray-card__price--free' : ''}">
+          ${isFree ? '✓ Free' : item.price_stars.toLocaleString() + ' ⭐'}
+        </div>
+        ${btnHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Purchase Spray ──
+async function purchaseSpray(itemId, itemName, price) {
+  if (starsBalance < price) {
+    showAlert('Not Enough Stars', `You need ${price} stars to buy ${itemName}. You have ${starsBalance}.`, { icon: '⭐' });
+    return;
+  }
+
+  const confirmed = await showConfirm('Purchase Spray', `Buy ${itemName} for ${price} ⭐?`, { icon: '🎨', confirmText: 'Buy Now', cancelText: 'Cancel' });
+  if (!confirmed) return;
+
+  try {
+    const { data, error } = await supabase.rpc('purchase_store_item', { p_item_id: itemId });
+
+    if (error) throw error;
+    if (data.error) {
+      showAlert('Purchase Failed', data.error, { icon: '⚠️' });
+      return;
+    }
+
+    // Update local state
+    starsBalance = data.new_balance;
+    userInventory.add(itemId);
+    userPurchases.add(itemId);
+    updateBalanceDisplay();
+    renderSpraysGrid();
+    renderCoversGrid(); // refresh covers too in case balance changed
+    showAlert('Spray Unlocked!', `${data.item} is now yours. Use it on any match post!`, { icon: '🎉' });
+
+  } catch (err) {
+    console.error('Spray purchase error:', err);
+    showAlert('Purchase Failed', err.message, { icon: '⚠️' });
+  }
+}
+
 // ── Time Ago ──
 function timeAgo(date) {
   const s = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -716,7 +882,7 @@ async function initStarsPage() {
   updateBalanceDisplay();
 
   // Load data
-  await Promise.all([loadTransactions(), loadCoversStore()]);
+  await Promise.all([loadTransactions(), loadCoversStore(), loadSpraysStore()]);
   updateNavDrawerUser();
 }
 

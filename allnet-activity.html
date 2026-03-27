@@ -260,7 +260,7 @@ html, body { height: auto; overflow: auto; }
 }
 
 .post-detail__spray-img {
-  width: 104px; height: 104px; object-fit: cover;
+  width: 104px; height: 104px; object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -294,6 +294,7 @@ html, body { height: auto; overflow: auto; }
 
 .overlay-nav-btn--spray svg {
   width: 28px; height: 28px;
+  stroke: none; stroke-width: 0; fill: none;
 }
 
 .overlay-nav-btn--disabled {
@@ -338,7 +339,7 @@ html, body { height: auto; overflow: auto; }
 }
 
 .spray-picker__tile img {
-  width: 100%; height: 100%; object-fit: cover;
+  width: 100%; height: 100%; object-fit: contain;
 }
 
 /* ── Media Carousel ── */
@@ -595,7 +596,7 @@ html, body { height: auto; overflow: auto; }
       <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     </button>
     <button class="overlay-nav-btn overlay-nav-btn--spray" id="postDetailSprayBtn" onclick="openSprayPicker()" aria-label="Spray">
-      <svg viewBox="0 0 24 24"><path d="M12 2v4M6.343 6.343l2.828 2.828M4 12H2M6.343 17.657l2.828-2.828M12 22v-4M17.657 17.657l-2.828-2.828M22 12h-2M17.657 6.343l-2.828 2.828"/><circle cx="12" cy="12" r="3"/></svg>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6.125 6.125H6.13375M9.625 7.875H9.63375M13.125 9.625H13.1338M6.125 9.625H6.13375M9.625 11.375H9.63375M6.125 13.125H6.13375M20.125 11.375V7.875H16.625V11.375M20.125 11.375H16.625M20.125 11.375L21.875 13.125V21.875C21.875 22.4 21.525 22.75 21 22.75H15.75C15.225 22.75 14.875 22.4 14.875 21.875V13.125L16.625 11.375M14.875 15.75L21.875 14M14.875 20.125L21.875 18.375" stroke="white" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
 </div>

@@ -16,7 +16,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   console.log('AllNet SW: push received');
 
-  let data = { title: 'AllNet', body: 'A court you watch is active!', courtId: null };
+  let data = { title: 'AllNet', body: 'A court you watch is active!', courtId: null, matchId: null, type: null };
 
   if (event.data) {
     try {
@@ -26,15 +26,19 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const tag = data.matchId ? `spray-${data.matchId}` : (data.courtId ? `court-${data.courtId}` : 'allnet-alert');
+
   const options = {
     body: data.body,
     icon: '/img/icon-192.png',
     badge: '/img/icon-192.png',
     vibrate: [200, 100, 200],
-    tag: data.courtId ? `court-${data.courtId}` : 'allnet-alert',
+    tag: tag,
     renotify: true,
     data: {
       courtId: data.courtId,
+      matchId: data.matchId,
+      type: data.type,
       url: data.url || '/allnet-app.html'
     }
   };
@@ -44,22 +48,31 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// ── Handle notification tap — open the court on the map ──
+// ── Handle notification tap ──
 self.addEventListener('notificationclick', (event) => {
   console.log('AllNet SW: notification clicked');
   event.notification.close();
 
-  const courtId = event.notification.data?.courtId;
-  const baseUrl = event.notification.data?.url || '/allnet-app.html';
-  const targetUrl = courtId ? `${baseUrl}?court=${courtId}` : baseUrl;
+  const notifData = event.notification.data || {};
+  let targetUrl;
+
+  if (notifData.type === 'post_sprayed' && notifData.matchId) {
+    // Spray notification → open activity page with match deep link
+    targetUrl = '/allnet-activity.html?match=' + notifData.matchId;
+  } else if (notifData.courtId) {
+    // Court alert → open map with court deep link
+    targetUrl = '/allnet-app.html?court=' + notifData.courtId;
+  } else {
+    targetUrl = notifData.url || '/allnet-app.html';
+  }
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      // If AllNet is already open, focus it and navigate
+      // If AllNet is already open, focus and navigate
       for (const client of clients) {
-        if (client.url.includes('allnet-app') && 'focus' in client) {
+        if ('focus' in client) {
           client.focus();
-          client.postMessage({ type: 'OPEN_COURT', courtId });
+          client.navigate(targetUrl);
           return;
         }
       }

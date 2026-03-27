@@ -974,9 +974,9 @@ function openPostDetail(matchId) {
   document.getElementById('postDetailMatch').innerHTML = buildPostDetailMatch(match);
   document.getElementById('postDetailSprays').innerHTML = buildSprayList(matchId);
 
-  // Disable spray button if user already sprayed this post or not logged in
+  // Spray button always enabled for logged-in users
   const btn = document.getElementById('postDetailSprayBtn');
-  if (!currentUser || userSprayedMatches.has(matchId)) {
+  if (!currentUser) {
     btn.classList.add('overlay-nav-btn--disabled');
   } else {
     btn.classList.remove('overlay-nav-btn--disabled');
@@ -996,7 +996,6 @@ function closePostDetail() {
 // ── Open Spray Picker ──
 function openSprayPicker() {
   if (!currentUser) return;
-  if (activeMatchId && userSprayedMatches.has(activeMatchId)) return;
 
   selectedSprayId = null;
   const grid = document.getElementById('sprayPickerGrid');
@@ -1046,41 +1045,38 @@ function selectSpray(itemId, tileEl) {
 // ── Confirm Spray ──
 async function confirmSpray() {
   if (!selectedSprayId || !activeMatchId || !currentUser) return;
-  if (userSprayedMatches.has(activeMatchId)) return;
+
+  const isUpdate = userSprayedMatches.has(activeMatchId);
 
   try {
-    const { error } = await supabase.from('post_sprays').insert({
+    const { error } = await supabase.from('post_sprays').upsert({
       match_id: activeMatchId,
       user_id: currentUser.id,
       spray_item_id: selectedSprayId
-    });
+    }, { onConflict: 'match_id,user_id' });
 
-    if (error) {
-      if (error.code === '23505') {
-        // Already sprayed — shouldn't happen but handle gracefully
-        userSprayedMatches.add(activeMatchId);
-        closeSprayPicker();
-        openPostDetail(activeMatchId); // Refresh
-        return;
-      }
-      throw error;
-    }
+    if (error) throw error;
 
     // Update local state
-    const newSpray = {
-      user_id: currentUser.id,
-      spray_item_id: selectedSprayId,
-      created_at: new Date().toISOString()
-    };
-
-    if (!spraysByMatch[activeMatchId]) spraysByMatch[activeMatchId] = [];
-    spraysByMatch[activeMatchId].unshift(newSpray); // newest first
-    userSprayedMatches.add(activeMatchId);
-
-    // Make sure current user is in liveProfiles
     if (!liveProfiles[currentUser.id] && currentProfile) {
       liveProfiles[currentUser.id] = currentProfile;
     }
+
+    if (isUpdate) {
+      // Replace existing spray in local cache
+      const existing = (spraysByMatch[activeMatchId] || []).find(s => s.user_id === currentUser.id);
+      if (existing) existing.spray_item_id = selectedSprayId;
+    } else {
+      // New spray
+      const newSpray = {
+        user_id: currentUser.id,
+        spray_item_id: selectedSprayId,
+        created_at: new Date().toISOString()
+      };
+      if (!spraysByMatch[activeMatchId]) spraysByMatch[activeMatchId] = [];
+      spraysByMatch[activeMatchId].unshift(newSpray);
+    }
+    userSprayedMatches.add(activeMatchId);
 
     // Close picker, refresh detail and feed
     closeSprayPicker();
@@ -1263,6 +1259,13 @@ async function initActivityPage() {
     updateNavDrawerUser();
   }
   await loadFeed();
+
+  // Deep link: ?match=xxx opens post detail automatically
+  const params = new URLSearchParams(window.location.search);
+  const matchParam = params.get('match');
+  if (matchParam && feedData.find(m => m.id === matchParam)) {
+    setTimeout(() => openPostDetail(matchParam), 300);
+  }
 }
 
 initActivityPage();

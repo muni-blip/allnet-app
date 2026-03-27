@@ -477,9 +477,9 @@ async function loadNotifications() {
     document.getElementById('alertsMarkAll').style.display = hasUnread ? 'block' : 'none';
 
     list.innerHTML = notifications.map(n => {
-      const icon = n.type === 'court_packed' ? '🔥' : '🏀';
+      const icon = n.type === 'court_packed' ? '🔥' : n.type === 'post_sprayed' ? '🎨' : '🏀';
       const timeAgo = formatNotificationTime(new Date(n.created_at));
-      return `<div class="alert-card ${n.read ? '' : 'alert-card--unread'}" data-notification-id="${n.id}" onclick="handleNotificationTap('${n.id}', '${n.court_id || ''}')">
+      return `<div class="alert-card ${n.read ? '' : 'alert-card--unread'}" data-notification-id="${n.id}" onclick="handleNotificationTap('${n.id}', '${n.court_id || ''}', '${n.type || ''}', '${n.match_id || ''}')">
         <div class="alert-card__icon">${icon}</div>
         <div class="alert-card__body">
           <div class="alert-card__title">${escapeHtml(n.title)}</div>
@@ -512,12 +512,17 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-async function handleNotificationTap(notificationId, courtId) {
+async function handleNotificationTap(notificationId, courtId, type, matchId) {
   await markNotificationRead(notificationId);
   const card = document.querySelector(`.alert-card[data-notification-id="${notificationId}"]`);
   if (card) card.classList.remove('alert-card--unread');
   updateNotificationBadge();
-  if (courtId) {
+
+  if (type === 'post_sprayed' && matchId) {
+    // Navigate to activity page with match deep link
+    closeNotifications();
+    window.location.href = 'allnet-activity.html?match=' + matchId;
+  } else if (courtId) {
     closeNotifications();
     const court = courts.find(c => c.id === courtId);
     if (court) openSheet(court);

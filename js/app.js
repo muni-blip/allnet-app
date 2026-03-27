@@ -438,9 +438,115 @@ function onMobileStatusChange(value) {
   setFilter(value, null);
 }
 
+let notificationsLoaded = false;
+
 function openNotifications() {
-  // Placeholder — notifications feature coming soon
-  showToast('Notifications coming soon');
+  if (!currentUser) {
+    showSignUpModal('notifications');
+    return;
+  }
+  document.getElementById('alertsScreen').classList.add('open');
+  if (!notificationsLoaded) {
+    loadNotifications();
+  }
+}
+
+function closeNotifications() {
+  document.getElementById('alertsScreen').classList.remove('open');
+}
+
+async function loadNotifications() {
+  const list = document.getElementById('alertsList');
+  list.innerHTML = '<div class="alerts-empty"><div class="alerts-empty__icon">⏳</div><div class="alerts-empty__text">Loading...</div></div>';
+
+  try {
+    const notifications = await getNotifications(50);
+    if (!notifications || notifications.length === 0) {
+      list.innerHTML = `
+        <div class="alerts-empty">
+          <div class="alerts-empty__icon">🔔</div>
+          <div class="alerts-empty__text">No alerts yet</div>
+          <div class="alerts-empty__sub">Watch a court to get notified when players check in</div>
+        </div>`;
+      document.getElementById('alertsMarkAll').style.display = 'none';
+      notificationsLoaded = true;
+      return;
+    }
+
+    const hasUnread = notifications.some(n => !n.read);
+    document.getElementById('alertsMarkAll').style.display = hasUnread ? 'block' : 'none';
+
+    list.innerHTML = notifications.map(n => {
+      const icon = n.type === 'court_packed' ? '🔥' : '🏀';
+      const timeAgo = formatNotificationTime(new Date(n.created_at));
+      return `<div class="alert-card ${n.read ? '' : 'alert-card--unread'}" data-notification-id="${n.id}" onclick="handleNotificationTap('${n.id}', '${n.court_id || ''}')">
+        <div class="alert-card__icon">${icon}</div>
+        <div class="alert-card__body">
+          <div class="alert-card__title">${escapeHtml(n.title)}</div>
+          <div class="alert-card__text">${escapeHtml(n.body)}</div>
+          <div class="alert-card__time">${timeAgo}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    notificationsLoaded = true;
+  } catch (err) {
+    console.error('Failed to load notifications:', err);
+    list.innerHTML = '<div class="alerts-empty"><div class="alerts-empty__text">Failed to load</div></div>';
+  }
+}
+
+function formatNotificationTime(date) {
+  const now = new Date();
+  const diff = Math.floor((now - date) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  return date.toLocaleDateString();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function handleNotificationTap(notificationId, courtId) {
+  await markNotificationRead(notificationId);
+  const card = document.querySelector(`.alert-card[data-notification-id="${notificationId}"]`);
+  if (card) card.classList.remove('alert-card--unread');
+  updateNotificationBadge();
+  if (courtId) {
+    closeNotifications();
+    const court = courts.find(c => c.id === courtId);
+    if (court) openSheet(court);
+  }
+}
+
+async function markAllNotificationsReadUI() {
+  await markAllNotificationsRead();
+  document.querySelectorAll('.alert-card--unread').forEach(card => {
+    card.classList.remove('alert-card--unread');
+  });
+  document.getElementById('alertsMarkAll').style.display = 'none';
+  updateNotificationBadge();
+}
+
+async function updateNotificationBadge() {
+  if (!currentUser) return;
+  try {
+    const count = await getUnreadNotificationCount();
+    const badge = document.getElementById('navBellBadge');
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (err) {
+    console.error('Badge update failed:', err);
+  }
 }
 
 /* ══════════════════════════════
@@ -2086,9 +2192,10 @@ async function loadUserProfile(user) {
       btn.className = 'nav-bar__avatar';
       btn.innerHTML = buildCompositeAvatar();
 
-      // Show bell icon (placeholder)
+      // Show bell icon and update badge
       const bellEl = document.getElementById('navBell');
       if (bellEl) bellEl.style.display = 'flex';
+      updateNotificationBadge();
 
       const profileName = document.querySelector('.profile-card__name');
       if (profileName) profileName.textContent = currentProfile.name || 'Your Profile';
@@ -2212,6 +2319,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     if (starsEl) starsEl.style.display = 'none';
     const bellEl = document.getElementById('navBell');
     if (bellEl) bellEl.style.display = 'none';
+    const bellBadge = document.getElementById('navBellBadge');
+    if (bellBadge) bellBadge.style.display = 'none';
+    notificationsLoaded = false;
     updateNavDrawerUser();
   }
 });

@@ -101,10 +101,9 @@
         <span class="nav-drawer__link-icon">⭐</span>
         <span class="nav-drawer__link-label">Stars</span>
       </a>
-      <a href="#" class="nav-drawer__link nav-drawer__link--soon" onclick="return false" data-nav="settings">
+      <a href="allnet-settings.html" class="nav-drawer__link" data-nav="settings">
         <span class="nav-drawer__link-icon">⚙️</span>
         <span class="nav-drawer__link-label">Settings</span>
-        <span class="nav-drawer__link-badge">Soon</span>
       </a>
     </nav>
     <div class="nav-drawer__footer">
@@ -245,6 +244,24 @@
   </div>
 
   <!-- ═══ Profile screen ═══ -->
+  <!-- ═══ Alerts Screen (slide-in like profile) ═══ -->
+  <div class="alerts-screen" id="alertsScreen">
+    <button class="profile-back" onclick="closeNotifications()">← Back to Map</button>
+    <div class="alerts-content">
+      <div class="alerts-header">
+        <div class="alerts-title">Notifications</div>
+        <button class="alerts-mark-all" id="alertsMarkAll" onclick="markAllNotificationsReadUI()" style="display:none;">Mark all read</button>
+      </div>
+      <div class="alerts-list" id="alertsList">
+        <div class="alerts-empty">
+          <div class="alerts-empty__icon">🔔</div>
+          <div class="alerts-empty__text">No alerts yet</div>
+          <div class="alerts-empty__sub">Watch a court to get notified when players check in</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="profile-screen" id="profileScreen">
     <button class="profile-back" onclick="closeProfile()">← Back to Map</button>
     <div class="profile-content">

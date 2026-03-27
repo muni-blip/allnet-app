@@ -205,3 +205,56 @@ function subscribeToGamePlayers(gameId, callback) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_players', filter: 'game_id=eq.' + gameId }, callback)
     .subscribe();
 }
+
+// ── Notification helpers ──
+async function getNotifications(limit) {
+  const user = await getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(limit || 50);
+  return data || [];
+}
+
+async function getUnreadNotificationCount() {
+  const user = await getUser();
+  if (!user) return 0;
+  const { count } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('read', false);
+  return count || 0;
+}
+
+async function markNotificationRead(notificationId) {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('id', notificationId);
+  return !error;
+}
+
+async function markAllNotificationsRead() {
+  const user = await getUser();
+  if (!user) return false;
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('user_id', user.id)
+    .eq('read', false);
+  return !error;
+}
+
+async function updatePushPreference(key, value) {
+  const user = await getUser();
+  if (!user) return false;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ [key]: value })
+    .eq('id', user.id);
+  return !error;
+}

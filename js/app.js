@@ -2015,9 +2015,18 @@ let currentUser = null;
 let currentProfile = null;
 let dbCourts = null;
 
+// ── Splash Screen ──
+function dismissSplash() {
+  const splash = document.getElementById('splashScreen');
+  if (!splash || splash.classList.contains('dismiss')) return;
+  splash.classList.add('dismiss');
+  setTimeout(() => splash.remove(), 500);
+}
+
 async function initApp() {
   if (typeof supabase === 'undefined' || typeof fetchCourts !== 'function') {
     console.log('AllNet: Running in demo mode (no Supabase)');
+    dismissSplash();
     return;
   }
 
@@ -2061,8 +2070,12 @@ async function initApp() {
       // Now that courts are loaded, request location to center map
       setTimeout(autoRequestLocation, 500);
     }
+
+    // All critical data resolved — dismiss splash
+    dismissSplash();
   } catch (err) {
     console.error('AllNet: Supabase init error', err);
+    dismissSplash(); // Dismiss even on error so user isn't stuck
   }
 }
 

@@ -44,7 +44,13 @@
 /* ═══ Splash Screen ═══ */
 .splash{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease;}
 .splash.dismiss{opacity:0;pointer-events:none;}
-.splash__lottie{width:120px;height:90px;}
+.splash__lottie{width:200px;height:150px;}
+.splash__text{position:relative;height:20px;margin-top:16px;overflow:hidden;}
+.splash__msg{position:absolute;width:100%;text-align:center;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;color:#666;opacity:0;animation:splashMsg 7.5s infinite;}
+.splash__msg:nth-child(1){animation-delay:0s;}
+.splash__msg:nth-child(2){animation-delay:2.5s;}
+.splash__msg:nth-child(3){animation-delay:5s;}
+@keyframes splashMsg{0%{opacity:0;transform:translateY(6px);}8%{opacity:1;transform:translateY(0);}28%{opacity:1;transform:translateY(0);}36%{opacity:0;transform:translateY(-6px);}100%{opacity:0;}}
 </style>
 </head>
 <body>
@@ -52,6 +58,11 @@
 <!-- Splash Screen — dismisses after critical data loads -->
 <div class="splash" id="splashScreen">
   <div class="splash__lottie" id="splashLottie"></div>
+  <div class="splash__text">
+    <div class="splash__msg">Busy dribbling, one moment</div>
+    <div class="splash__msg">Practicing layups, hold on</div>
+    <div class="splash__msg">Setting a pick, one sec</div>
+  </div>
 </div>
 <script>
   // Start Lottie immediately — no waiting for DOMContentLoaded

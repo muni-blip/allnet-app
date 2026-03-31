@@ -375,14 +375,7 @@ var DIV_THUMBS = {
   '5v5': 'img/5v5.png'
 };
 
-function timeAgo(date) {
-  var s = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (s < 60) return 'Just now';
-  if (s < 3600) return Math.floor(s / 60) + 'm ago';
-  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
-  if (s < 604800) return Math.floor(s / 86400) + 'd ago';
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+// timeAgo() defined in js/supabase-helpers.js
 
 function updateMH(rows) {
   document.getElementById('matchHistoryTitle').textContent = 'MATCH HISTORY (' + rows.length + ')';

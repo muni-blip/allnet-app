@@ -970,6 +970,10 @@ async function initPhase2() {
       try {
         await loadPendingReviewGame(reviewGameId);
       } catch (err) { console.error('Failed to load pending review game:', err); }
+    } else if (reviewMode === 'lobby' && reviewGameId && currentUser) {
+      try {
+        await loadLobbyGame(reviewGameId);
+      } catch (err) { console.error('Failed to load lobby game:', err); }
     }
   } catch (err) { console.error('Phase 2 init error:', err); }
 }
@@ -1035,6 +1039,64 @@ async function loadPendingReviewGame(gameId) {
   goTo('screenReview');
   renderReview();
   console.log('Phase 2: Loaded pending review for game', gameId, '—', G.reviews.length, 'players to review');
+}
+
+async function loadLobbyGame(gameId) {
+  // Load game session
+  const { data: game, error: gameErr } = await supabase.from('game_sessions')
+    .select('*, courts(name)').eq('id', gameId).single();
+  if (gameErr || !game) { console.error('Lobby game not found:', gameErr); return; }
+
+  // Load players who have joined
+  const { data: players, error: playersErr } = await supabase.from('game_players')
+    .select('*, profiles(name, initials)').eq('game_id', gameId);
+
+  // Set game state
+  G.format = game.format;
+  G.teamSize = FORMAT_SIZES[G.format];
+  G.codeA = game.code_a || '????';
+  G.codeB = game.code_b || '????';
+  dbGameId = gameId;
+  dbCourtId = game.court_id;
+
+  // Build team rosters from DB
+  G.teamA = [];
+  G.teamB = [];
+  if (players) {
+    players.forEach(p => {
+      const entry = {
+        name: p.profiles?.name || 'Unknown',
+        initials: p.profiles?.initials || '??',
+        isYou: p.user_id === currentUser.id,
+        userId: p.user_id
+      };
+      if (p.team === 'a') G.teamA.push(entry);
+      else G.teamB.push(entry);
+    });
+  }
+
+  // Update court context
+  const courtLabel = game.courts?.name || 'Court';
+  document.querySelector('.court-context__name').textContent = courtLabel + ' · Lobby';
+
+  // Render lobby UI
+  const codesEl = document.getElementById('codesContainer');
+  if (G.format === '1v1') {
+    codesEl.innerHTML = '<div class="single-code"><div class="single-code__card"><div class="single-code__label">Game Code</div><div class="single-code__code">' + G.codeA + '</div><div class="single-code__hint">Share with your opponent</div></div></div>';
+    document.getElementById('lobbySub').textContent = 'Waiting for your opponent.';
+    document.getElementById('teamALabel').textContent = 'You';
+    document.getElementById('teamBLabel').textContent = 'Opponent';
+  } else {
+    codesEl.innerHTML = '<div class="team-codes"><div class="team-code-card team-code-card--a"><div class="team-code-card__label">Team A</div><div class="team-code-card__code">' + G.codeA + '</div></div><div class="team-code-card team-code-card--b"><div class="team-code-card__label">Team B</div><div class="team-code-card__code">' + G.codeB + '</div></div></div>';
+    document.getElementById('lobbySub').textContent = 'Waiting for all players.';
+    document.getElementById('teamALabel').textContent = 'Team A';
+    document.getElementById('teamBLabel').textContent = 'Team B';
+  }
+
+  goTo('screenLobby');
+  renderLobby();
+  checkReady();
+  console.log('Phase 2: Loaded lobby for game', gameId, '— Team A:', G.teamA.length, 'Team B:', G.teamB.length);
 }
 
 // Override createGame to persist to Supabase

@@ -2262,36 +2262,6 @@ checkIn = async function(courtId) {
   }
 };
 
-// Override showPlayerCard to use Supabase
-const _originalShowPlayerCard = showPlayerCard;
-showPlayerCard = async function(name, userId) {
-  if (currentUser && userId) {
-    try {
-      const card = await getPlayerCard(userId);
-      if (card) {
-        const avatarEl = document.getElementById('pmAvatar');
-        avatarEl.innerHTML = buildCompositeAvatarHtml(card);
-        document.getElementById('pmName').textContent = card.name;
-        document.getElementById('pmMeta').textContent = '📍 ' + (card.location || 'OC/LA');
-        document.getElementById('pmBadge').style.display = card.is_founding_hooper ? 'inline-block' : 'none';
-        document.getElementById('pmWins').textContent = card.wins || 0;
-        document.getElementById('pmLosses').textContent = card.losses || 0;
-        document.getElementById('pmDraws').textContent = card.draws || 0;
-        document.getElementById('pmSkill').textContent = card.skill_rating ? card.skill_rating.toFixed(1) : '—';
-        document.getElementById('pmSocial').textContent = card.social_rating ? card.social_rating.toFixed(1) : '—';
-        const games = card.recent_games || [];
-        document.getElementById('pmHistory').innerHTML = games.length > 0 ? games.map(g => {
-          const cls = g.result === 'W' ? 'w' : g.result === 'L' ? 'l' : 'd';
-          return '<div class="player-modal__game"><div class="player-modal__game-result player-modal__game-result--' + cls + '">' + g.result + '</div><div class="player-modal__game-detail">' + g.format + ' at ' + (g.court_name || 'Court') + '</div><div class="player-modal__game-time">' + timeAgo(new Date(g.played_at)) + '</div></div>';
-        }).join('') : '<div style="text-align:center;color:var(--text-muted);padding:12px;font-size:13px;">No games yet</div>';
-        document.getElementById('playerModal').classList.add('active');
-        return;
-      }
-    } catch (err) { console.error('Failed to load player card:', err); }
-  }
-  _originalShowPlayerCard(name);
-};
-
 // timeAgo() defined in js/supabase-helpers.js
 
 /* ══════════════════════════════

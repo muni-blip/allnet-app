@@ -67,7 +67,7 @@ async function fetchCourtWithCheckins(courtId) {
   const { data: court } = await supabase.from('courts').select('*').eq('id', courtId).single();
   const { data: checkins } = await supabase
     .from('checkins')
-    .select('*, profiles(name, initials, is_founding_hooper, avatar_url)')
+    .select('*, profiles(name, initials, is_founding_hooper, avatar_url, avatar_cutout_url, selected_cover)')
     .eq('court_id', courtId)
     .gte('checked_in_at', new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString())
     .is('checked_out_at', null)
@@ -279,6 +279,40 @@ function timeAgo(date) {
 }
 
 /* ═══════════════════════════════════════
+   SHARED COMPOSITE AVATAR BUILDER
+   Creates a circular avatar with cutout + cover bg.
+   Works for any profile object with avatar_cutout_url,
+   avatar_url, selected_cover, initials fields.
+   ═══════════════════════════════════════ */
+var _COVERS_BASE = 'https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
+var _COVERS_MAP = {
+  crossover: _COVERS_BASE + '/Crossover.png', rally: _COVERS_BASE + '/Rally.png',
+  flowstate: _COVERS_BASE + '/Flowstate.png', fastbreak: _COVERS_BASE + '/Fastbreak.png',
+  shatter: _COVERS_BASE + '/Shatter.png', showtime: _COVERS_BASE + '/Showtime.png',
+  fadeaway: _COVERS_BASE + '/Fadeaway.png'
+};
+
+function buildCompositeAvatarHtml(profile) {
+  if (!profile) return '??';
+  var cutout = profile.avatar_cutout_url;
+  var rawUrl = profile.avatar_url;
+  var cover = profile.selected_cover || 'crossover';
+  var coverUrl = _COVERS_MAP[cover] || _COVERS_MAP.crossover;
+  var initials = profile.initials || (profile.name || '??').split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
+
+  if (cutout) {
+    return '<div class="av-comp" style="position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;">' +
+      '<div style="position:absolute;inset:0;background-image:url(\'' + coverUrl + '\');background-size:cover;background-position:center;"></div>' +
+      '<img src="' + cutout + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;" onerror="this.style.display=\'none\'">' +
+    '</div>';
+  }
+  if (rawUrl) {
+    return '<img src="' + rawUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">';
+  }
+  return initials;
+}
+
+/* ═══════════════════════════════════════
    SHARED NAV BAR — populates stars, bell, avatar
    on any page that includes the .nav-bar element.
    Call from each page's init after Supabase is ready.
@@ -322,14 +356,10 @@ async function initNavBar() {
       } catch (e) { if (badgeEl) badgeEl.style.display = 'none'; }
     }
 
-    // Avatar — replace CTA with avatar
+    // Avatar — replace CTA with composite avatar
     profileBtn.className = 'nav-bar__avatar';
     profileBtn.onclick = function() { window.location.href = 'allnet-app.html'; };
-    if (profile.avatar_url) {
-      profileBtn.innerHTML = '<img src="' + profile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;" alt="' + (profile.name || '') + '">';
-    } else {
-      profileBtn.textContent = profile.initials || 'U';
-    }
+    profileBtn.innerHTML = buildCompositeAvatarHtml(profile);
   } catch (err) {
     console.error('initNavBar error:', err);
   }

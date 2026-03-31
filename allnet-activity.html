@@ -749,9 +749,7 @@ function renderMatchCard(match, media) {
     const slides = media.map((m, idx) => {
       const profile = liveProfiles[m.user_id];
       const authorName = profile ? (profile.first_name || profile.name?.split(' ')[0] || 'Player') : 'Player';
-      const authorAvatar = profile?.avatar_url
-        ? `<img src="${profile.avatar_url}" alt="">`
-        : (authorName[0] || '?');
+      const authorAvatar = buildAvatarHtml(profile || { name: authorName });
       const mediaIcon = m.media_type === 'video' ? '🎥' : '📸';
 
       const mediaEl = m.media_type === 'video'

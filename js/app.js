@@ -884,9 +884,10 @@ function openSheet(court) {
 
   const checkinHTML = court.checkedIn.length > 0
     ? court.checkedIn.map(p => {
-        const avatarContent = p.avatarUrl
-          ? `<img src="${p.avatarUrl}" class="avatar-img" alt="${p.name}">`
-          : p.initials;
+        const avatarContent = buildCompositeAvatarHtml({
+          avatar_cutout_url: p.avatarCutoutUrl, avatar_url: p.avatarUrl,
+          selected_cover: p.selectedCover, initials: p.initials, name: p.name
+        });
         return `<div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,'${p.userId}'` : ''})`}">
           <div class="checkin-player__avatar">${avatarContent}</div>
           <div class="checkin-player__info">
@@ -2137,7 +2138,9 @@ openSheet = async function(court) {
           time: timeAgo(new Date(c.checked_in_at)),
           badge: c.profiles?.is_founding_hooper || false,
           userId: c.user_id,
-          avatarUrl: c.profiles?.avatar_url || null
+          avatarUrl: c.profiles?.avatar_url || null,
+          avatarCutoutUrl: c.profiles?.avatar_cutout_url || null,
+          selectedCover: c.profiles?.selected_cover || null
         }));
         court.players = checkins.length;
         court.status = checkins.length >= 10 ? 'packed' : checkins.length > 0 ? 'active' : 'quiet';
@@ -2186,9 +2189,10 @@ function _updateSheetLiveData(court, reported) {
   if (checkinList) {
     if (court.checkedIn.length > 0) {
       checkinList.innerHTML = court.checkedIn.map(p => {
-        const avatarContent = p.avatarUrl
-          ? `<img src="${p.avatarUrl}" class="avatar-img" alt="${p.name}">`
-          : p.initials;
+        const avatarContent = buildCompositeAvatarHtml({
+          avatar_cutout_url: p.avatarCutoutUrl, avatar_url: p.avatarUrl,
+          selected_cover: p.selectedCover, initials: p.initials, name: p.name
+        });
         return `<div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,'${p.userId}'` : ''})`}">
           <div class="checkin-player__avatar">${avatarContent}</div>
           <div class="checkin-player__info">
@@ -2266,11 +2270,7 @@ showPlayerCard = async function(name, userId) {
       const card = await getPlayerCard(userId);
       if (card) {
         const avatarEl = document.getElementById('pmAvatar');
-        if (card.avatar_url) {
-          avatarEl.innerHTML = `<img src="${card.avatar_url}" class="avatar-img" alt="${card.name}">`;
-        } else {
-          avatarEl.textContent = card.initials || '??';
-        }
+        avatarEl.innerHTML = buildCompositeAvatarHtml(card);
         document.getElementById('pmName').textContent = card.name;
         document.getElementById('pmMeta').textContent = '📍 ' + (card.location || 'OC/LA');
         document.getElementById('pmBadge').style.display = card.is_founding_hooper ? 'inline-block' : 'none';

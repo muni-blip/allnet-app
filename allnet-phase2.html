@@ -1146,11 +1146,17 @@ finalizeGame = async function() {
 
     const teamAData = G.teamA.map(p => ({
       name: p.name, initials: p.initials,
-      avatar_url: (p.isYou && currentProfile?.avatar_url) ? currentProfile.avatar_url : null
+      user_id: (p.isYou && currentUser) ? currentUser.id : (p.userId || null),
+      avatar_url: (p.isYou && currentProfile?.avatar_url) ? currentProfile.avatar_url : null,
+      avatar_cutout_url: (p.isYou && currentProfile?.avatar_cutout_url) ? currentProfile.avatar_cutout_url : null,
+      selected_cover: (p.isYou && currentProfile?.selected_cover) ? currentProfile.selected_cover : null
     }));
     const teamBData = G.teamB.map(p => ({
       name: p.name, initials: p.initials,
-      avatar_url: (p.isYou && currentProfile?.avatar_url) ? currentProfile.avatar_url : null
+      user_id: (p.isYou && currentUser) ? currentUser.id : (p.userId || null),
+      avatar_url: (p.isYou && currentProfile?.avatar_url) ? currentProfile.avatar_url : null,
+      avatar_cutout_url: (p.isYou && currentProfile?.avatar_cutout_url) ? currentProfile.avatar_cutout_url : null,
+      selected_cover: (p.isYou && currentProfile?.selected_cover) ? currentProfile.selected_cover : null
     }));
 
     const courtParam = new URLSearchParams(window.location.search).get('court') || 'Unknown Court';

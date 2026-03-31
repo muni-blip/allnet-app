@@ -544,10 +544,8 @@ function updateNavDrawerUser() {
   document.getElementById('navUserName').textContent = currentProfile.name || 'Player';
   document.getElementById('navUserStars').textContent = '⭐ ' + (currentProfile.stars_balance || 0).toLocaleString();
   const navAvatar = document.getElementById('navAvatar');
-  if (navAvatar && currentProfile.avatar_url) {
-    navAvatar.innerHTML = '<img src="' + currentProfile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-  } else if (navAvatar) {
-    navAvatar.textContent = currentProfile.initials || 'U';
+  if (navAvatar) {
+    navAvatar.innerHTML = buildCompositeAvatarHtml(currentProfile);
   }
 }
 

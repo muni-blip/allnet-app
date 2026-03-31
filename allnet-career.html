@@ -302,7 +302,7 @@ function updateNavDrawerUser() {
   document.getElementById('navUserName').textContent = currentProfile.name || 'Player';
   document.getElementById('navUserStars').textContent = '⭐ ' + (currentProfile.stars_balance || 0).toLocaleString();
   var a = document.getElementById('navAvatar');
-  if (a && currentProfile.avatar_url) a.innerHTML = '<img src="' + currentProfile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  if (a) a.innerHTML = buildCompositeAvatarHtml(currentProfile);
   else if (a) a.textContent = currentProfile.initials || 'U';
 }
 
@@ -530,12 +530,7 @@ function renderSummaryPlayer(p) {
   var ini = nm.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
   var isYou = p.user_id === currentUser.id;
 
-  var avatarHtml;
-  if (profile?.avatar_url) {
-    avatarHtml = '<img src="' + profile.avatar_url + '" alt="">';
-  } else {
-    avatarHtml = ini;
-  }
+  var avatarHtml = buildCompositeAvatarHtml(profile || { initials: ini });
 
   var youBadge = isYou ? '<span class="game-summary__you-badge">YOU</span>' : '';
   var onclick = isYou ? '' : ' onclick="showSummaryPlayerCard(\'' + p.user_id + '\')"';

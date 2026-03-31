@@ -25,8 +25,8 @@ html, body { height: auto; overflow: auto; }
 }
 
 .activity-topbar__title {
-  flex: 1; font-family: var(--font-display); font-size: 18px;
-  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--font-display); font-size: 24px;
+  font-weight: 700; text-transform: uppercase;
 }
 
 /* Filter tabs */
@@ -275,7 +275,7 @@ html, body { height: auto; overflow: auto; }
   z-index: 1010; padding: 16px;
   display: flex; align-items: center; justify-content: center; gap: 12px;
   background: linear-gradient(transparent, #000 30%);
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
 .overlay-nav-btn {
@@ -565,9 +565,6 @@ html, body { height: auto; overflow: auto; }
 
   <!-- Top Bar -->
   <div class="activity-topbar">
-    <button class="top-bar__menu" onclick="openNavDrawer()" aria-label="Menu">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect y="3" width="20" height="2" rx="1" fill="white"/><rect y="9" width="20" height="2" rx="1" fill="white"/><rect y="15" width="20" height="2" rx="1" fill="white"/></svg>
-    </button>
     <div class="activity-topbar__title">Activity</div>
   </div>
 

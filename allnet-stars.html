@@ -18,24 +18,15 @@ html, body { height: auto; overflow: auto; }
 
 .stars-topbar {
   position: sticky; top: 0; z-index: 100;
-  height: 56px; padding: 0 16px;
+  padding: 14px 16px;
   background: #000;
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center;
   border-bottom: 1px solid #2e2e2e;
 }
 
-.stars-topbar__menu {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: #000; border: 1px solid #2e2e2e;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; transition: var(--transition);
-}
-.stars-topbar__menu:hover { border-color: #444; }
-.stars-topbar__menu svg { width: 24px; height: 24px; }
-
 .stars-topbar__title {
-  flex: 1; font-family: 'Montserrat', sans-serif; font-size: 18px;
-  font-weight: 600; color: #fff; text-align: center;
+  font-family: var(--font-display); font-size: 24px;
+  font-weight: 700; color: #fff; text-transform: uppercase;
 }
 
 /* Balance Hero */
@@ -416,10 +407,7 @@ html, body { height: auto; overflow: auto; }
 
   <!-- Top Bar -->
   <div class="stars-topbar">
-    <button class="stars-topbar__menu" onclick="openNavDrawer()" aria-label="Menu">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13C10.1046 13 11 13.8954 11 15V20C11 21.1046 10.1046 22 9 22H4C2.89543 22 2 21.1046 2 20V15C2 13.8954 2.89543 13 4 13H9ZM20 13C21.1046 13 22 13.8954 22 15V20C22 21.1046 21.1046 22 20 22H15C13.8954 22 13 21.1046 13 20V15C13 13.8954 13.8954 13 15 13H20ZM9 2C10.1046 2 11 2.89543 11 4V9C11 10.1046 10.1046 11 9 11H4C2.89543 11 2 10.1046 2 9V4C2 2.89543 2.89543 2 4 2H9ZM20 2C21.1046 2 22 2.89543 22 4V9C22 10.1046 21.1046 11 20 11H15C13.8954 11 13 10.1046 13 9V4C13 2.89543 13.8954 2 15 2H20Z" fill="url(#menuGradS)"/><defs><linearGradient id="menuGradS" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F8981D"/><stop offset="1" stop-color="#F74501"/></linearGradient></defs></svg>
-    </button>
-    <div class="stars-topbar__title">Manage stars</div>
+    <div class="stars-topbar__title">Stars</div>
   </div>
 
   <!-- Balance Hero -->

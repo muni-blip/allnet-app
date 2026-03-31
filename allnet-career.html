@@ -11,9 +11,8 @@
 html, body { height: auto; overflow: auto; }
 .career-page { min-height: 100vh; background: #000; padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px); }
 
-.career-topbar { position: sticky; top: 0; z-index: 100; padding: 14px 16px; background: rgba(0,0,0,0.95); backdrop-filter: blur(16px); display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
-.career-topbar__menu { width: 48px; height: 48px; border-radius: 999px; background: #000; border: 1px solid #222; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-.career-topbar__title { flex: 1; font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 600; color: #fff; text-align: center; line-height: 24px; }
+.career-topbar { position: sticky; top: 0; z-index: 100; padding: 14px 16px; background: rgba(0,0,0,0.95); backdrop-filter: blur(16px); display: flex; align-items: center; border-bottom: 1px solid var(--border); }
+.career-topbar__title { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: #fff; text-transform: uppercase; }
 
 .cc-wrapper { padding: 20px 16px 0; }
 .cc-actions { display: flex; gap: 16px; padding: 40px 16px 0; max-width: 375px; margin: 0 auto; }
@@ -180,11 +179,7 @@ html, body { height: auto; overflow: auto; }
 <body>
 <div class="career-page" id="careerPage">
   <div class="career-topbar">
-    <button class="career-topbar__menu" onclick="openNavDrawer()" aria-label="Menu">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F74501" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    </button>
-    <div class="career-topbar__title">Your Career Card</div>
-    <div style="width:48px;flex-shrink:0;"></div>
+    <div class="career-topbar__title">Career</div>
   </div>
   <div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
   <div class="nav-drawer" id="navDrawer">

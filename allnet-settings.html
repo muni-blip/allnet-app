@@ -15,22 +15,17 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .settings-page { max-width: 480px; margin: 0 auto; min-height: 100vh; border-left: 1px solid var(--border); border-right: 1px solid var(--border); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px); }
 
 /* ── Top bar ── */
-.top-bar {
+.settings-topbar {
   position: sticky; top: 0; z-index: 10;
   padding: 14px 16px;
   background: rgba(10,10,10,0.9);
   backdrop-filter: blur(16px);
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center;
   border-bottom: 1px solid var(--border);
 }
-.top-bar__back {
-  font-size: 14px; font-weight: 600; color: var(--text-secondary);
-  cursor: pointer; background: none; border: none; font-family: var(--font-body);
-}
-.top-bar__back:hover { color: var(--text-primary); }
-.top-bar__title {
-  font-family: var(--font-display); font-size: 18px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.04em;
+.settings-topbar__title {
+  font-family: var(--font-display); font-size: 24px;
+  font-weight: 700; color: #fff; text-transform: uppercase;
 }
 
 /* ── Settings content ── */
@@ -119,9 +114,8 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 </div>
 
 <div class="settings-page">
-  <div class="top-bar">
-    <button class="top-bar__back" onclick="window.location.href='allnet-app.html'">← Back</button>
-    <div class="top-bar__title">Settings</div>
+  <div class="settings-topbar">
+    <div class="settings-topbar__title">Settings</div>
   </div>
 
   <div class="settings-content">

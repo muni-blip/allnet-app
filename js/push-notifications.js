@@ -24,7 +24,21 @@ const PushManager_ = (function() {
 
   function isIosSafari() {
     const ua = navigator.userAgent;
-    return /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    // iPhone/iPod: straightforward UA check
+    if (/iPhone|iPod/.test(ua) && !window.MSStream) return true;
+    // iPad: since iPadOS 13, iPads report as "Macintosh" — detect via touch + Mac combo
+    if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return true;
+    return false;
+  }
+
+  function isMacSafari() {
+    const ua = navigator.userAgent;
+    // macOS Safari (Sonoma+ supports Add to Dock with push)
+    return /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome/.test(ua) && navigator.maxTouchPoints === 0;
+  }
+
+  function isAndroid() {
+    return /Android/.test(navigator.userAgent);
   }
 
   function isInstalledPWA() {
@@ -164,12 +178,33 @@ const PushManager_ = (function() {
     return false;
   }
 
-  // ── Add to Home Screen banner (iOS) ──
+  // ── Add to Home Screen / Install PWA ──
+
+  let deferredInstallPrompt = null; // Chrome/Edge beforeinstallprompt event
 
   function showA2HSBannerIfNeeded() {
-    if (!isIosSafari()) return;
     if (isInstalledPWA()) return;
     if (localStorage.getItem('allnet_a2hs_dismissed')) return;
+
+    // Determine which platform we're on for appropriate messaging
+    let bannerText = '';
+    let howBtn = true;
+
+    if (isIosSafari()) {
+      bannerText = 'Get court alerts even when the browser is closed';
+    } else if (isMacSafari()) {
+      bannerText = 'Add AllNet to your Dock for push notifications';
+    } else if (deferredInstallPrompt) {
+      // Chrome/Edge on Android or Desktop — use native prompt
+      bannerText = 'Install AllNet for the best experience';
+      howBtn = false; // Chrome handles install natively
+    } else {
+      // Not a supported install scenario (Firefox, Chrome without prompt, etc.)
+      return;
+    }
+
+    // Don't double-add
+    if (document.getElementById('a2hsBanner')) return;
 
     const banner = document.createElement('div');
     banner.id = 'a2hsBanner';
@@ -179,11 +214,14 @@ const PushManager_ = (function() {
           <div class="a2hs-banner__icon">🏀</div>
           <div class="a2hs-banner__text">
             <strong>Add AllNet to your Home Screen</strong>
-            <span>Get court alerts even when the browser is closed</span>
+            <span>${bannerText}</span>
           </div>
         </div>
         <div class="a2hs-banner__actions">
-          <button class="a2hs-banner__how" onclick="PushManager_.showA2HSInstructions()">How?</button>
+          ${howBtn
+            ? '<button class="a2hs-banner__how" onclick="PushManager_.showA2HSInstructions()">How?</button>'
+            : '<button class="a2hs-banner__how" onclick="PushManager_.triggerInstallPrompt()">Install</button>'
+          }
           <button class="a2hs-banner__dismiss" onclick="PushManager_.dismissA2HS()">✕</button>
         </div>
       </div>
@@ -192,11 +230,31 @@ const PushManager_ = (function() {
   }
 
   function showA2HSInstructions() {
-    if (typeof showAlert === 'function') {
+    if (typeof showAlert !== 'function') return;
+
+    if (isIosSafari()) {
       showAlert('Add to Home Screen',
-        '1. Tap the Share button <span style="font-size:18px">⎋</span> at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"\n\nYou\'ll then get push notifications for court alerts!',
+        '1. Tap the Share button ⬆ at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"\n\nYou\'ll then get push notifications for court alerts!',
         { icon: '📲' }
       );
+    } else if (isMacSafari()) {
+      showAlert('Add to Dock',
+        '1. Click File in the menu bar\n2. Click "Add to Dock"\n3. Click "Add"\n\nYou\'ll then get push notifications for court alerts!',
+        { icon: '📲' }
+      );
+    }
+  }
+
+  // Chrome/Edge native install prompt
+  function triggerInstallPrompt() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(choice => {
+        if (choice.outcome === 'accepted') {
+          dismissA2HS();
+        }
+        deferredInstallPrompt = null;
+      });
     }
   }
 
@@ -205,6 +263,16 @@ const PushManager_ = (function() {
     const el = document.getElementById('a2hsBanner');
     if (el) el.remove();
   }
+
+  // Listen for Chrome/Edge beforeinstallprompt (fires before we can show our banner)
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    // If profile is already loaded, show banner now
+    if (!isInstalledPWA() && !localStorage.getItem('allnet_a2hs_dismissed')) {
+      showA2HSBannerIfNeeded();
+    }
+  });
 
   // ── Soft prompt (shown during onboarding) ──
 
@@ -252,6 +320,7 @@ const PushManager_ = (function() {
     requestPermissionAndSubscribe,
     showA2HSBannerIfNeeded,
     showA2HSInstructions,
+    triggerInstallPrompt,
     dismissA2HS,
     showSoftPrompt
   };

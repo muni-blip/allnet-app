@@ -2203,6 +2203,7 @@ html, body {
   color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 24px;
+  white-space: pre-line;
 }
 
 .alert-modal__btn {

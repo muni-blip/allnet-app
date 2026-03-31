@@ -969,6 +969,7 @@ function openSheet(court) {
 function closeSheet() {
   document.getElementById('sheetOverlay').classList.remove('active');
   document.getElementById('courtSheet').classList.remove('open');
+  if (typeof _sheetLoading !== 'undefined') _sheetLoading = false;
 }
 
 function toggleForecastTooltip(wrapper) {
@@ -2086,16 +2087,49 @@ async function initApp() {
   }
 }
 
-// Override openSheet to load real check-ins from Supabase
+// Override openSheet to show immediately, then load real data
+let _sheetLoading = false;
 const _originalOpenSheet = openSheet;
 openSheet = async function(court) {
+  // Double-tap guard
+  if (_sheetLoading) return;
+
+  // Set known local state immediately
   court._watching = userWatches.has(court.id);
-  if (currentUser && court.id && typeof court.id === 'string' && court.id.length > 10) {
+  court._reported = false;
+  // Show sheet instantly with static data + loading placeholder for check-ins
+  court.checkedIn = [];
+  court.players = court.players || 0;
+  _originalOpenSheet(court);
+
+  // Replace check-in list with loading spinner
+  const checkinList = document.querySelector('.checkin-list');
+  if (checkinList) {
+    checkinList.innerHTML = '<div class="checkin-loading"><div class="checkin-loading__spinner"></div><span>Loading players...</span></div>';
+  }
+
+  // Hide report section until we know report status
+  const reportSection = document.getElementById('courtReportSection');
+  if (reportSection) reportSection.style.opacity = '0.3';
+
+  // Fetch live data in parallel
+  const isRealCourt = currentUser && court.id && typeof court.id === 'string' && court.id.length > 10;
+  if (isRealCourt) {
+    _sheetLoading = true;
     try {
-      court._reported = await hasUserReported(court.id);
-    } catch (err) { court._reported = false; }
-    try {
-      const { court: freshCourt, checkins } = await fetchCourtWithCheckins(court.id);
+      const [reportResult, checkinResult] = await Promise.all([
+        hasUserReported(court.id).catch(() => false),
+        fetchCourtWithCheckins(court.id).catch(() => ({ court: null, checkins: null }))
+      ]);
+
+      // If sheet was closed while loading, bail out
+      if (!document.getElementById('courtSheet').classList.contains('open')) {
+        _sheetLoading = false;
+        return;
+      }
+
+      // Update check-in data
+      const checkins = checkinResult.checkins;
       if (checkins) {
         court.checkedIn = checkins.map(c => ({
           name: c.profiles?.name || 'Unknown',
@@ -2108,10 +2142,76 @@ openSheet = async function(court) {
         court.players = checkins.length;
         court.status = checkins.length >= 10 ? 'packed' : checkins.length > 0 ? 'active' : 'quiet';
       }
-    } catch (err) { console.error('Failed to load check-ins:', err); }
+
+      // Surgical DOM updates (no full re-render)
+      _updateSheetLiveData(court, reportResult);
+    } catch (err) {
+      console.error('Failed to load court data:', err);
+      // Show fallback in check-in list
+      const cl = document.querySelector('.checkin-list');
+      if (cl) cl.innerHTML = '<div class="empty-checkins">Could not load check-ins</div>';
+    }
+    _sheetLoading = false;
   }
-  _originalOpenSheet(court);
 };
+
+// Update sheet DOM with fresh async data (no full re-render)
+function _updateSheetLiveData(court, reported) {
+  // Update player count
+  const playerVal = document.querySelector('.pulse-stat__value');
+  if (playerVal) {
+    playerVal.textContent = court.players;
+    playerVal.style.color = court.status === 'packed' ? 'var(--orange)' : court.status === 'active' ? 'var(--green-live)' : 'var(--text-muted)';
+  }
+
+  // Update checked-in count
+  const statValues = document.querySelectorAll('.pulse-stat__value');
+  if (statValues.length >= 2) statValues[1].textContent = court.checkedIn.length;
+
+  // Update status dot + label
+  const statusIcon = court.status === 'packed' ? '🔥' : court.status === 'active' ? '🏀' : '😴';
+  const statusDot = document.querySelector('.status-dot-lg');
+  if (statusDot) {
+    statusDot.textContent = statusIcon;
+    statusDot.className = 'status-dot-lg status-dot-lg--' + court.status;
+  }
+  const statusLabel = document.querySelector('.status-label');
+  if (statusLabel) {
+    statusLabel.textContent = court.status.charAt(0).toUpperCase() + court.status.slice(1);
+    statusLabel.className = 'status-label status-label--' + court.status;
+  }
+
+  // Update check-in list
+  const checkinList = document.querySelector('.checkin-list');
+  if (checkinList) {
+    if (court.checkedIn.length > 0) {
+      checkinList.innerHTML = court.checkedIn.map(p => {
+        const avatarContent = p.avatarUrl
+          ? `<img src="${p.avatarUrl}" class="avatar-img" alt="${p.name}">`
+          : p.initials;
+        return `<div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,'${p.userId}'` : ''})`}">
+          <div class="checkin-player__avatar">${avatarContent}</div>
+          <div class="checkin-player__info">
+            <div class="checkin-player__name">${p.name}</div>
+            <div class="checkin-player__meta">${p.time}</div>
+          </div>
+          ${p.badge ? '<span class="checkin-player__badge">Founding</span>' : ''}
+        </div>`;
+      }).join('');
+    } else {
+      checkinList.innerHTML = '<div class="empty-checkins">No one checked in yet. Be the first!</div>';
+    }
+  }
+
+  // Update report section
+  const reportSection = document.getElementById('courtReportSection');
+  if (reportSection) {
+    reportSection.style.opacity = '1';
+    reportSection.innerHTML = reported
+      ? '<span class="court-report__done">⚑ You reported this listing</span>'
+      : `<button class="court-report__btn" onclick="showReportModal('${court.id}')">⚑ Report incorrect listing</button>`;
+  }
+}
 
 // Override checkIn to write to Supabase
 const _originalCheckIn = checkIn;

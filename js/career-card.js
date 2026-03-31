@@ -23,6 +23,10 @@
 var CareerCard = (function() {
 
   var SUPABASE_COVERS_URL = 'https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
+
+  // Trend-line icons for rating deltas
+  var ICON_INCREASE = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.6667 4.6665H14.6667M14.6667 4.6665V8.6665M14.6667 4.6665L9.00004 10.3332L5.66671 6.99984L1.33337 11.3332" stroke="#34FF34" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_DECREASE = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.6667 11.3332H14.6667M14.6667 11.3332V7.33317M14.6667 11.3332L9.00004 5.6665L5.66671 8.99984L1.33337 4.6665" stroke="#FF6B6B" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var COVERS = {
     crossover: SUPABASE_COVERS_URL + '/Crossover.png',
     rally:     SUPABASE_COVERS_URL + '/Rally.png',
@@ -79,14 +83,16 @@ var CareerCard = (function() {
       var skNum = Number(skD);
       var skSign = skNum >= 0 ? '+' : '';
       var skClass = skNum >= 0 ? '' : ' cc__rating-delta--down';
-      skDeltaHtml = '<span class="cc__rating-delta' + skClass + '">' + skSign + skNum.toFixed(1) + ' ↗</span>';
+      var skIcon = skNum >= 0 ? ICON_INCREASE : ICON_DECREASE;
+      skDeltaHtml = '<span class="cc__rating-delta' + skClass + '">' + skSign + skNum.toFixed(1) + ' ' + skIcon + '</span>';
     }
     var soDeltaHtml = '';
     if (showD && soD !== null && soD !== undefined) {
       var soNum = Number(soD);
       var soSign = soNum >= 0 ? '+' : '';
       var soClass = soNum >= 0 ? '' : ' cc__rating-delta--down';
-      soDeltaHtml = '<span class="cc__rating-delta' + soClass + '">' + soSign + soNum.toFixed(1) + ' ↗</span>';
+      var soIcon = soNum >= 0 ? ICON_INCREASE : ICON_DECREASE;
+      soDeltaHtml = '<span class="cc__rating-delta' + soClass + '">' + soSign + soNum.toFixed(1) + ' ' + soIcon + '</span>';
     }
 
     // Division tabs

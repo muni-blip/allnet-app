@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Game Session</title>
 <link rel="stylesheet" href="css/app.css">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/career-card.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -141,32 +142,6 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
 .rating-btn.selected { border-color:var(--orange); color:var(--orange); background:rgba(255,90,31,0.08); }
 .card-update { text-align:center; flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; }
 .card-update__label { font-size:14px; color:var(--text-secondary); margin-bottom:24px; }
-.career-card { width:100%; max-width:320px; background:linear-gradient(145deg,#1A1A1A 0%,#0F0F0F 100%); border:1px solid var(--border-light); border-radius:var(--radius-lg); overflow:hidden; position:relative; animation:cardReveal 0.6s ease; }
-@keyframes cardReveal { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
-.career-card::before { content:''; position:absolute; top:-1px; left:-1px; right:-1px; height:3px; background:linear-gradient(90deg,var(--orange),#FF8C42,var(--orange)); }
-.career-card__name-bar { padding:18px 20px 14px; }
-.career-card__first-name,.career-card__last-name { font-family:var(--font-display); font-size:28px; font-weight:700; text-transform:uppercase; line-height:1; }
-.career-card__last-name { text-align:right; }
-.career-card__color-bars { display:flex; margin:4px 0; }
-.career-card__color-bar { height:6px; flex:1; }
-.career-card__photo { width:100%; height:180px; background:linear-gradient(135deg,#1a1a3e,#4a1942,#1a3a4a); display:flex; align-items:flex-end; justify-content:space-around; padding:16px 20px; }
-.career-card__wld { display:flex; justify-content:space-around; width:100%; }
-.career-card__wld-item { text-align:center; }
-.career-card__wld-letter { font-family:var(--font-display); font-size:14px; font-weight:600; color:rgba(255,255,255,0.7); }
-.career-card__wld-value { font-family:var(--font-display); font-size:32px; font-weight:700; color:white; }
-.career-card__wld-change { font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--green); animation:changePop 0.5s ease 0.8s both; }
-@keyframes changePop { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-.career-card__ratings { padding:16px 20px 20px; }
-.career-card__rating-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
-.career-card__rating-label { font-family:var(--font-display); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
-.career-card__rating-value { display:flex; align-items:center; gap:8px; }
-.career-card__rating-number { font-family:var(--font-display); font-size:16px; font-weight:700; }
-.career-card__rating-change { font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--green); animation:changePop 0.5s ease 1s both; }
-.career-card__formats { display:flex; gap:6px; padding:0 20px 16px; }
-.career-card__format { padding:5px 14px; border-radius:100px; border:1px solid var(--border); font-size:12px; font-weight:600; color:var(--text-muted); }
-.career-card__format--active { border-color:var(--text-primary); color:var(--text-primary); background:rgba(255,255,255,0.05); }
-.career-card__new-badge { font-family:var(--font-mono); font-size:10px; font-weight:700; color:var(--green); background:var(--green-glow); padding:2px 6px; border-radius:4px; margin-left:4px; }
-.career-card__empty-state { text-align:center; padding:12px 20px; font-size:12px; color:var(--text-muted); }
 .review-question__hint { font-size:12px; color:var(--text-muted); margin-bottom:10px; margin-top:-6px; }
 
 /* ═══════════════════════════════════════════════
@@ -328,31 +303,14 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
   <div class="screen" id="screenCardUpdate">
     <div class="card-update">
       <div class="card-update__label">Your career card has updated!</div>
-      <div class="career-card">
-        <div class="career-card__name-bar"><div class="career-card__first-name">JASON <span style="display:inline-block;width:60%;height:6px;background:var(--orange);vertical-align:middle;margin-left:8px;border-radius:2px;"></span></div><div class="career-card__color-bars"><div class="career-card__color-bar" style="background:#3B82F6;"></div><div class="career-card__color-bar" style="background:#3B82F6;"></div></div><div class="career-card__last-name"><span style="display:inline-block;width:50%;height:6px;background:#3B82F6;vertical-align:middle;margin-right:8px;border-radius:2px;"></span> REYES</div></div>
-        <div class="career-card__photo"><div class="career-card__wld">
-          <div class="career-card__wld-item"><div class="career-card__wld-letter">W</div><div class="career-card__wld-value" id="cardWins">0</div><div class="career-card__wld-change" id="cardWinChange"></div></div>
-          <div class="career-card__wld-item"><div class="career-card__wld-letter">L</div><div class="career-card__wld-value" id="cardLosses">0</div><div class="career-card__wld-change" id="cardLossChange"></div></div>
-          <div class="career-card__wld-item"><div class="career-card__wld-letter">D</div><div class="career-card__wld-value" id="cardDraws">0</div><div class="career-card__wld-change" id="cardDrawChange"></div></div>
-        </div></div>
-        <div class="career-card__ratings">
-          <div class="career-card__rating-row"><div class="career-card__rating-label">Social Rating</div><div class="career-card__rating-value"><span style="color:var(--yellow);">★</span><span class="career-card__rating-number" id="cardSocial">—</span><span class="career-card__rating-change" id="cardSocialChange"></span></div></div>
-          <div class="career-card__rating-row"><div class="career-card__rating-label" id="cardSkillLabel">1v1 Skill Rating</div><div class="career-card__rating-value"><span style="color:var(--orange);">■■</span><span class="career-card__rating-number" id="cardSkill">—</span><span class="career-card__rating-change" id="cardSkillChange"></span><span class="career-card__new-badge" id="cardNewBadge" style="display:none;">NEW</span></div></div>
-        </div>
-        <div class="career-card__formats" id="cardFormats">
-          <span class="career-card__format career-card__format--active" data-div="1v1" onclick="switchCardDivision('1v1')">1v1</span>
-          <span class="career-card__format" data-div="2v2" onclick="switchCardDivision('2v2')">2v2</span>
-          <span class="career-card__format" data-div="3v3" onclick="switchCardDivision('3v3')">3v3</span>
-          <span class="career-card__format" data-div="4v4" onclick="switchCardDivision('4v4')">4v4</span>
-          <span class="career-card__format" data-div="5v5" onclick="switchCardDivision('5v5')">5v5</span>
-        </div>
-      </div>
+      <div class="cc-border"><div class="cc" id="p2CardContainer"></div></div>
       <div class="btn-row" style="width:100%;"><button class="btn btn--secondary" onclick="window.location.href='allnet-app.html'">Back to Map</button><button class="btn btn--primary" onclick="goTo('screenChoose');resetGame();">Play Again</button></div>
     </div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
+<script src="js/career-card.js"></script>
 <script>
 const FORMAT_SIZES={'1v1':1,'2v2':2,'3v3':3,'4v4':4,'5v5':5};
 
@@ -649,79 +607,87 @@ function finalizeGame(){
 
 function updateCardDisplay(div,prevSkill,prevSocial){
   const ds=G.divisionStats[div];
+  const cardEl=document.getElementById('p2CardContainer');
+  if(!cardEl) return;
 
-  // W/L/D
-  document.getElementById('cardWins').textContent=ds.wins;
-  document.getElementById('cardLosses').textContent=ds.losses;
-  document.getElementById('cardDraws').textContent=ds.draws;
+  const wins=ds.wins, losses=ds.losses, draws=ds.draws;
+  const skillVal=ds.skillRating!==null?Number(ds.skillRating):0;
+  const socialVal=G.socialRating!==null?Number(G.socialRating):0;
+  const skDelta=prevSkill===null?null:Number((skillVal-(prevSkill||0)).toFixed(1));
+  const soDelta=prevSocial===null?null:Number((socialVal-(prevSocial||0)).toFixed(1));
+  const wD=G.winner==='me'?1:0;
+  const lD=G.winner==='them'?1:0;
+  const dD=G.winner==='draw'?1:0;
 
-  // Skill
-  document.getElementById('cardSkillLabel').textContent=div+' Skill Rating';
-  document.getElementById('cardSkill').textContent=ds.skillRating!==null?ds.skillRating.toFixed(1):'—';
+  cardEl.innerHTML=CareerCard.render({
+    cardId:'p2cc',
+    firstName:currentProfile?.first_name||currentProfile?.name?.split(' ')[0]||'',
+    lastName:currentProfile?.last_name||currentProfile?.name?.split(' ').slice(1).join(' ')||'',
+    cutoutUrl:currentProfile?.avatar_cutout_url,
+    coverSlug:currentProfile?.selected_cover||'crossover',
+    wins:wins, losses:losses, draws:draws,
+    skillRating:skillVal?skillVal.toFixed(1):'—',
+    socialRating:socialVal?socialVal.toFixed(1):'—',
+    divisionLabel:div.toUpperCase(),
+    activeDivision:div,
+    showTabs:true,
+    onTabClick:'switchCardDivision',
+    showDeltas:true,
+    skillDelta:skDelta,
+    socialDelta:soDelta,
+    winsDelta:wD,
+    lossesDelta:lD,
+    drawsDelta:dD
+  });
 
-  // NEW badge
-  const newBadge=document.getElementById('cardNewBadge');
-  newBadge.style.display=(ds.gamesCount>0&&ds.gamesCount<=5)?'inline':'none';
-
-  // Skill change indicator
-  const sd=prevSkill===null?(ds.skillRating||0):(ds.skillRating-prevSkill);
-  document.getElementById('cardSkillChange').textContent=sd>=0?'+'+sd.toFixed(1)+' ↗':sd.toFixed(1)+' ↘';
-  document.getElementById('cardSkillChange').style.color=sd<0?'var(--red)':'';
-
-  // Social
-  document.getElementById('cardSocial').textContent=G.socialRating!==null?G.socialRating.toFixed(1):'—';
-  const scd=prevSocial===null?(G.socialRating||0):(G.socialRating-prevSocial);
-  document.getElementById('cardSocialChange').textContent=scd>=0?'+'+scd.toFixed(1)+' ↗':scd.toFixed(1)+' ↘';
-  document.getElementById('cardSocialChange').style.color=scd<0?'var(--red)':'';
-
-  // W/L/D change indicators
-  document.getElementById('cardWinChange').textContent=G.winner==='me'?'+1':'';
-  document.getElementById('cardLossChange').textContent=G.winner==='them'?'+1':'';
-  document.getElementById('cardDrawChange').textContent=G.winner==='draw'?'+1':'';
-
-  // Division tabs — highlight active
-  document.querySelectorAll('.career-card__format').forEach(el=>{
-    el.classList.toggle('career-card__format--active',el.getAttribute('data-div')===div);
+  requestAnimationFrame(()=>{
+    CareerCard.fitNames('p2cc');
+    // Rolodex animation from old → new values
+    setTimeout(()=>{
+      CareerCard.animateValues('p2CardContainer',{
+        winsFrom:wins-wD, winsTo:wins,
+        lossesFrom:losses-lD, lossesTo:losses,
+        drawsFrom:draws-dD, drawsTo:draws,
+        skillFrom:skDelta!=null?skillVal-skDelta:skillVal,
+        skillTo:skillVal,
+        socialFrom:soDelta!=null?socialVal-soDelta:socialVal,
+        socialTo:socialVal,
+        duration:1400,
+        stagger:250
+      });
+    },300);
   });
 }
 
 function switchCardDivision(div){
   G.activeCardDivision=div;
   const ds=G.divisionStats[div];
+  const cardEl=document.getElementById('p2CardContainer');
+  if(!cardEl) return;
 
-  // Division tabs
-  document.querySelectorAll('.career-card__format').forEach(el=>{
-    el.classList.toggle('career-card__format--active',el.getAttribute('data-div')===div);
+  const wins=ds.gamesCount>0?ds.wins:0;
+  const losses=ds.gamesCount>0?ds.losses:0;
+  const draws=ds.gamesCount>0?ds.draws:0;
+  const skillVal=ds.skillRating!==null?Number(ds.skillRating):0;
+  const socialVal=G.socialRating!==null?Number(G.socialRating):0;
+
+  cardEl.innerHTML=CareerCard.render({
+    cardId:'p2cc',
+    firstName:currentProfile?.first_name||currentProfile?.name?.split(' ')[0]||'',
+    lastName:currentProfile?.last_name||currentProfile?.name?.split(' ').slice(1).join(' ')||'',
+    cutoutUrl:currentProfile?.avatar_cutout_url,
+    coverSlug:currentProfile?.selected_cover||'crossover',
+    wins:wins, losses:losses, draws:draws,
+    skillRating:ds.gamesCount>0&&skillVal?skillVal.toFixed(1):'—',
+    socialRating:socialVal?socialVal.toFixed(1):'—',
+    divisionLabel:div.toUpperCase(),
+    activeDivision:div,
+    showTabs:true,
+    onTabClick:'switchCardDivision',
+    showDeltas:false
   });
 
-  // Skill label
-  document.getElementById('cardSkillLabel').textContent=div+' Skill Rating';
-
-  if(ds.gamesCount===0){
-    // Empty state
-    document.getElementById('cardWins').textContent='—';
-    document.getElementById('cardLosses').textContent='—';
-    document.getElementById('cardDraws').textContent='—';
-    document.getElementById('cardSkill').textContent='—';
-    document.getElementById('cardSkillChange').textContent='';
-    document.getElementById('cardWinChange').textContent='';
-    document.getElementById('cardLossChange').textContent='';
-    document.getElementById('cardDrawChange').textContent='';
-    document.getElementById('cardNewBadge').style.display='none';
-  } else {
-    document.getElementById('cardWins').textContent=ds.wins;
-    document.getElementById('cardLosses').textContent=ds.losses;
-    document.getElementById('cardDraws').textContent=ds.draws;
-    document.getElementById('cardSkill').textContent=ds.skillRating!==null?ds.skillRating.toFixed(1):'—';
-    document.getElementById('cardSkillChange').textContent='';
-    document.getElementById('cardWinChange').textContent='';
-    document.getElementById('cardLossChange').textContent='';
-    document.getElementById('cardDrawChange').textContent='';
-    document.getElementById('cardNewBadge').style.display=ds.gamesCount<=5?'inline':'none';
-  }
-  // Social always stays the same
-  document.getElementById('cardSocial').textContent=G.socialRating!==null?G.socialRating.toFixed(1):'—';
-  document.getElementById('cardSocialChange').textContent='';
+  requestAnimationFrame(()=>CareerCard.fitNames('p2cc'));
 }
 
 function resetGame(){
@@ -732,8 +698,8 @@ function resetGame(){
   document.getElementById('setupNextBtn').disabled=true;document.getElementById('joinInput').value='';document.getElementById('joinBtn').disabled=true;document.getElementById('readyBtn').disabled=true;
   document.getElementById('waitingIndicator').style.display='';document.getElementById('lobbyTitle').textContent='Waiting for players';document.getElementById('backBtn').style.display='';
   document.getElementById('codesContainer').innerHTML='';document.getElementById('teamAList').innerHTML='';document.getElementById('teamBList').innerHTML='';
-  document.getElementById('cardWinChange').textContent='';document.getElementById('cardLossChange').textContent='';document.getElementById('cardDrawChange').textContent='';
-  document.getElementById('cardSkillChange').style.color='';document.getElementById('cardSocialChange').style.color='';document.getElementById('gameTimer').textContent='00:00';
+  var p2Card=document.getElementById('p2CardContainer');if(p2Card)p2Card.innerHTML='';
+  document.getElementById('gameTimer').textContent='00:00';
   hist.length=0;hist.push('screenChoose');updateBack('screenChoose');
 }
 

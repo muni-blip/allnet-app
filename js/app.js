@@ -478,13 +478,13 @@ async function loadNotifications() {
 
     list.innerHTML = notifications.map(n => {
       const icon = n.type === 'court_packed' ? '🔥' : n.type === 'post_sprayed' ? '🎨' : '🏀';
-      const timeAgo = formatNotificationTime(new Date(n.created_at));
+      const notifTime = timeAgo(new Date(n.created_at));
       return `<div class="alert-card ${n.read ? '' : 'alert-card--unread'}" data-notification-id="${n.id}" onclick="handleNotificationTap('${n.id}', '${n.court_id || ''}', '${n.type || ''}', '${n.match_id || ''}')">
         <div class="alert-card__icon">${icon}</div>
         <div class="alert-card__body">
           <div class="alert-card__title">${escapeHtml(n.title)}</div>
           <div class="alert-card__text">${escapeHtml(n.body)}</div>
-          <div class="alert-card__time">${timeAgo}</div>
+          <div class="alert-card__time">${notifTime}</div>
         </div>
       </div>`;
     }).join('');
@@ -496,15 +496,7 @@ async function loadNotifications() {
   }
 }
 
-function formatNotificationTime(date) {
-  const now = new Date();
-  const diff = Math.floor((now - date) / 1000);
-  if (diff < 60) return 'Just now';
-  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-  return date.toLocaleDateString();
-}
+// formatNotificationTime removed — using shared timeAgo() from supabase-helpers.js
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -2185,13 +2177,7 @@ showPlayerCard = async function(name, userId) {
   _originalShowPlayerCard(name);
 };
 
-function timeAgo(date) {
-  const s = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (s < 60) return 'Just now';
-  if (s < 3600) return Math.floor(s / 60) + 'm ago';
-  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
-  return Math.floor(s / 86400) + 'd ago';
-}
+// timeAgo() defined in js/supabase-helpers.js
 
 /* ══════════════════════════════
    LOAD USER PROFILE — single source of truth

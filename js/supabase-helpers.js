@@ -258,3 +258,22 @@ async function updatePushPreference(key, value) {
     .eq('id', user.id);
   return !error;
 }
+
+// ── Shared time formatting (Instagram-style) ──
+function timeAgo(date) {
+  if (!(date instanceof Date)) date = new Date(date);
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return 'Just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m === 1 ? '1 minute ago' : m + ' minutes ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h === 1 ? '1 hour ago' : h + ' hours ago';
+  const d = Math.floor(h / 24);
+  if (d < 7) return d === 1 ? '1 day ago' : d + ' days ago';
+  const now = new Date();
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  if (date.getFullYear() === now.getFullYear()) {
+    return months[date.getMonth()] + ' ' + date.getDate();
+  }
+  return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+}

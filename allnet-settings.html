@@ -143,6 +143,16 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
             <span class="toggle__track"></span>
           </label>
         </div>
+        <div class="settings-row">
+          <div class="settings-row__info">
+            <div class="settings-row__label">Game Notifications</div>
+            <div class="settings-row__desc">Get notified about player joins, review reminders, and game results</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="toggleGameAlerts" checked onchange="handleGameAlertsToggle(this.checked)">
+            <span class="toggle__track"></span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -186,6 +196,9 @@ async function initSettings() {
 
     const sprayToggle = document.getElementById('toggleSprayAlerts');
     sprayToggle.checked = currentProfile.push_spray_alerts !== false;
+
+    const gameToggle = document.getElementById('toggleGameAlerts');
+    gameToggle.checked = currentProfile.push_game_alerts !== false;
   }
 
   // Check browser notification permission
@@ -218,6 +231,20 @@ async function handleSprayAlertsToggle(enabled) {
   } else {
     status.textContent = 'Failed to save — try again';
     document.getElementById('toggleSprayAlerts').checked = !enabled;
+  }
+  setTimeout(() => { status.textContent = ''; }, 2000);
+}
+
+async function handleGameAlertsToggle(enabled) {
+  const status = document.getElementById('settingsStatus');
+  status.textContent = 'Saving...';
+
+  const success = await updatePushPreference('push_game_alerts', enabled);
+  if (success) {
+    status.textContent = enabled ? 'Game notifications enabled' : 'Game notifications disabled';
+  } else {
+    status.textContent = 'Failed to save — try again';
+    document.getElementById('toggleGameAlerts').checked = !enabled;
   }
   setTimeout(() => { status.textContent = ''; }, 2000);
 }

@@ -477,9 +477,14 @@ async function loadNotifications() {
     document.getElementById('alertsMarkAll').style.display = hasUnread ? 'block' : 'none';
 
     list.innerHTML = notifications.map(n => {
-      const icon = n.type === 'court_packed' ? '🔥' : n.type === 'post_sprayed' ? '🎨' : '🏀';
+      const iconMap = {
+        court_active: '🏀', court_heating_up: '🔥', court_packed: '🔥',
+        post_sprayed: '🎨',
+        player_joined: '👋', review_reminder: '📝', game_complete: '🏆', review_penalty: '⚠️'
+      };
+      const icon = iconMap[n.type] || '🏀';
       const notifTime = timeAgo(new Date(n.created_at));
-      return `<div class="alert-card ${n.read ? '' : 'alert-card--unread'}" data-notification-id="${n.id}" onclick="handleNotificationTap('${n.id}', '${n.court_id || ''}', '${n.type || ''}', '${n.match_id || ''}')">
+      return `<div class="alert-card ${n.read ? '' : 'alert-card--unread'}" data-notification-id="${n.id}" onclick="handleNotificationTap('${n.id}', '${n.court_id || ''}', '${n.type || ''}', '${n.match_id || ''}', '${n.game_id || ''}')">
         <div class="alert-card__icon">${icon}</div>
         <div class="alert-card__body">
           <div class="alert-card__title">${escapeHtml(n.title)}</div>
@@ -504,14 +509,24 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-async function handleNotificationTap(notificationId, courtId, type, matchId) {
+async function handleNotificationTap(notificationId, courtId, type, matchId, gameId) {
   await markNotificationRead(notificationId);
   const card = document.querySelector(`.alert-card[data-notification-id="${notificationId}"]`);
   if (card) card.classList.remove('alert-card--unread');
   updateNotificationBadge();
 
-  if (type === 'post_sprayed' && matchId) {
-    // Navigate to activity page with match deep link
+  // Game notification types
+  if (type === 'player_joined' && gameId) {
+    closeNotifications();
+    window.location.href = 'allnet-phase2.html?mode=lobby&game_id=' + gameId;
+  } else if (type === 'review_reminder' && gameId) {
+    closeNotifications();
+    window.location.href = 'allnet-phase2.html?mode=review&game_id=' + gameId;
+  } else if (type === 'game_complete') {
+    closeNotifications();
+    window.location.href = 'allnet-career.html';
+  // Existing types
+  } else if (type === 'post_sprayed' && matchId) {
     closeNotifications();
     window.location.href = 'allnet-activity.html?match=' + matchId;
   } else if (courtId) {

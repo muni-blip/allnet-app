@@ -16,7 +16,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   console.log('AllNet SW: push received');
 
-  let data = { title: 'AllNet', body: 'A court you watch is active!', courtId: null, matchId: null, type: null };
+  let data = { title: 'AllNet', body: 'A court you watch is active!', courtId: null, matchId: null, gameId: null, type: null };
 
   if (event.data) {
     try {
@@ -26,7 +26,10 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const tag = data.matchId ? `spray-${data.matchId}` : (data.courtId ? `court-${data.courtId}` : 'allnet-alert');
+  const tag = data.gameId ? `game-${data.type}-${data.gameId}`
+    : data.matchId ? `spray-${data.matchId}`
+    : data.courtId ? `court-${data.courtId}`
+    : 'allnet-alert';
 
   const options = {
     body: data.body,
@@ -38,6 +41,7 @@ self.addEventListener('push', (event) => {
     data: {
       courtId: data.courtId,
       matchId: data.matchId,
+      gameId: data.gameId,
       type: data.type,
       url: data.url || '/allnet-app.html'
     }
@@ -56,11 +60,17 @@ self.addEventListener('notificationclick', (event) => {
   const notifData = event.notification.data || {};
   let targetUrl;
 
-  if (notifData.type === 'post_sprayed' && notifData.matchId) {
-    // Spray notification → open activity page with match deep link
+  // Game notification types
+  if (notifData.type === 'player_joined' && notifData.gameId) {
+    targetUrl = '/allnet-phase2.html?mode=lobby&game_id=' + notifData.gameId;
+  } else if (notifData.type === 'review_reminder' && notifData.gameId) {
+    targetUrl = '/allnet-phase2.html?mode=review&game_id=' + notifData.gameId;
+  } else if (notifData.type === 'game_complete') {
+    targetUrl = '/allnet-career.html';
+  // Existing notification types
+  } else if (notifData.type === 'post_sprayed' && notifData.matchId) {
     targetUrl = '/allnet-activity.html?match=' + notifData.matchId;
   } else if (notifData.courtId) {
-    // Court alert → open map with court deep link
     targetUrl = '/allnet-app.html?court=' + notifData.courtId;
   } else {
     targetUrl = notifData.url || '/allnet-app.html';

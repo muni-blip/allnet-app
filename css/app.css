@@ -202,13 +202,13 @@ html, body {
 /* ── Mobile ≤480px: nav-bar moves to bottom, mobile filters appear ── */
 @media (max-width: 480px) {
   .app {
-    padding: 12px 12px calc(64px + env(safe-area-inset-bottom, 0px) + 12px) 12px;
+    padding: 12px 12px calc(76px + env(safe-area-inset-bottom, 0px) + 12px) 12px;
   }
   .nav-bar {
     top: auto;
     bottom: 0;
     background: rgba(0,0,0,0.95);
-    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-bottom: calc(12px + max(0px, env(safe-area-inset-bottom)));
   }
   .nav-bar__logo { flex: 0; }
   .pulse-filter { display: none !important; }
@@ -257,7 +257,7 @@ html, body {
   }
   .locate-btn { bottom: 20px; }
   .nudge-banner { top: 0; border-radius: 24px 24px 0 0; }
-  .sheet__body { padding-bottom: 88px; }
+  .sheet__body { padding-bottom: 100px; }
 }
 
 /* ── Check-in Nudge Banner ── */

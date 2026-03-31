@@ -277,3 +277,68 @@ function timeAgo(date) {
   }
   return months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
 }
+
+/* ═══════════════════════════════════════
+   SHARED NAV BAR — populates stars, bell, avatar
+   on any page that includes the .nav-bar element.
+   Call from each page's init after Supabase is ready.
+   ═══════════════════════════════════════ */
+async function initNavBar() {
+  var starsEl = document.getElementById('topBarStars');
+  var starsCount = document.getElementById('topBarStarsCount');
+  var bellEl = document.getElementById('navBell');
+  var badgeEl = document.getElementById('navBellBadge');
+  var profileBtn = document.getElementById('profileBtn');
+  if (!profileBtn) return; // no nav bar on this page
+
+  try {
+    var session = (await supabase.auth.getSession()).data.session;
+    if (!session) return; // not logged in — keep "Get Started" CTA
+
+    var profile = await getUserProfile(session.user.id);
+    if (!profile) return;
+
+    // Stars
+    if (starsEl && starsCount) {
+      starsCount.textContent = (profile.stars_balance || 0).toLocaleString();
+      starsEl.style.display = 'flex';
+    }
+
+    // Bell + unread badge
+    if (bellEl) {
+      bellEl.style.display = 'flex';
+      try {
+        var { count } = await supabase
+          .from('notifications').select('id', { count: 'exact', head: true })
+          .eq('user_id', session.user.id).eq('read', false);
+        if (badgeEl) {
+          if (count && count > 0) {
+            badgeEl.textContent = count > 99 ? '99+' : count;
+            badgeEl.style.display = 'flex';
+          } else {
+            badgeEl.style.display = 'none';
+          }
+        }
+      } catch (e) { if (badgeEl) badgeEl.style.display = 'none'; }
+    }
+
+    // Avatar — replace CTA with avatar
+    profileBtn.className = 'nav-bar__avatar';
+    profileBtn.onclick = function() { window.location.href = 'allnet-app.html'; };
+    if (profile.avatar_url) {
+      profileBtn.innerHTML = '<img src="' + profile.avatar_url + '" style="width:100%;height:100%;object-fit:cover;" alt="' + (profile.name || '') + '">';
+    } else {
+      profileBtn.textContent = profile.initials || 'U';
+    }
+  } catch (err) {
+    console.error('initNavBar error:', err);
+  }
+}
+
+// Fallback handlers for secondary pages (overridden by app.js on Play page)
+if (typeof openNotifications === 'undefined') {
+  var openNotifications = function() { window.location.href = 'allnet-app.html'; };
+}
+if (typeof handleProfileClick === 'undefined') {
+  var handleProfileClick = function() { window.location.href = 'allnet-app.html'; };
+}

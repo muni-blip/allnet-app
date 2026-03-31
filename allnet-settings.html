@@ -4,23 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Settings</title>
+<link rel="stylesheet" href="css/app.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --bg: #0A0A0A; --bg-elevated: #141414; --bg-card: #1A1A1A; --surface: #111111;
-  --orange: #FF5A1F; --orange-glow: rgba(255,90,31,0.15);
-  --green: #22C55E; --red: #EF4444;
-  --text-primary: #F5F5F5; --text-secondary: #A3A3A3; --text-muted: #6B6B6B;
-  --border: #2A2A2A;
-  --radius: 12px; --radius-sm: 8px;
-  --font-display: 'Oswald', sans-serif; --font-body: 'DM Sans', sans-serif; --font-mono: 'JetBrains Mono', monospace;
-  --transition: 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
-}
+
 html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
 
-.app { max-width: 480px; margin: 0 auto; min-height: 100%; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+.settings-page { max-width: 480px; margin: 0 auto; min-height: 100vh; border-left: 1px solid var(--border); border-right: 1px solid var(--border); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px); }
 
 /* ── Top bar ── */
 .top-bar {
@@ -109,7 +101,24 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 </head>
 <body>
 
-<div class="app">
+<!-- Nav Drawer -->
+<div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer__header">
+    <svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
+    <button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button>
+  </div>
+  <nav class="nav-drawer__links">
+    <a href="allnet-app.html" class="nav-drawer__link" data-nav="play"><span class="nav-drawer__link-icon">🏀</span><span class="nav-drawer__link-label">Play</span></a>
+    <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity"><span class="nav-drawer__link-icon">📊</span><span class="nav-drawer__link-label">Activity</span></a>
+    <a href="allnet-career.html" class="nav-drawer__link" data-nav="career"><span class="nav-drawer__link-icon">🏆</span><span class="nav-drawer__link-label">Career</span></a>
+    <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars"><span class="nav-drawer__link-icon">⭐</span><span class="nav-drawer__link-label">Stars</span></a>
+    <a href="allnet-settings.html" class="nav-drawer__link nav-drawer__link--active" data-nav="settings"><span class="nav-drawer__link-icon">⚙️</span><span class="nav-drawer__link-label">Settings</span></a>
+  </nav>
+  <div class="nav-drawer__footer"></div>
+</div>
+
+<div class="settings-page">
   <div class="top-bar">
     <button class="top-bar__back" onclick="window.location.href='allnet-app.html'">← Back</button>
     <div class="top-bar__title">Settings</div>
@@ -172,11 +181,37 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
   </div>
 </div>
 
+<!-- ═══ Bottom Nav Bar ═══ -->
+<div class="nav-bar" id="navBar">
+  <button class="nav-bar__menu" onclick="openNavDrawer()" aria-label="Menu">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13C10.1046 13 11 13.8954 11 15V20C11 21.1046 10.1046 22 9 22H4C2.89543 22 2 21.1046 2 20V15C2 13.8954 2.89543 13 4 13H9ZM20 13C21.1046 13 22 13.8954 22 15V20C22 21.1046 21.1046 22 20 22H15C13.8954 22 13 21.1046 13 20V15C13 13.8954 13.8954 13 15 13H20ZM9 2C10.1046 2 11 2.89543 11 4V9C11 10.1046 10.1046 11 9 11H4C2.89543 11 2 10.1046 2 9V4C2 2.89543 2.89543 2 4 2H9ZM20 2C21.1046 2 22 2.89543 22 4V9C22 10.1046 21.1046 11 20 11H15C13.8954 11 13 10.1046 13 9V4C13 2.89543 13.8954 2 15 2H20Z" fill="url(#menuGrad2)"/><defs><linearGradient id="menuGrad2" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F8981D"/><stop offset="1" stop-color="#F74501"/></linearGradient></defs></svg>
+  </button>
+  <span class="nav-bar__logo"><a href="allnet-app.html"><svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a></span>
+  <div class="nav-bar__spacer"></div>
+  <div class="nav-bar__right" id="navBarRight">
+    <a href="allnet-stars.html" class="nav-bar__stars" id="topBarStars" style="display:none;"><span id="topBarStarsCount">0</span> <img src="https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/star-icon.png" alt="⭐" style="width:14px;height:14px;" onerror="this.replaceWith(document.createTextNode('⭐'))"></a>
+    <button class="nav-bar__bell" id="navBell" onclick="openNotifications()" style="display:none;" aria-label="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="nav-bar__bell-badge" id="navBellBadge" style="display:none;">0</span>
+    </button>
+    <button class="nav-bar__cta" id="profileBtn" onclick="handleProfileClick()">Get Started</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
 <script>
 let currentUser = null;
 let currentProfile = null;
+
+function openNavDrawer() {
+  document.getElementById('navOverlay').classList.add('open');
+  document.getElementById('navDrawer').classList.add('open');
+}
+function closeNavDrawer() {
+  document.getElementById('navOverlay').classList.remove('open');
+  document.getElementById('navDrawer').classList.remove('open');
+}
 
 async function initSettings() {
   const user = await getUser();
@@ -186,6 +221,7 @@ async function initSettings() {
   }
   currentUser = user;
   currentProfile = await getUserProfile(user.id);
+  initNavBar();
 
   if (currentProfile) {
     document.getElementById('settingsUserName').textContent = currentProfile.name || 'Player';

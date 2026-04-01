@@ -2098,7 +2098,7 @@ async function initApp() {
       try {
         const { data: activeGames } = await supabase
           .from('game_players')
-          .select('game_id, team, status, game_sessions!inner(id, format, status, started_at, court_id, courts(name))')
+          .select('game_id, team, status, game_sessions!inner(id, format, status, started_at, created_at, court_id, courts(name))')
           .eq('user_id', currentUser.id)
           .eq('status', 'active')
           .in('game_sessions.status', ['active', 'lobby']);
@@ -2106,7 +2106,18 @@ async function initApp() {
         const resumable = (activeGames || []).filter(g =>
           g.game_sessions && (g.game_sessions.status === 'active' || g.game_sessions.status === 'lobby')
         );
+        // Sort by most recently created — always resume the newest game
+        resumable.sort((a, b) => new Date(b.game_sessions.created_at) - new Date(a.game_sessions.created_at));
         if (resumable.length > 0) {
+          // Auto-cleanup older stale games (keep only the newest)
+          for (let i = 1; i < resumable.length; i++) {
+            const staleId = resumable[i].game_sessions.id;
+            supabase.from('game_players').update({ status: 'abandoned', left_at: new Date().toISOString() })
+              .eq('game_id', staleId).eq('user_id', currentUser.id).then(() => {});
+            supabase.from('game_sessions').update({ status: 'nulled', ended_at: new Date().toISOString() })
+              .eq('id', staleId).then(() => {});
+          }
+
           const g = resumable[0];
           const gs = g.game_sessions;
           const courtDisplayName = gs.courts?.name || 'Unknown Court';

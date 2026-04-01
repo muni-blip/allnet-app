@@ -47,6 +47,7 @@ var CareerCard = (function() {
     var fn       = (opts.firstName || '').toUpperCase();
     var ln       = (opts.lastName || '').toUpperCase();
     var cut      = opts.cutoutUrl;
+    var avUrl    = opts.avatarUrl;
     var coverUrl = getCoverUrl(opts.coverSlug || 'crossover');
     var w        = opts.wins || 0;
     var l        = opts.losses || 0;
@@ -62,13 +63,18 @@ var CareerCard = (function() {
     var soD      = opts.socialDelta;
     var wD       = opts.winsDelta;
 
-    // Player image: show cutout or placeholder prompt
-    var playerFrameHtml = cut
-      ? '<div class="cc__player-frame"><img src="' + cut + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>'
-      : '<div class="cc__placeholder">' +
+    // Player image: cutout (best) → regular avatar fallback → placeholder prompt
+    var playerFrameHtml;
+    if (cut) {
+      playerFrameHtml = '<div class="cc__player-frame"><img src="' + cut + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>';
+    } else if (avUrl) {
+      playerFrameHtml = '<div class="cc__player-frame"><img src="' + avUrl + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>';
+    } else {
+      playerFrameHtml = '<div class="cc__placeholder">' +
           '<div class="cc__placeholder-icon">📷</div>' +
           '<div class="cc__placeholder-text">Upload a photo to generate your career card</div>' +
         '</div>';
+    }
 
     // W/L/D with optional delta
     var wDeltaHtml = (showD && wD && wD > 0) ? '<div class="cc__wld-delta">+' + wD + '</div>' : '';

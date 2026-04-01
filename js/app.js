@@ -27,7 +27,7 @@ async function showPlayerCard(name, userId) {
   try {
     const [{ data: player }, { data: stats }] = await Promise.all([
       supabase.from('profiles')
-        .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating, skill_rating')
+        .select('id, first_name, last_name, name, avatar_url, avatar_cutout_url, selected_cover, social_rating, skill_rating')
         .eq('id', userId).single(),
       supabase.from('player_division_stats')
         .select('*').eq('user_id', userId)
@@ -64,6 +64,7 @@ function renderPlayerSheetCard() {
     firstName: player.first_name || player.name?.split(' ')[0] || '',
     lastName: player.last_name || player.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: player.avatar_cutout_url,
+    avatarUrl: player.avatar_url,
     coverSlug: player.selected_cover || 'crossover',
     wins: ds?.wins || 0, losses: ds?.losses || 0, draws: ds?.draws || 0,
     skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
@@ -147,6 +148,7 @@ function renderRatingOverlayCard() {
     firstName: profile.first_name || profile.name?.split(' ')[0] || '',
     lastName: profile.last_name || profile.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: profile.avatar_cutout_url,
+    avatarUrl: profile.avatar_url,
     coverSlug: profile.selected_cover || 'crossover',
     wins: wins, losses: losses, draws: draws,
     skillRating: skillVal ? skillVal.toFixed(1) : '—',
@@ -1825,6 +1827,7 @@ function renderCareerCard() {
     firstName: currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '',
     lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: currentProfile?.avatar_cutout_url,
+    avatarUrl: currentProfile?.avatar_url,
     coverSlug: currentProfile?.selected_cover || 'crossover',
     wins: currentProfile?.wins || 0,
     losses: currentProfile?.losses || 0,
@@ -1856,6 +1859,7 @@ function switchProfileCardDivision(div) {
     firstName: currentProfile?.first_name || currentProfile?.name?.split(' ')[0] || '',
     lastName: currentProfile?.last_name || currentProfile?.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: currentProfile?.avatar_cutout_url,
+    avatarUrl: currentProfile?.avatar_url,
     coverSlug: currentProfile?.selected_cover || 'crossover',
     wins: ds?.wins || 0,
     losses: ds?.losses || 0,

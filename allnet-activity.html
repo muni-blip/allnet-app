@@ -796,6 +796,7 @@ function renderPlayerSheetCard() {
     firstName: player.first_name || player.name?.split(' ')[0] || '',
     lastName: player.last_name || player.name?.split(' ').slice(1).join(' ') || '',
     cutoutUrl: player.avatar_cutout_url,
+    avatarUrl: player.avatar_url,
     coverSlug: player.selected_cover || 'crossover',
     wins: ds?.wins || 0, losses: ds?.losses || 0, draws: ds?.draws || 0,
     skillRating: ds?.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',

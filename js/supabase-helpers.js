@@ -358,7 +358,7 @@ async function initNavBar() {
 
     // Avatar — replace CTA with composite avatar
     profileBtn.className = 'nav-bar__avatar';
-    profileBtn.onclick = function() { window.location.href = 'allnet-app.html'; };
+    profileBtn.onclick = function() { openSharedProfile(); };
     profileBtn.innerHTML = buildCompositeAvatarHtml(profile);
   } catch (err) {
     console.error('initNavBar error:', err);
@@ -370,5 +370,103 @@ if (typeof openNotifications === 'undefined') {
   var openNotifications = function() { window.location.href = 'allnet-app.html'; };
 }
 if (typeof handleProfileClick === 'undefined') {
-  var handleProfileClick = function() { window.location.href = 'allnet-app.html'; };
+  var handleProfileClick = function() { openSharedProfile(); };
+}
+
+/* ══════════════════════════════
+   SHARED PROFILE PANEL
+   Works on any page — injects HTML on first open, fetches data from Supabase
+   On the Play page, app.js overrides openSharedProfile with its richer openProfile()
+   ══════════════════════════════ */
+function _injectProfilePanel() {
+  if (document.getElementById('sharedProfileScreen')) return;
+  var panel = document.createElement('div');
+  panel.className = 'profile-screen';
+  panel.id = 'sharedProfileScreen';
+  panel.innerHTML = '<button class="profile-back" onclick="closeSharedProfile()">← Back</button>' +
+    '<div class="profile-content">' +
+      '<div class="profile-card">' +
+        '<div class="profile-card__avatar" id="sp_avatar">U</div>' +
+        '<div class="profile-card__name" id="sp_name">Your Profile</div>' +
+        '<div class="profile-card__location">📍 OC/LA</div>' +
+        '<div class="profile-card__founding-badge">🏅 Founding Hooper</div>' +
+      '</div>' +
+      '<div class="profile-stats">' +
+        '<div class="profile-stat"><div class="profile-stat__value" id="sp_days">—</div><div class="profile-stat__label">Days In</div></div>' +
+        '<div class="profile-stat"><div class="profile-stat__value" id="sp_checkins">—</div><div class="profile-stat__label">Check-ins</div></div>' +
+        '<div class="profile-stat"><div class="profile-stat__value" id="sp_courts">—</div><div class="profile-stat__label">Courts</div></div>' +
+      '</div>' +
+      '<div class="profile-section-title">// Recent Activity</div>' +
+      '<div class="history-list" id="sp_history"><div class="empty-checkins">Loading...</div></div>' +
+      '<button class="logout-btn" onclick="sharedLogOut()">Log Out</button>' +
+    '</div>';
+  document.body.appendChild(panel);
+}
+
+async function openSharedProfile() {
+  try {
+    var sess = (await supabase.auth.getSession()).data.session;
+    if (!sess) return;
+    var profile = await getUserProfile(sess.user.id);
+    if (!profile) return;
+
+    _injectProfilePanel();
+    var panel = document.getElementById('sharedProfileScreen');
+
+    // Avatar
+    var avatarEl = document.getElementById('sp_avatar');
+    if (avatarEl) avatarEl.innerHTML = buildCompositeAvatarHtml(profile);
+
+    // Name
+    var nameEl = document.getElementById('sp_name');
+    if (nameEl) nameEl.textContent = (profile.first_name || '') + ' ' + (profile.last_name || '');
+
+    // Stats
+    var created = profile.created_at ? new Date(profile.created_at) : new Date();
+    var days = Math.max(1, Math.floor((Date.now() - created.getTime()) / 86400000));
+    var daysEl = document.getElementById('sp_days');
+    if (daysEl) daysEl.textContent = days;
+
+    // Checkins
+    var checkins = await getUserCheckins(sess.user.id);
+    var checkinsEl = document.getElementById('sp_checkins');
+    if (checkinsEl) checkinsEl.textContent = checkins ? checkins.length : 0;
+
+    // Unique courts
+    var courtsEl = document.getElementById('sp_courts');
+    if (courtsEl && checkins) {
+      var unique = new Set(checkins.map(function(c) { return c.court_id; }));
+      courtsEl.textContent = unique.size;
+    }
+
+    // Recent history (5 most recent)
+    var histEl = document.getElementById('sp_history');
+    if (histEl && checkins && checkins.length > 0) {
+      histEl.innerHTML = checkins.slice(0, 5).map(function(c) {
+        var t = new Date(c.checked_in_at);
+        var diff = Math.floor((Date.now() - t.getTime()) / 1000);
+        var timeStr = diff < 60 ? 'Just now' : diff < 3600 ? Math.floor(diff/60) + 'm ago' : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return '<div class="history-item"><div class="history-item__icon">📍</div>' +
+          '<div class="history-item__info"><div class="history-item__title">' + (c.courts?.name || 'Court') + '</div>' +
+          '<div class="history-item__meta">Checked in</div></div>' +
+          '<div class="history-item__time">' + timeStr + '</div></div>';
+      }).join('');
+    } else if (histEl) {
+      histEl.innerHTML = '<div class="empty-checkins">No check-ins yet. Visit a court and tap "I\'m Here" to start building your history.</div>';
+    }
+
+    panel.classList.add('open');
+  } catch (err) {
+    console.error('openSharedProfile error:', err);
+  }
+}
+
+function closeSharedProfile() {
+  var panel = document.getElementById('sharedProfileScreen');
+  if (panel) panel.classList.remove('open');
+}
+
+async function sharedLogOut() {
+  await supabase.auth.signOut();
+  window.location.href = 'allnet-app.html';
 }

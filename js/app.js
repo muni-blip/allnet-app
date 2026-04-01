@@ -889,7 +889,7 @@ function openSheet(court) {
           avatar_cutout_url: p.avatarCutoutUrl, avatar_url: p.avatarUrl,
           selected_cover: p.selectedCover, initials: p.initials, name: p.name
         });
-        return `<div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,'${p.userId}'` : ''})`}">
+        return `<div class="checkin-player" onclick="${`closeSheet();showPlayerCard('${p.name.replace(/'/g, "\\'")}'${p.userId ? `,'${p.userId}'` : ''})`}">
           <div class="checkin-player__avatar">${avatarContent}</div>
           <div class="checkin-player__info">
             <div class="checkin-player__name">${p.name}</div>
@@ -1441,7 +1441,7 @@ function renderHistory() {
     return;
   }
 
-  list.innerHTML = userCheckins.map(c => {
+  list.innerHTML = userCheckins.slice(0, 5).map(c => {
     const timeStr = formatTime(c.time);
     return `<div class="history-item">
       <div class="history-item__icon">📍</div>
@@ -2266,7 +2266,7 @@ function _updateSheetLiveData(court, reported) {
           avatar_cutout_url: p.avatarCutoutUrl, avatar_url: p.avatarUrl,
           selected_cover: p.selectedCover, initials: p.initials, name: p.name
         });
-        return `<div class="checkin-player" onclick="${(currentProfile && p.name === currentProfile.name) ? 'closeSheet();openProfile()' : `closeSheet();showPlayerCard('${p.name}'${p.userId ? `,'${p.userId}'` : ''})`}">
+        return `<div class="checkin-player" onclick="${`closeSheet();showPlayerCard('${p.name.replace(/'/g, "\\'")}'${p.userId ? `,'${p.userId}'` : ''})`}">
           <div class="checkin-player__avatar">${avatarContent}</div>
           <div class="checkin-player__info">
             <div class="checkin-player__name">${p.name}</div>

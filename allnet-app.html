@@ -321,7 +321,7 @@
     <div class="profile-content">
       <div class="profile-card">
         <div class="profile-card__avatar" id="profileCardAvatar" onclick="triggerProfileAvatarUpload()">U</div>
-        <input type="file" id="profileAvatarInput" accept="image/*" capture="user" style="display:none;" onchange="handleProfileAvatarChange(this)">
+        <input type="file" id="profileAvatarInput" accept="image/*" style="display:none;" onchange="handleProfileAvatarChange(this)">
         <div class="profile-card__name">Your Profile</div>
         <div class="profile-card__location">📍 OC/LA</div>
         <div class="profile-card__founding-badge">🏅 Founding Hooper</div>
@@ -384,7 +384,7 @@
           </div>
           <div class="onboarding-avatar-label" id="onboardAvatarLabel">Tap to upload a photo</div>
         </div>
-        <input type="file" id="onboardAvatarInput" accept="image/*" capture="user" style="display:none;" onchange="previewOnboardAvatar(this)">
+        <input type="file" id="onboardAvatarInput" accept="image/*" style="display:none;" onchange="previewOnboardAvatar(this)">
         <div class="onboarding-error" id="onboardPhotoError"></div>
         <button class="btn btn--primary" id="onboardPhotoBtn" onclick="submitOnboardAvatar()" style="width:100%;margin-top:10px;" disabled>Upload Photo</button>
         <button class="btn btn--secondary" onclick="skipAvatarUpload()" style="width:100%;margin-top:10px;flex:none;">Skip for now</button>
@@ -420,7 +420,7 @@
         </div>
         <div class="onboarding-avatar-label" id="promptAvatarLabel">Tap to upload a photo</div>
       </div>
-      <input type="file" id="promptAvatarInput" accept="image/*" capture="user" style="display:none;" onchange="previewPromptAvatar(this)">
+      <input type="file" id="promptAvatarInput" accept="image/*" style="display:none;" onchange="previewPromptAvatar(this)">
       <div class="onboarding-error" id="promptPhotoError"></div>
       <button class="btn btn--primary" id="promptPhotoBtn" onclick="submitPromptAvatar()" style="width:100%;margin-bottom:10px;flex:none;" disabled>Upload & Start Game</button>
       <button class="btn btn--secondary" onclick="closePhotoPromptModal()" style="width:100%;flex:none;">Not now</button>

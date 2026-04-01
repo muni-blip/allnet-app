@@ -1564,18 +1564,22 @@ async function handleProfileAvatarChange(input) {
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
     currentProfile.avatar_url = publicUrl;
     updateAvatarDisplays(publicUrl);
+
+    // Await background removal — keep overlay visible
+    showUploadOverlay('Removing background...');
+    const cutoutUrl = await processAvatar(path);
     hideUploadOverlay();
-    showToast('Profile photo updated — removing background... ⚡');
-    // Process avatar in background — card will update when done
-    processAvatar(path).then(() => {
+    if (cutoutUrl) {
       showToast('Career card updated 🏀');
-    }).catch(err => console.error('processAvatar failed (non-fatal):', err));
+    } else {
+      showAlert('Photo Processing Failed', 'Background removal failed. Please try uploading a different photo with a clear, well-lit background.', { icon: '⚠️' });
+    }
   } catch (err) {
     console.error('Profile avatar upload failed:', err);
     hideUploadOverlay();
     const avatarEl = document.getElementById('profileCardAvatar');
     if (avatarEl) avatarEl.textContent = currentProfile?.initials || 'U';
-    showToast('Photo upload failed. Please try again.');
+    showAlert('Upload Failed', 'Photo upload failed. Please try again.', { icon: '⚠️' });
   }
   input.value = '';
 }
@@ -1727,12 +1731,20 @@ async function submitOnboardAvatar() {
 
     currentProfile.avatar_url = publicUrl;
     updateAvatarDisplays(publicUrl);
-    hideUploadOverlay();
-    closeOnboarding();
-    showToast('Welcome to AllNet, ' + currentProfile.first_name + '! 🏀');
 
-    // Kick off background removal after onboarding closes — non-blocking
-    processAvatar(path).catch(err => console.error('processAvatar failed (non-fatal):', err));
+    // Await background removal — keep overlay visible
+    showUploadOverlay('Removing background...');
+    const cutoutUrl = await processAvatar(path);
+    hideUploadOverlay();
+
+    if (cutoutUrl) {
+      closeOnboarding();
+      showToast('Welcome to AllNet, ' + currentProfile.first_name + '! 🏀');
+    } else {
+      errorEl.textContent = 'Background removal failed. Try a different photo with a clear background.';
+      btn.disabled = false;
+      btn.textContent = 'Upload Photo';
+    }
 
   } catch (err) {
     console.error('Avatar upload error:', err);
@@ -1914,8 +1926,6 @@ function showCareerCardProcessing() {
 async function processAvatar(storagePath) {
   showCareerCardProcessing();
   try {
-    // FIX 1: getSession() can return null after OAuth redirect.
-    // Refresh session to guarantee a valid token before calling the edge function.
     let token = null;
     const { data: sessionData } = await supabase.auth.getSession();
     token = sessionData?.session?.access_token;
@@ -1926,10 +1936,6 @@ async function processAvatar(storagePath) {
       token = refreshData.session.access_token;
     }
 
-    // FIX 2: Supabase Edge Functions require BOTH headers:
-    //   Authorization: Bearer <user-token>  — authenticates the user
-    //   apikey: <anon-key>                  — identifies the project to the gateway
-    // Without 'apikey', the gateway returns 401 before our function code runs at all.
     const res = await fetch(SUPABASE_URL + '/functions/v1/avatar-process', {
       method: 'POST',
       headers: {
@@ -1949,16 +1955,13 @@ async function processAvatar(storagePath) {
     currentProfile.avatar_cutout_url = result.cutoutUrl;
     if (!currentProfile.selected_cover) currentProfile.selected_cover = 'crossover';
 
-    // Refresh career card AND both avatar circles with the new composite
     renderCareerCard();
     updateAvatarDisplays(currentProfile.avatar_url);
     return result.cutoutUrl;
 
   } catch (err) {
-    // FIX 3 & 4: Show visible toast and always reset card — never leave stuck on spinner
     console.error('processAvatar error:', err);
     renderCareerCard();
-    showToast('Career card processing failed — try re-uploading your photo');
     return null;
   }
 }
@@ -2037,14 +2040,20 @@ async function submitPromptAvatar() {
     currentProfile.avatar_url = publicUrl;
     updateAvatarDisplays(publicUrl);
 
+    // Await background removal — keep overlay visible
+    showUploadOverlay('Removing background...');
+    const cutoutUrl = await processAvatar(path);
     hideUploadOverlay();
-    closePhotoPromptModal();
 
-    // Kick off background removal — non-blocking, navigates to game after
-    processAvatar(path).catch(err => console.error('processAvatar failed (non-fatal):', err));
-
-    if (pendingGameCourt) {
-      window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(pendingGameCourt);
+    if (cutoutUrl) {
+      closePhotoPromptModal();
+      if (pendingGameCourt) {
+        window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(pendingGameCourt);
+      }
+    } else {
+      errorEl.textContent = 'Background removal failed. Try a different photo with a clear background.';
+      btn.disabled = false;
+      btn.textContent = 'Upload & Start Game';
     }
 
   } catch (err) {

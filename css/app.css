@@ -1386,6 +1386,19 @@ html, body {
   pointer-events: all;
 }
 
+@media (max-width: 480px) {
+  .toast {
+    left: 16px;
+    right: 16px;
+    transform: translateX(0) translateY(-20px);
+    max-width: none;
+    width: auto;
+  }
+  .toast.visible {
+    transform: translateX(0) translateY(0);
+  }
+}
+
 .toast__icon { font-size: 18px; }
 .toast__text span { color: var(--green-live); }
 

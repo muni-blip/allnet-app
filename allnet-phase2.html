@@ -7,7 +7,19 @@
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/career-card.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 <style>
+/* ═══ Resume Splash ═══ */
+.p2-splash{position:fixed;inset:0;z-index:9999;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease;}
+.p2-splash.active{display:flex;}
+.p2-splash.dismiss{opacity:0;pointer-events:none;}
+.p2-splash__lottie{width:200px;height:150px;}
+.p2-splash__text{position:relative;height:20px;width:100%;max-width:320px;margin-top:16px;overflow:hidden;}
+.p2-splash__msg{position:absolute;width:100%;text-align:center;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;color:#666;opacity:0;animation:p2Msg 7.5s infinite;}
+.p2-splash__msg:nth-child(1){animation-delay:0s;}
+.p2-splash__msg:nth-child(2){animation-delay:2.5s;}
+.p2-splash__msg:nth-child(3){animation-delay:5s;}
+@keyframes p2Msg{0%{opacity:0;transform:translateY(6px);}8%{opacity:1;transform:translateY(0);}28%{opacity:1;transform:translateY(0);}36%{opacity:0;transform:translateY(-6px);}100%{opacity:0;}}
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
   --bg: #0A0A0A; --bg-elevated: #141414; --bg-card: #1A1A1A; --surface: #111111;
@@ -284,6 +296,41 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
 </style>
 </head>
 <body>
+<!-- ═══ Resume Splash (only shown when resuming) ═══ -->
+<div class="p2-splash" id="p2Splash">
+  <div class="p2-splash__lottie" id="p2SplashLottie"></div>
+  <div class="p2-splash__text">
+    <div class="p2-splash__msg">Getting back in the game...</div>
+    <div class="p2-splash__msg">Checking the scoreboard...</div>
+    <div class="p2-splash__msg">Warming up, one sec...</div>
+  </div>
+</div>
+<script>
+  // Show splash only when resuming a game (mode param present)
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var mode = params.get('mode');
+    if (mode === 'resume' || mode === 'lobby' || mode === 'review') {
+      var splash = document.getElementById('p2Splash');
+      splash.classList.add('active');
+      if (typeof lottie !== 'undefined') {
+        lottie.loadAnimation({
+          container: document.getElementById('p2SplashLottie'),
+          renderer: 'svg', loop: true, autoplay: true,
+          path: '/img/loader-basketball.json'
+        });
+      }
+      // Safety: dismiss after 6s max
+      setTimeout(function() {
+        if (splash && !splash.classList.contains('dismiss')) {
+          splash.classList.add('dismiss');
+          setTimeout(function(){ splash.remove(); }, 500);
+        }
+      }, 6000);
+    }
+  })();
+</script>
+
 <div class="app">
   <div class="top-bar"><a class="top-bar__logo"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a><div style="flex:1;"></div><button class="top-bar__back" id="backBtn" onclick="goBack()">← Back</button></div>
   <div class="screen active" id="screenChoose">
@@ -449,6 +496,13 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
 <script src="js/career-card.js"></script>
 <script>
 const FORMAT_SIZES={'1v1':1,'2v2':2,'3v3':3,'4v4':4,'5v5':5};
+
+function dismissP2Splash() {
+  const splash = document.getElementById('p2Splash');
+  if (!splash || splash.classList.contains('dismiss')) return;
+  splash.classList.add('dismiss');
+  setTimeout(() => splash.remove(), 500);
+}
 
 // Read court name from URL param
 const urlParams=new URLSearchParams(window.location.search);
@@ -1221,11 +1275,12 @@ async function submitReport() {
 async function initPhase2() {
   if (typeof supabase === 'undefined' || typeof fetchCourts !== 'function') {
     console.log('Phase 2: Running in demo mode');
+    dismissP2Splash();
     return;
   }
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { console.log('Phase 2: Not logged in'); return; }
+    if (!session) { console.log('Phase 2: Not logged in'); dismissP2Splash(); return; }
     currentUser = session.user;
     currentProfile = await getUserProfile(currentUser.id);
     if (currentProfile) {
@@ -1264,17 +1319,17 @@ async function initPhase2() {
     if (reviewMode === 'review' && reviewGameId && currentUser) {
       try {
         await loadPendingReviewGame(reviewGameId);
-      } catch (err) { console.error('Failed to load pending review game:', err); }
+      } catch (err) { console.error('Failed to load pending review game:', err); dismissP2Splash(); }
     } else if (reviewMode === 'lobby' && reviewGameId && currentUser) {
       try {
         await loadLobbyGame(reviewGameId);
-      } catch (err) { console.error('Failed to load lobby game:', err); }
+      } catch (err) { console.error('Failed to load lobby game:', err); dismissP2Splash(); }
     } else if (reviewMode === 'resume' && reviewGameId && currentUser) {
       try {
         await resumeActiveGame(reviewGameId);
-      } catch (err) { console.error('Failed to resume active game:', err); }
+      } catch (err) { console.error('Failed to resume active game:', err); dismissP2Splash(); }
     }
-  } catch (err) { console.error('Phase 2 init error:', err); }
+  } catch (err) { console.error('Phase 2 init error:', err); dismissP2Splash(); }
 }
 
 async function loadPendingReviewGame(gameId) {
@@ -1340,6 +1395,7 @@ async function loadPendingReviewGame(gameId) {
   if (allOthers.length === 0) {
     // All reviews already submitted
     document.querySelector('.court-context__name').textContent = (game.courts?.name || courtName) + ' · All Reviews Done';
+    dismissP2Splash();
     return;
   }
 
@@ -1359,6 +1415,7 @@ async function loadPendingReviewGame(gameId) {
   goTo('screenReview');
   renderReview();
   console.log('Phase 2: Loaded pending review for game', gameId, '—', G.reviews.length, 'players to review');
+  dismissP2Splash();
 }
 
 async function loadLobbyGame(gameId) {
@@ -1433,6 +1490,7 @@ async function loadLobbyGame(gameId) {
   renderLobby();
   checkReady();
   console.log('Phase 2: Loaded lobby for game', gameId, '— Team A:', G.teamA.length, 'Team B:', G.teamB.length);
+  dismissP2Splash();
 }
 
 async function resumeActiveGame(gameId) {
@@ -1516,6 +1574,7 @@ async function resumeActiveGame(gameId) {
   }, 1000);
 
   console.log('Phase 2: Resumed active game', gameId, '— elapsed', elapsed, 'seconds');
+  dismissP2Splash();
 }
 
 // Override createGame to persist to Supabase

@@ -984,6 +984,19 @@ function openSheet(court) {
       <div class="checkin-list">${checkinHTML}</div>
     </div>
 
+    <div class="leaderboard-section" id="courtLeaderboard" style="display:none;">
+      <div class="leaderboard-title-row">
+        <div class="forecast-title">// Court Leaders</div>
+        <button class="leaderboard-info-btn" onclick="toggleLeaderboardTooltip()" title="How scores are calculated">?</button>
+      </div>
+      <div class="leaderboard-tooltip" id="leaderboardTooltip">
+        <strong>Court Leader Score</strong><br>
+        Score = (Skill × 40%) + (Social × 25%) + (Win% × 35%)<br>
+        Players must have at least 1 completed game at this court to qualify.
+      </div>
+      <div id="leaderboardList"></div>
+    </div>
+
     <div class="court-actions">
       ${checkinCourts.has(court.id)
         ? `<button class="btn btn--success" onclick="startGame('${court.name.replace(/'/g, "\\'")}')">🏀 Start a Game</button>
@@ -1014,6 +1027,49 @@ function toggleForecastTooltip(wrapper) {
   if (!wasTapped) {
     wrapper.classList.add('tapped');
     setTimeout(() => wrapper.classList.remove('tapped'), 3000);
+  }
+}
+
+/* ══════════════════════════════
+   COURT LEADERBOARD
+   ══════════════════════════════ */
+function toggleLeaderboardTooltip() {
+  const tip = document.getElementById('leaderboardTooltip');
+  if (tip) tip.classList.toggle('visible');
+}
+
+async function fetchAndRenderLeaderboard(courtId) {
+  const section = document.getElementById('courtLeaderboard');
+  const list = document.getElementById('leaderboardList');
+  if (!section || !list) return;
+
+  try {
+    const { data, error } = await supabase.rpc('get_court_leaderboard', { p_court_id: courtId });
+    if (error || !data || data.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = data.map((p, i) => {
+      const rank = i + 1;
+      const rankCls = rank <= 3 ? ' leaderboard-rank--' + rank : '';
+      const avatarContent = (typeof buildCompositeAvatarHtml === 'function' && (p.avatar_cutout_url || p.avatar_url))
+        ? buildCompositeAvatarHtml(p) : (p.initials || '??');
+      const winLoss = p.total_wins + 'W-' + p.total_losses + 'L';
+      return `<div class="leaderboard-row" onclick="closeSheet();showPlayerCard('${(p.name||'').replace(/'/g,"\\'")}','${p.user_id}')">
+        <div class="leaderboard-rank${rankCls}">${rank}</div>
+        <div class="leaderboard-avatar">${avatarContent}</div>
+        <div class="leaderboard-info">
+          <div class="leaderboard-name">${p.name || 'Unknown'}</div>
+          <div class="leaderboard-stats">${Number(p.avg_skill).toFixed(1)} ⭐ · ${winLoss}</div>
+        </div>
+        <div class="leaderboard-score">${Number(p.score).toFixed(2)}</div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    console.error('Leaderboard error:', err);
+    section.style.display = 'none';
   }
 }
 
@@ -2358,6 +2414,9 @@ openSheet = async function(court) {
 
       // Surgical DOM updates (no full re-render)
       _updateSheetLiveData(court, reportResult);
+
+      // Fetch leaderboard (non-blocking, renders after main data)
+      fetchAndRenderLeaderboard(court.id);
     } catch (err) {
       console.error('Failed to load court data:', err);
       // Show fallback in check-in list

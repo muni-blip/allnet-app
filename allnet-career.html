@@ -19,6 +19,36 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 .cc-action-btn { flex: 1; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; background: transparent; border: 1px solid #5a5a5a; padding: 12px 8px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .cc-action-btn:hover { border-color: #fff; }
 
+/* ── Username & Share Section ── */
+.career-username { padding: 32px 16px 0; max-width: 375px; margin: 0 auto; }
+.career-username__label { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.career-username__row { display: flex; gap: 10px; align-items: stretch; }
+.career-username__input-wrap { flex: 1; position: relative; }
+.career-username__input { width: 100%; padding: 12px 36px 12px 14px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; color: #fff; background: #181818; border: 1px solid #333; border-radius: 8px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.career-username__input:focus { border-color: #F74501; }
+.career-username__input.is-error { border-color: #EF4444; }
+.career-username__input.is-valid { border-color: #22C55E; }
+.career-username__status { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; }
+.career-username__save { padding: 12px 20px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; color: #fff; background: #F74501; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+.career-username__save:disabled { opacity: 0.35; cursor: default; }
+.career-username__preview { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #666; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.career-username__preview span { color: #F74501; }
+.career-username__error { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #EF4444; margin-top: 6px; min-height: 16px; }
+.career-username__current { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #22C55E; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+.career-username__current a { color: #22C55E; text-decoration: none; }
+
+.career-share { padding: 28px 16px 0; max-width: 375px; margin: 0 auto; }
+.career-share__label { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.career-share__sub { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #F74501; font-weight: 600; margin-bottom: 12px; }
+.career-share__btns { display: flex; gap: 10px; }
+.career-share__btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 13px; color: #fff; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; border: none; }
+.career-share__btn:hover { opacity: 0.85; }
+.career-share__btn--link { background: #F74501; }
+.career-share__btn--copy { background: #2a2a2a; border: 1px solid #444; }
+.career-share__url { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #666; margin-top: 10px; text-align: center; word-break: break-all; }
+.career-share__toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #22C55E; color: #000; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 24px; border-radius: 100px; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.career-share__toast.active { opacity: 1; }
+
 .match-history { padding: 40px 16px 0; max-width: 375px; margin: 0 auto; }
 .match-history__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; margin-bottom: 16px; }
 .match-history__empty { text-align: center; padding: 32px 16px; color: #666; font-size: 14px; font-family: 'Montserrat', sans-serif; }
@@ -211,6 +241,40 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
   <div class="career-badge" id="careerBadge"></div>
   <div class="cc-wrapper"><div class="cc-border"><div class="cc" id="careerCard"><div class="cc__placeholder"><div class="cc__placeholder-icon">📷</div><div class="cc__placeholder-text">Upload a photo to generate your career card</div></div></div></div></div>
   <div class="cc-actions"><button class="cc-action-btn" onclick="openPhotoModal()">CHANGE PHOTO</button><button class="cc-action-btn" onclick="openCoverPicker()">UPDATE COVER</button></div>
+
+  <!-- Username Claim -->
+  <div class="career-username" id="usernameSection">
+    <div class="career-username__label">YOUR PROFILE URL</div>
+    <div class="career-username__row">
+      <div class="career-username__input-wrap">
+        <input class="career-username__input" id="usernameInput" type="text" placeholder="choose a username" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="career-username__status" id="usernameStatus"></div>
+      </div>
+      <button class="career-username__save" id="usernameSaveBtn" disabled onclick="saveUsername()">SAVE</button>
+    </div>
+    <div class="career-username__preview" id="usernamePreview">allnetgames.com/p/<span>...</span></div>
+    <div class="career-username__error" id="usernameError"></div>
+    <div class="career-username__current" id="usernameCurrent" style="display:none"></div>
+  </div>
+
+  <!-- Share Card -->
+  <div class="career-share" id="shareSection">
+    <div class="career-share__label">SHARE YOUR CARD</div>
+    <div class="career-share__sub">⭐ Earn 500 Stars for each friend who joins</div>
+    <div class="career-share__btns">
+      <button class="career-share__btn career-share__btn--link" onclick="shareCardLink()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        SHARE LINK
+      </button>
+      <button class="career-share__btn career-share__btn--copy" onclick="copyCardLink()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        COPY LINK
+      </button>
+    </div>
+    <div class="career-share__url" id="shareUrl"></div>
+  </div>
+  <div class="career-share__toast" id="shareToast">Link copied!</div>
+
   <div class="match-history"><div class="match-history__title" id="matchHistoryTitle">MATCH HISTORY</div><div id="matchHistoryList"><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div></div></div>
 </div>
 <div class="photo-modal-overlay" id="photoModal"><div class="photo-modal"><div class="photo-modal__title">Change Photo</div><div class="photo-modal__text">Upload a new photo. We'll remove the background automatically.</div><div class="photo-modal__preview" id="photoPreview"><img id="photoPreviewImg" src="" alt=""></div><div class="photo-modal__processing" id="photoProcessing"><div class="photo-modal__spinner">⚡</div><div class="photo-modal__status" id="photoStatus">Removing background...</div></div><input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)"><button class="photo-modal__upload-btn" id="photoUploadBtn" onclick="document.getElementById('photoInput').click()">Choose Photo</button><button class="photo-modal__cancel-btn" onclick="closePhotoModal()">Cancel</button></div></div>
@@ -963,6 +1027,157 @@ async function saveCoverSelection() {
   }
 }
 
+/* ── Username Claim ── */
+var _usernameTimer = null;
+var _usernameValid = false;
+
+function initUsernameSection() {
+  var input = document.getElementById('usernameInput');
+  var preview = document.getElementById('usernamePreview');
+  var current = document.getElementById('usernameCurrent');
+  var shortCode = currentProfile.short_code || '';
+
+  // Show current URL (username or short code)
+  if (currentProfile.username) {
+    input.value = currentProfile.username;
+    input.placeholder = currentProfile.username;
+    current.style.display = 'flex';
+    current.innerHTML = '✅ <a href="https://allnetgames.com/p/' + currentProfile.username + '" target="_blank">allnetgames.com/p/' + currentProfile.username + '</a>';
+    preview.innerHTML = 'allnetgames.com/p/<span>' + currentProfile.username + '</span>';
+    _usernameValid = true;
+    document.getElementById('usernameSaveBtn').disabled = true;
+  } else {
+    preview.innerHTML = 'allnetgames.com/p/<span>' + shortCode + '</span> (short code)';
+  }
+
+  // Live availability check on input
+  input.addEventListener('input', function() {
+    var val = input.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    input.value = val;
+    preview.innerHTML = 'allnetgames.com/p/<span>' + (val || shortCode || '...') + '</span>';
+    document.getElementById('usernameError').textContent = '';
+    document.getElementById('usernameStatus').textContent = '';
+    _usernameValid = false;
+    document.getElementById('usernameSaveBtn').disabled = true;
+
+    if (_usernameTimer) clearTimeout(_usernameTimer);
+    if (val.length < 3) {
+      if (val.length > 0) document.getElementById('usernameError').textContent = 'At least 3 characters';
+      return;
+    }
+    if (val === currentProfile.username) {
+      document.getElementById('usernameStatus').textContent = '✅';
+      _usernameValid = false; // no change needed
+      return;
+    }
+
+    document.getElementById('usernameStatus').textContent = '⏳';
+    _usernameTimer = setTimeout(async function() {
+      try {
+        var { data, error } = await supabase.rpc('check_username_available', { p_username: val });
+        if (error) throw error;
+        if (data === true) {
+          document.getElementById('usernameStatus').textContent = '✅';
+          input.classList.remove('is-error');
+          input.classList.add('is-valid');
+          _usernameValid = true;
+          document.getElementById('usernameSaveBtn').disabled = false;
+        } else {
+          document.getElementById('usernameStatus').textContent = '❌';
+          input.classList.remove('is-valid');
+          input.classList.add('is-error');
+          document.getElementById('usernameError').textContent = 'That username is taken or reserved';
+          _usernameValid = false;
+        }
+      } catch (e) {
+        console.error('Username check error:', e);
+        document.getElementById('usernameStatus').textContent = '⚠️';
+      }
+    }, 400);
+  });
+}
+
+async function saveUsername() {
+  if (!_usernameValid) return;
+  var btn = document.getElementById('usernameSaveBtn');
+  var input = document.getElementById('usernameInput');
+  var val = input.value.toLowerCase().trim();
+
+  btn.disabled = true;
+  btn.textContent = 'SAVING...';
+
+  try {
+    var { data, error } = await supabase.rpc('claim_username', {
+      p_user_id: currentUser.id,
+      p_username: val
+    });
+    if (error) throw error;
+    if (data && data.success) {
+      currentProfile.username = data.username;
+      var current = document.getElementById('usernameCurrent');
+      current.style.display = 'flex';
+      current.innerHTML = '✅ <a href="https://allnetgames.com/p/' + data.username + '" target="_blank">allnetgames.com/p/' + data.username + '</a>';
+      updateShareUrl();
+      btn.textContent = 'SAVED ✓';
+      setTimeout(function() { btn.textContent = 'SAVE'; }, 2000);
+    } else {
+      document.getElementById('usernameError').textContent = (data && data.error) || 'Could not save username';
+      btn.textContent = 'SAVE';
+      btn.disabled = false;
+    }
+  } catch (e) {
+    console.error('Save username error:', e);
+    document.getElementById('usernameError').textContent = 'Something went wrong. Try again.';
+    btn.textContent = 'SAVE';
+    btn.disabled = false;
+  }
+}
+
+/* ── Share Card ── */
+function getShareUrl() {
+  var slug = currentProfile.username || currentProfile.short_code || '';
+  return 'https://allnetgames.com/p/' + slug + '?ref=' + (currentProfile.short_code || '');
+}
+
+function updateShareUrl() {
+  var el = document.getElementById('shareUrl');
+  if (el) el.textContent = getShareUrl();
+}
+
+async function shareCardLink() {
+  var url = getShareUrl();
+  var name = currentProfile.first_name || currentProfile.name || 'A player';
+  var text = name + ' is on AllNet — the pickup basketball reputation network. Join with my link and earn 500 Stars!';
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'AllNet — ' + name, text: text, url: url });
+    } catch (e) {
+      if (e.name !== 'AbortError') copyCardLink(); // fallback
+    }
+  } else {
+    copyCardLink();
+  }
+}
+
+function copyCardLink() {
+  var url = getShareUrl();
+  navigator.clipboard.writeText(url).then(function() {
+    var toast = document.getElementById('shareToast');
+    toast.classList.add('active');
+    setTimeout(function() { toast.classList.remove('active'); }, 2000);
+  }).catch(function() {
+    // Fallback for older browsers
+    var ta = document.createElement('textarea');
+    ta.value = url; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    var toast = document.getElementById('shareToast');
+    toast.classList.add('active');
+    setTimeout(function() { toast.classList.remove('active'); }, 2000);
+  });
+}
+
 /* ── Init ── */
 async function initCareerPage() {
   var sess = await supabase.auth.getSession();
@@ -970,6 +1185,7 @@ async function initCareerPage() {
   currentUser = sess.data.session.user; currentProfile = await getUserProfile(currentUser.id);
   if (!currentProfile) { window.location.href = 'allnet-app.html'; return; }
   updateNavDrawerUser(); initNavBar(); await loadDivisionStats(); renderCard(); loadMatchHistory();
+  initUsernameSection(); updateShareUrl();
 
   // Render founding badge + most played court
   var badgeEl = document.getElementById('careerBadge');

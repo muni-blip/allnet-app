@@ -20,24 +20,36 @@ async function showPlayerCard(name, userId) {
   const cardEl = document.getElementById('playerSheetCard');
   if (!overlay || !cardEl) return;
 
-  const { data: player } = await supabase.from('profiles')
-    .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating, skill_rating')
-    .eq('id', userId).single();
-  if (!player) return;
-
-  const { data: stats } = await supabase.from('player_division_stats')
-    .select('*').eq('user_id', userId);
-
-  const divStats = {};
-  let bestDiv = '1v1', bestGames = 0;
-  if (stats) stats.forEach(s => {
-    divStats[s.division] = s;
-    if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
-  });
-
-  overlay._playerData = { player, divStats, activeDivision: bestGames > 0 ? bestDiv : '1v1' };
-  renderPlayerSheetCard();
+  // Show overlay immediately with spinner
+  cardEl.innerHTML = '<div class="player-sheet__loader"><div class="player-sheet__spinner"></div></div>';
   overlay.classList.add('active');
+
+  try {
+    const [{ data: player }, { data: stats }] = await Promise.all([
+      supabase.from('profiles')
+        .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating, skill_rating')
+        .eq('id', userId).single(),
+      supabase.from('player_division_stats')
+        .select('*').eq('user_id', userId)
+    ]);
+
+    // If overlay was closed while loading, bail out
+    if (!overlay.classList.contains('active')) return;
+    if (!player) { overlay.classList.remove('active'); return; }
+
+    const divStats = {};
+    let bestDiv = '1v1', bestGames = 0;
+    if (stats) stats.forEach(s => {
+      divStats[s.division] = s;
+      if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
+    });
+
+    overlay._playerData = { player, divStats, activeDivision: bestGames > 0 ? bestDiv : '1v1' };
+    renderPlayerSheetCard();
+  } catch (err) {
+    console.error('showPlayerCard error:', err);
+    if (overlay.classList.contains('active')) overlay.classList.remove('active');
+  }
 }
 
 function renderPlayerSheetCard() {

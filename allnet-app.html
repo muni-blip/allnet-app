@@ -38,6 +38,9 @@
 .player-sheet__close{display:flex;justify-content:center;margin-top:16px;}
 .player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
 .player-sheet__close-btn:hover{background:rgba(255,255,255,0.15);}
+.player-sheet__loader{display:flex;align-items:center;justify-content:center;height:100%;}
+.player-sheet__spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.1);border-top-color:#FF5A1F;border-radius:50%;animation:psSpin .7s linear infinite;}
+@keyframes psSpin{to{transform:rotate(360deg);}}
 
 /* ═══ Resume Game Modal ═══ */
 .resume-modal-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;}

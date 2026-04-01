@@ -528,6 +528,9 @@ html, body { height: auto; overflow: auto; }
 .player-sheet__handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 16px; }
 .player-sheet__close { display: flex; justify-content: center; margin-top: 16px; }
 .player-sheet__close-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.player-sheet__loader { display: flex; align-items: center; justify-content: center; height: 100%; }
+.player-sheet__spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #FF5A1F; border-radius: 50%; animation: psSpin .7s linear infinite; }
+@keyframes psSpin { to { transform: rotate(360deg); } }
 
 /* Tappable players in match cards */
 .match-card__player--tappable { cursor: pointer; }
@@ -749,24 +752,36 @@ async function showPlayerCard(userId) {
   const cardEl = document.getElementById('playerSheetCard');
   if (!overlay || !cardEl) return;
 
-  const { data: player } = await supabase.from('profiles')
-    .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating, skill_rating')
-    .eq('id', userId).single();
-  if (!player) return;
-
-  const { data: stats } = await supabase.from('player_division_stats')
-    .select('*').eq('user_id', userId);
-
-  const divStats = {};
-  let bestDiv = '1v1', bestGames = 0;
-  if (stats) stats.forEach(s => {
-    divStats[s.division] = s;
-    if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
-  });
-
-  overlay._playerData = { player, divStats, activeDivision: bestGames > 0 ? bestDiv : '1v1' };
-  renderPlayerSheetCard();
+  // Show overlay immediately with spinner
+  cardEl.innerHTML = '<div class="player-sheet__loader"><div class="player-sheet__spinner"></div></div>';
   overlay.classList.add('active');
+
+  try {
+    const [{ data: player }, { data: stats }] = await Promise.all([
+      supabase.from('profiles')
+        .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating, skill_rating')
+        .eq('id', userId).single(),
+      supabase.from('player_division_stats')
+        .select('*').eq('user_id', userId)
+    ]);
+
+    // If overlay was closed while loading, bail out
+    if (!overlay.classList.contains('active')) return;
+    if (!player) { overlay.classList.remove('active'); return; }
+
+    const divStats = {};
+    let bestDiv = '1v1', bestGames = 0;
+    if (stats) stats.forEach(s => {
+      divStats[s.division] = s;
+      if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
+    });
+
+    overlay._playerData = { player, divStats, activeDivision: bestGames > 0 ? bestDiv : '1v1' };
+    renderPlayerSheetCard();
+  } catch (err) {
+    console.error('showPlayerCard error:', err);
+    if (overlay.classList.contains('active')) overlay.classList.remove('active');
+  }
 }
 
 function renderPlayerSheetCard() {

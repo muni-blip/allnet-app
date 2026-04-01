@@ -1589,6 +1589,10 @@ async function handleProfileAvatarChange(input) {
     const cutoutUrl = await withTimeout(processAvatar(path), 60000, 'Background removal');
     hideUploadOverlay();
     if (cutoutUrl) {
+      // Force re-render all displays with the new cache-busted cutout URL
+      renderCareerCard();
+      updateAvatarDisplays(currentProfile.avatar_url);
+      updateNavDrawerUser();
       showToast('Career card updated 🏀');
     } else {
       showAlert('Photo Processing Failed', 'Background removal failed. Please try uploading a different photo with a clear, well-lit background.', { icon: '⚠️' });
@@ -1764,6 +1768,9 @@ async function submitOnboardAvatar() {
     hideUploadOverlay();
 
     if (cutoutUrl) {
+      renderCareerCard();
+      updateAvatarDisplays(currentProfile.avatar_url);
+      updateNavDrawerUser();
       closeOnboarding();
       showToast('Welcome to AllNet, ' + currentProfile.first_name + '! 🏀');
     } else {
@@ -2079,6 +2086,9 @@ async function submitPromptAvatar() {
     hideUploadOverlay();
 
     if (cutoutUrl) {
+      renderCareerCard();
+      updateAvatarDisplays(currentProfile.avatar_url);
+      updateNavDrawerUser();
       closePhotoPromptModal();
       if (pendingGameCourt) {
         window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(pendingGameCourt);

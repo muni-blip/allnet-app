@@ -62,15 +62,13 @@ var CareerCard = (function() {
     var soD      = opts.socialDelta;
     var wD       = opts.winsDelta;
 
-    // Empty state
-    if (!cut) {
-      return '<div class="cc__cover" style="background-image:url(\'' + coverUrl + '\')"></div>' +
-        '<div class="cc__overlay"></div>' +
-        '<div class="cc__placeholder">' +
+    // Player image: show cutout or placeholder prompt
+    var playerFrameHtml = cut
+      ? '<div class="cc__player-frame"><img src="' + cut + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>'
+      : '<div class="cc__placeholder">' +
           '<div class="cc__placeholder-icon">📷</div>' +
           '<div class="cc__placeholder-text">Upload a photo to generate your career card</div>' +
         '</div>';
-    }
 
     // W/L/D with optional delta
     var wDeltaHtml = (showD && wD && wD > 0) ? '<div class="cc__wld-delta">+' + wD + '</div>' : '';
@@ -116,7 +114,7 @@ var CareerCard = (function() {
 
     return '' +
       '<div class="cc__cover" style="background-image:url(\'' + coverUrl + '\')"></div>' +
-      '<div class="cc__player-frame"><img src="' + cut + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>' +
+      playerFrameHtml +
       '<div class="cc__overlay"></div>' +
 
       // Name row 1: [firstName] [gradient bar]

@@ -1526,6 +1526,20 @@ function formatTime(date) {
 }
 
 /* ══════════════════════════════
+   UPLOAD PROCESSING OVERLAY
+   ══════════════════════════════ */
+function showUploadOverlay(text) {
+  const o = document.getElementById('uploadOverlay');
+  if (!o) return;
+  document.getElementById('uploadOverlayText').textContent = text || 'Processing photo...';
+  o.classList.add('active');
+}
+function hideUploadOverlay() {
+  const o = document.getElementById('uploadOverlay');
+  if (o) o.classList.remove('active');
+}
+
+/* ══════════════════════════════
    PROFILE AVATAR — change from profile screen
    ══════════════════════════════ */
 function triggerProfileAvatarUpload() {
@@ -1536,8 +1550,7 @@ function triggerProfileAvatarUpload() {
 async function handleProfileAvatarChange(input) {
   const file = input.files[0];
   if (!file || !currentUser) return;
-  const avatarEl = document.getElementById('profileCardAvatar');
-  avatarEl.innerHTML = '<span style="font-size:13px;color:var(--text-muted);">Uploading...</span>';
+  showUploadOverlay('Uploading photo...');
   try {
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
     const path = currentUser.id + '/avatar.' + ext;
@@ -1549,6 +1562,7 @@ async function handleProfileAvatarChange(input) {
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
     currentProfile.avatar_url = publicUrl;
     updateAvatarDisplays(publicUrl);
+    hideUploadOverlay();
     showToast('Profile photo updated — removing background... ⚡');
     // Process avatar in background — card will update when done
     processAvatar(path).then(() => {
@@ -1556,7 +1570,9 @@ async function handleProfileAvatarChange(input) {
     }).catch(err => console.error('processAvatar failed (non-fatal):', err));
   } catch (err) {
     console.error('Profile avatar upload failed:', err);
-    avatarEl.textContent = currentProfile?.initials || 'U';
+    hideUploadOverlay();
+    const avatarEl = document.getElementById('profileCardAvatar');
+    if (avatarEl) avatarEl.textContent = currentProfile?.initials || 'U';
     showToast('Photo upload failed. Please try again.');
   }
   input.value = '';
@@ -1687,6 +1703,7 @@ async function submitOnboardAvatar() {
   btn.disabled = true;
   btn.textContent = 'Uploading...';
   const errorEl = document.getElementById('onboardPhotoError');
+  showUploadOverlay('Uploading photo...');
 
   try {
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
@@ -1708,6 +1725,7 @@ async function submitOnboardAvatar() {
 
     currentProfile.avatar_url = publicUrl;
     updateAvatarDisplays(publicUrl);
+    hideUploadOverlay();
     closeOnboarding();
     showToast('Welcome to AllNet, ' + currentProfile.first_name + '! 🏀');
 
@@ -1716,6 +1734,7 @@ async function submitOnboardAvatar() {
 
   } catch (err) {
     console.error('Avatar upload error:', err);
+    hideUploadOverlay();
     errorEl.textContent = 'Upload failed. Try a smaller photo or try again.';
     btn.disabled = false;
     btn.textContent = 'Upload Photo';
@@ -1996,6 +2015,7 @@ async function submitPromptAvatar() {
   btn.disabled = true;
   btn.textContent = 'Uploading...';
   const errorEl = document.getElementById('promptPhotoError');
+  showUploadOverlay('Uploading photo...');
 
   try {
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
@@ -2013,6 +2033,7 @@ async function submitPromptAvatar() {
     currentProfile.avatar_url = publicUrl;
     updateAvatarDisplays(publicUrl);
 
+    hideUploadOverlay();
     closePhotoPromptModal();
 
     // Kick off background removal — non-blocking, navigates to game after
@@ -2024,6 +2045,7 @@ async function submitPromptAvatar() {
 
   } catch (err) {
     console.error('Prompt avatar upload error:', err);
+    hideUploadOverlay();
     errorEl.textContent = 'Upload failed. Try a smaller photo or try again.';
     btn.disabled = false;
     btn.textContent = 'Upload & Start Game';

@@ -2082,6 +2082,16 @@ async function initApp() {
 
     // All critical data resolved — dismiss splash
     dismissSplash();
+
+    // Show toast if redirected from leave game
+    const toastParam = new URLSearchParams(window.location.search).get('toast');
+    if (toastParam === 'left_game') {
+      setTimeout(() => showToast('You left the game'), 500);
+      history.replaceState(null, '', window.location.pathname);
+    } else if (toastParam === 'left_penalty') {
+      setTimeout(() => showToast('You left the match. Social rating −0.3'), 500);
+      history.replaceState(null, '', window.location.pathname);
+    }
   } catch (err) {
     console.error('AllNet: Supabase init error', err);
     dismissSplash(); // Dismiss even on error so user isn't stuck

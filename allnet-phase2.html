@@ -208,6 +208,79 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
   font-size: 14px; margin-top: 4px;
 }
 .game-options__btn-icon { font-size: 18px; flex-shrink: 0; }
+.game-options__desc {
+  font-size: 14px; color: var(--text-secondary); text-align: center;
+  padding: 0 8px 16px; line-height: 1.5;
+}
+.game-options__desc--warning { color: var(--red); font-weight: 600; }
+
+/* Leave lobby button */
+.btn--leave-lobby {
+  background: none; border: none; color: var(--text-muted);
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  cursor: pointer; padding: 8px 16px; transition: color 0.2s;
+}
+.btn--leave-lobby:hover { color: var(--red); }
+
+/* Report Player Overlay */
+.report-player-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: var(--bg); display: none;
+  flex-direction: column; overflow-y: auto;
+}
+.report-player-overlay.active { display: flex; }
+.report-player {
+  max-width: 480px; width: 100%; margin: 0 auto;
+  padding: 0 20px 40px; flex: 1;
+}
+.report-player__header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+}
+.report-player__back {
+  background: none; border: none; color: var(--text-secondary);
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+.report-player__title {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  text-transform: uppercase;
+}
+.report-player__label {
+  font-size: 15px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.report-player__list { display: flex; flex-direction: column; gap: 8px; }
+.report-player__item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer; transition: var(--transition);
+}
+.report-player__item:hover { border-color: var(--text-muted); }
+.report-player__item-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; background: #333; color: #999;
+  overflow: hidden; flex-shrink: 0;
+}
+.report-player__item-name { font-weight: 600; font-size: 15px; }
+.report-player__item-team { font-size: 12px; color: var(--text-muted); }
+.report-player__reasons { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.report-reason {
+  padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text-primary); font-family: var(--font-body);
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+  text-align: left; width: 100%;
+}
+.report-reason:hover { border-color: var(--text-muted); }
+.report-reason.selected { border-color: var(--orange); color: var(--orange); background: rgba(255,90,31,0.08); }
+.report-player__note {
+  width: 100%; padding: 12px 14px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text-primary); font-family: var(--font-body);
+  font-size: 14px; resize: none; outline: none; margin-bottom: 20px;
+}
+.report-player__note:focus { border-color: var(--orange); }
+.report-player__note::placeholder { color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -239,6 +312,7 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
     <div class="lobby-section" id="teamBSection"><div class="lobby-section__title lobby-section__title--b"><span class="team-dot team-dot--b"></span> <span id="teamBLabel">Team B</span></div><div id="teamBList"></div></div>
     <div class="waiting-indicator" id="waitingIndicator"><span>Waiting for opponent</span><div class="waiting-dots"><span></span><span></span><span></span></div></div>
     <div class="btn-row"><button class="btn btn--primary" id="readyBtn" disabled onclick="startGame()">Everyone's Here — Play →</button></div>
+    <div style="text-align:center;margin-top:12px;"><button class="btn--leave-lobby" onclick="confirmLeaveMatch()">Leave Game</button></div>
   </div>
   <div class="screen" id="screenJoin">
     <div class="section-label">// Join a game</div><h1 class="screen-title">Enter Game Code</h1><p class="screen-sub">Get the code from the game creator.</p>
@@ -316,15 +390,57 @@ html, body { height:100%; font-family:var(--font-body); background:var(--bg); co
 <div class="game-options-overlay" id="gameOptionsOverlay" onclick="closeGameOptions()">
   <div class="game-options" onclick="event.stopPropagation()">
     <div class="game-options__title">Game Options</div>
-    <button class="game-options__btn game-options__btn--danger" onclick="leaveMatch()">
+    <button class="game-options__btn game-options__btn--danger" onclick="confirmLeaveMatch()">
       <span class="game-options__btn-icon">🚪</span>
       <span>Leave Match</span>
     </button>
-    <button class="game-options__btn" onclick="reportPlayerFromGame()">
+    <button class="game-options__btn" onclick="openReportPlayer()">
       <span class="game-options__btn-icon">⚑</span>
       <span>Report a Player</span>
     </button>
     <button class="game-options__btn game-options__btn--cancel" onclick="closeGameOptions()">Cancel</button>
+  </div>
+</div>
+
+<!-- ═══ Leave Confirmation Modal ═══ -->
+<div class="game-options-overlay" id="leaveConfirmOverlay" onclick="closeLeaveConfirm()">
+  <div class="game-options" onclick="event.stopPropagation()">
+    <div class="game-options__title" id="leaveConfirmTitle">Leave Game?</div>
+    <div class="game-options__desc" id="leaveConfirmDesc">No penalty will be applied to your rating.</div>
+    <button class="game-options__btn game-options__btn--danger" onclick="executeLeaveMatch()">
+      <span>Leave Game</span>
+    </button>
+    <button class="game-options__btn game-options__btn--cancel" onclick="closeLeaveConfirm()">Stay</button>
+  </div>
+</div>
+
+<!-- ═══ Report Player Overlay ═══ -->
+<div class="report-player-overlay" id="reportPlayerOverlay">
+  <div class="report-player">
+    <div class="report-player__header">
+      <button class="report-player__back" onclick="closeReportPlayer()">← Back</button>
+      <div class="report-player__title">Report a Player</div>
+    </div>
+
+    <!-- Step 1: Select player -->
+    <div class="report-player__step" id="reportStep1">
+      <div class="report-player__label">Who do you want to report?</div>
+      <div class="report-player__list" id="reportPlayerList"></div>
+    </div>
+
+    <!-- Step 2: Select reason + note -->
+    <div class="report-player__step" id="reportStep2" style="display:none;">
+      <div class="report-player__label">Why are you reporting <span id="reportTargetName"></span>?</div>
+      <div class="report-player__reasons" id="reportReasons">
+        <button class="report-reason" data-reason="unsportsmanlike" onclick="selectReportReason('unsportsmanlike', this)">Unsportsmanlike conduct</button>
+        <button class="report-reason" data-reason="no_show" onclick="selectReportReason('no_show', this)">No-show / didn't play</button>
+        <button class="report-reason" data-reason="abusive_language" onclick="selectReportReason('abusive_language', this)">Abusive language</button>
+        <button class="report-reason" data-reason="cheating" onclick="selectReportReason('cheating', this)">Cheating / score manipulation</button>
+        <button class="report-reason" data-reason="other" onclick="selectReportReason('other', this)">Other</button>
+      </div>
+      <textarea class="report-player__note" id="reportNote" rows="3" maxlength="300" placeholder="Add details (optional)..."></textarea>
+      <button class="btn btn--primary" id="reportSubmitBtn" disabled onclick="submitReport()">Submit Report</button>
+    </div>
   </div>
 </div>
 
@@ -900,23 +1016,190 @@ let dbGameId = null;
 let dbCourtId = null;
 
 // Game Options modal
+const LEAVE_PENALTY = 0.3;
+
 function openGameOptions() {
   document.getElementById('gameOptionsOverlay').classList.add('active');
 }
 function closeGameOptions() {
   document.getElementById('gameOptionsOverlay').classList.remove('active');
 }
-function leaveMatch() {
+
+// Determine if game is active (timer running) vs pre-game (lobby)
+function isGameActive() {
+  return hist[hist.length - 1] === 'screenActive';
+}
+
+function confirmLeaveMatch() {
   closeGameOptions();
+  const titleEl = document.getElementById('leaveConfirmTitle');
+  const descEl = document.getElementById('leaveConfirmDesc');
+  if (isGameActive()) {
+    titleEl.textContent = 'Leave Active Match?';
+    descEl.textContent = 'Your social rating will be reduced by ' + LEAVE_PENALTY.toFixed(1) + '. This cannot be undone.';
+    descEl.className = 'game-options__desc game-options__desc--warning';
+  } else {
+    titleEl.textContent = 'Leave Game?';
+    descEl.textContent = 'No penalty will be applied to your rating.';
+    descEl.className = 'game-options__desc';
+  }
+  document.getElementById('leaveConfirmOverlay').classList.add('active');
+}
+
+function closeLeaveConfirm() {
+  document.getElementById('leaveConfirmOverlay').classList.remove('active');
+}
+
+async function executeLeaveMatch() {
+  closeLeaveConfirm();
   clearInterval(G.timerInterval);
   G.joinTimeouts.forEach(t => clearTimeout(t));
-  window.location.href = 'allnet-app.html';
+
+  const wasActive = isGameActive();
+
+  if (currentUser && dbGameId) {
+    try {
+      if (wasActive) {
+        // Active game: apply social penalty
+        await supabase.from('game_players')
+          .update({ status: 'abandoned', left_at: new Date().toISOString() })
+          .eq('game_id', dbGameId).eq('user_id', currentUser.id);
+
+        // Apply -0.3 social rating
+        const newSocial = Math.max(1.0, (currentProfile?.social_rating || 3.0) - LEAVE_PENALTY);
+        await supabase.from('profiles')
+          .update({ social_rating: newSocial })
+          .eq('id', currentUser.id);
+
+        // In-app notification (no push)
+        await supabase.from('notifications').insert({
+          user_id: currentUser.id,
+          type: 'leave_penalty',
+          title: 'You left an active match',
+          body: 'Social rating reduced by ' + LEAVE_PENALTY.toFixed(1) + ' for leaving during a game.',
+          game_id: dbGameId,
+          read: false
+        });
+
+        // Check if any team now has 0 active players → auto-end as void
+        const { data: remaining } = await supabase.from('game_players')
+          .select('team, status').eq('game_id', dbGameId).eq('status', 'active');
+        if (remaining) {
+          const teamsWithPlayers = new Set(remaining.map(p => p.team));
+          if (teamsWithPlayers.size < 2) {
+            // One or both teams empty — void the game
+            await supabase.from('game_sessions')
+              .update({ status: 'void', ended_at: new Date().toISOString() })
+              .eq('id', dbGameId);
+          }
+        }
+
+        window.location.href = 'allnet-app.html?toast=left_penalty';
+      } else {
+        // Pre-game: no penalty, clean up DB
+        await supabase.from('game_players')
+          .delete().eq('game_id', dbGameId).eq('user_id', currentUser.id);
+
+        // If creator, reassign or cancel
+        const { data: game } = await supabase.from('game_sessions')
+          .select('creator_id').eq('id', dbGameId).single();
+        if (game && game.creator_id === currentUser.id) {
+          const { data: others } = await supabase.from('game_players')
+            .select('user_id').eq('game_id', dbGameId).limit(1);
+          if (others && others.length > 0) {
+            await supabase.from('game_sessions')
+              .update({ creator_id: others[0].user_id }).eq('id', dbGameId);
+          } else {
+            await supabase.from('game_sessions')
+              .update({ status: 'cancelled' }).eq('id', dbGameId);
+          }
+        }
+        window.location.href = 'allnet-app.html?toast=left_game';
+      }
+    } catch (err) {
+      console.error('Leave match error:', err);
+      window.location.href = 'allnet-app.html?toast=left_game';
+    }
+  } else {
+    window.location.href = 'allnet-app.html?toast=left_game';
+  }
 }
-function reportPlayerFromGame() {
+
+// Report Player
+let reportTarget = null;
+let reportReason = null;
+
+function openReportPlayer() {
   closeGameOptions();
-  // Placeholder — will wire to real report flow
+  const allPlayers = [...G.teamA, ...G.teamB].filter(p => !p.isYou);
+  const list = document.getElementById('reportPlayerList');
+  list.innerHTML = allPlayers.map(p => {
+    const uid = p.userId || '';
+    const avatarHtml = typeof buildCompositeAvatarHtml === 'function'
+      ? buildCompositeAvatarHtml(p) : (p.initials || '??');
+    const team = G.teamA.includes(p) ? 'Team A' : 'Team B';
+    return '<div class="report-player__item" onclick="selectReportTarget(\'' + uid + '\', \'' + p.name.replace(/'/g, "\\'") + '\')">' +
+      '<div class="report-player__item-avatar">' + avatarHtml + '</div>' +
+      '<div><div class="report-player__item-name">' + p.name + '</div>' +
+      '<div class="report-player__item-team">' + team + '</div></div></div>';
+  }).join('');
+
+  // Also include abandoned players (who left)
+  document.getElementById('reportStep1').style.display = '';
+  document.getElementById('reportStep2').style.display = 'none';
+  reportTarget = null;
+  reportReason = null;
+  document.getElementById('reportPlayerOverlay').classList.add('active');
+}
+
+function closeReportPlayer() {
+  document.getElementById('reportPlayerOverlay').classList.remove('active');
+}
+
+function selectReportTarget(userId, name) {
+  reportTarget = { userId: userId, name: name };
+  document.getElementById('reportTargetName').textContent = name;
+  document.getElementById('reportStep1').style.display = 'none';
+  document.getElementById('reportStep2').style.display = '';
+  reportReason = null;
+  document.getElementById('reportNote').value = '';
+  document.getElementById('reportSubmitBtn').disabled = true;
+  document.querySelectorAll('.report-reason').forEach(b => b.classList.remove('selected'));
+}
+
+function selectReportReason(reason, el) {
+  reportReason = reason;
+  document.querySelectorAll('.report-reason').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('reportSubmitBtn').disabled = false;
+}
+
+async function submitReport() {
+  if (!reportTarget || !reportReason) return;
+  const btn = document.getElementById('reportSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    if (currentUser && reportTarget.userId) {
+      const { error } = await supabase.from('player_reports').insert({
+        reporter_id: currentUser.id,
+        reported_user_id: reportTarget.userId,
+        game_id: dbGameId || null,
+        reason: reportReason,
+        note: document.getElementById('reportNote').value.trim() || null
+      });
+      if (error) console.error('Report error:', error);
+    }
+  } catch (err) {
+    console.error('Report submission error:', err);
+  }
+
+  btn.textContent = 'Submit Report';
+  closeReportPlayer();
+  // Show confirmation in court context bar
   var msg = document.querySelector('.court-context__name');
-  if (msg) msg.textContent = msg.textContent.split(' ·')[0] + ' · Report sent';
+  if (msg) msg.textContent = msg.textContent.split(' ·')[0] + ' · Report submitted';
 }
 
 async function initPhase2() {

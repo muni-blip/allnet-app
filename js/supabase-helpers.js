@@ -470,3 +470,24 @@ async function sharedLogOut() {
   await supabase.auth.signOut();
   window.location.href = 'allnet-app.html';
 }
+
+/* ══════════════════════════════
+   BLOCK SWIPE-BACK/FORWARD NAVIGATION
+   iOS Safari ignores overscroll-behavior-x: none.
+   This touch handler detects horizontal swipes and blocks them.
+   ══════════════════════════════ */
+(function() {
+  var startX = 0, startY = 0;
+  document.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    var dx = Math.abs(e.touches[0].clientX - startX);
+    var dy = Math.abs(e.touches[0].clientY - startY);
+    // If gesture is more horizontal than vertical and started near edge, block it
+    if (dx > dy && dx > 10 && (startX < 30 || startX > window.innerWidth - 30)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+})();

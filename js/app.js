@@ -1817,25 +1817,8 @@ function closeOnboarding() {
    Falls back to raw photo, then to initials.
    ══════════════════════════════ */
 function buildCompositeAvatar() {
-  const cutoutUrl  = currentProfile?.avatar_cutout_url;
-  const rawUrl     = currentProfile?.avatar_url;
-  const cover      = currentProfile?.selected_cover || 'crossover';
-  const coverUrl   = COVERS[cover] || COVERS.crossover;
-  const initials   = currentProfile?.initials || 'U';
-
-  if (cutoutUrl) {
-    // Full composite: cover bg + transparent cutout on top
-    return `<div class="avatar-composite">
-      <div class="avatar-composite__cover" style="background-image:url('${coverUrl}')"></div>
-      <img class="avatar-composite__cutout" src="${cutoutUrl}" alt="avatar" onerror="this.style.display='none'">
-    </div>`;
-  }
-  if (rawUrl) {
-    // Raw photo while cutout is still processing
-    return `<img src="${rawUrl}" class="avatar-img" alt="Profile" onerror="this.style.display='none'">`;
-  }
-  // No photo yet — initials fallback
-  return initials;
+  // Delegate to shared function for consistent rendering across all pages
+  return buildCompositeAvatarHtml(currentProfile || {});
 }
 
 function updateAvatarDisplays(url) {

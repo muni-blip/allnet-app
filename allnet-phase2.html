@@ -1089,7 +1089,7 @@ async function executeLeaveMatch() {
           if (teamsWithPlayers.size < 2) {
             // One or both teams empty — void the game
             await supabase.from('game_sessions')
-              .update({ status: 'void', ended_at: new Date().toISOString() })
+              .update({ status: 'nulled', ended_at: new Date().toISOString() })
               .eq('id', dbGameId);
           }
         }

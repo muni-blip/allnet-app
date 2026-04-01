@@ -2098,12 +2098,14 @@ async function initApp() {
       try {
         const { data: activeGames } = await supabase
           .from('game_players')
-          .select('game_id, team, status, game_sessions(id, format, status, started_at, court_id, courts(name))')
+          .select('game_id, team, status, game_sessions!inner(id, format, status, started_at, court_id, courts(name))')
           .eq('user_id', currentUser.id)
           .eq('status', 'active')
           .in('game_sessions.status', ['active', 'lobby']);
 
-        const resumable = (activeGames || []).filter(g => g.game_sessions && g.game_sessions.status);
+        const resumable = (activeGames || []).filter(g =>
+          g.game_sessions && (g.game_sessions.status === 'active' || g.game_sessions.status === 'lobby')
+        );
         if (resumable.length > 0) {
           const g = resumable[0];
           const gs = g.game_sessions;

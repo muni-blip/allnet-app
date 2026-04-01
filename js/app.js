@@ -2081,8 +2081,20 @@ async function initApp() {
       setTimeout(autoRequestLocation, 500);
     }
 
-    // All critical data resolved — dismiss splash
-    dismissSplash();
+    // Dismiss splash only after map has finished rendering dots
+    if (courtsLayersReady) {
+      // Map already loaded — dots are being painted, wait for idle
+      map.once('idle', () => dismissSplash());
+      // Safety: dismiss after 6s max in case idle never fires
+      setTimeout(dismissSplash, 6000);
+    } else {
+      // Map hasn't loaded yet — it will call renderMarkers() on load,
+      // then we wait for idle after that
+      map.once('load', () => {
+        map.once('idle', () => dismissSplash());
+        setTimeout(dismissSplash, 6000);
+      });
+    }
 
     // Show toast if redirected from leave game
     const toastParam = new URLSearchParams(window.location.search).get('toast');

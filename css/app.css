@@ -712,7 +712,7 @@ html, body {
 
 .forecast-chart::before, .forecast-chart::after {
   content: ''; position: absolute; left: 0; right: 0; height: 1px;
-  background: var(--border); pointer-events: none;
+  background: var(--border); pointer-events: none; z-index: 0;
 }
 .forecast-chart::before { bottom: calc(22px + 78px * 0.5); }
 .forecast-chart::after { bottom: calc(22px + 78px * 0.85); }
@@ -720,7 +720,7 @@ html, body {
 .forecast-bar-wrapper {
   flex: 1; display: flex; flex-direction: column; align-items: center;
   gap: 4px; height: 100%; justify-content: flex-end; position: relative;
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; z-index: 1;
 }
 
 .forecast-bar {

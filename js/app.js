@@ -1576,7 +1576,7 @@ async function handleProfileAvatarChange(input) {
     const path = currentUser.id + '/avatar.' + ext;
     const { error: uploadError } = await withTimeout(
       supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type }),
-      30000, 'Upload'
+      60000, 'Upload'
     );
     if (uploadError) throw uploadError;
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
@@ -1586,7 +1586,7 @@ async function handleProfileAvatarChange(input) {
 
     // Await background removal — keep overlay visible
     showUploadOverlay('Removing background...');
-    const cutoutUrl = await withTimeout(processAvatar(path), 45000, 'Background removal');
+    const cutoutUrl = await withTimeout(processAvatar(path), 60000, 'Background removal');
     hideUploadOverlay();
     if (cutoutUrl) {
       showToast('Career card updated 🏀');
@@ -1742,7 +1742,7 @@ async function submitOnboardAvatar() {
 
     const { error: uploadError } = await withTimeout(
       supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type }),
-      30000, 'Upload'
+      60000, 'Upload'
     );
 
     if (uploadError) throw uploadError;
@@ -1760,7 +1760,7 @@ async function submitOnboardAvatar() {
 
     // Await background removal — keep overlay visible
     showUploadOverlay('Removing background...');
-    const cutoutUrl = await withTimeout(processAvatar(path), 45000, 'Background removal');
+    const cutoutUrl = await withTimeout(processAvatar(path), 60000, 'Background removal');
     hideUploadOverlay();
 
     if (cutoutUrl) {
@@ -2062,7 +2062,7 @@ async function submitPromptAvatar() {
 
     const { error: uploadError } = await withTimeout(
       supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type }),
-      30000, 'Upload'
+      60000, 'Upload'
     );
 
     if (uploadError) throw uploadError;
@@ -2075,7 +2075,7 @@ async function submitPromptAvatar() {
 
     // Await background removal — keep overlay visible
     showUploadOverlay('Removing background...');
-    const cutoutUrl = await withTimeout(processAvatar(path), 45000, 'Background removal');
+    const cutoutUrl = await withTimeout(processAvatar(path), 60000, 'Background removal');
     hideUploadOverlay();
 
     if (cutoutUrl) {

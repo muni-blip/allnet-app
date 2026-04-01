@@ -1395,9 +1395,27 @@ async function resumeActiveGame(gameId) {
   dbGameId = gameId;
   dbCourtId = game.court_id;
 
-  // Rebuild teams from persisted JSONB
-  const teamA = game.team_a_data || [];
-  const teamB = game.team_b_data || [];
+  // Rebuild teams from persisted JSONB, or fallback to game_players table
+  let teamA = game.team_a_data || [];
+  let teamB = game.team_b_data || [];
+
+  if (teamA.length === 0 && teamB.length === 0) {
+    // Fallback: load from game_players table
+    const { data: players } = await supabase.from('game_players')
+      .select('*, profiles(name, initials)')
+      .eq('game_id', gameId).eq('status', 'active');
+    if (players) {
+      players.forEach(p => {
+        const entry = {
+          name: p.profiles?.name || 'Unknown', initials: p.profiles?.initials || '??',
+          isYou: p.user_id === currentUser.id, userId: p.user_id
+        };
+        if (p.team === 'a') teamA.push(entry);
+        else teamB.push(entry);
+      });
+    }
+  }
+
   G.teamA = teamA.map(p => ({
     name: p.name, initials: p.initials,
     isYou: p.isYou || (p.userId === currentUser.id),

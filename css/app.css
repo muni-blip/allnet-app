@@ -529,18 +529,19 @@ html, body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 24px;
   margin-bottom: 20px;
 }
 
 .court-header__info { flex: 1; }
 
 .court-header__name {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
   text-transform: uppercase;
   margin-bottom: 4px;
+  line-height: 1.2;
 }
 
 .court-header__address {
@@ -723,21 +724,19 @@ html, body {
 }
 
 .forecast-bar {
-  width: 100%; border-radius: 4px 4px 0 0; min-height: 4px;
-  transition: background 0.2s ease, filter 0.15s ease;
+  width: 100%; border-radius: 0; min-height: 4px;
+  transition: filter 0.15s ease;
+  border: 1px solid #0077F6;
+  background: transparent;
 }
 
 .forecast-bar-wrapper:hover .forecast-bar,
 .forecast-bar-wrapper.tapped .forecast-bar { filter: brightness(1.25); }
 
-.forecast-bar--low { background: var(--border-light); }
-.forecast-bar--med { background: var(--green-live); opacity: 0.6; }
-.forecast-bar--high { background: var(--green-live); }
-.forecast-bar--packed { background: var(--orange); }
-.forecast-bar--now { box-shadow: 0 0 8px rgba(255, 90, 31, 0.4); }
+.forecast-bar--today { background: #0077F6; }
 
 .forecast-label { font-size: 9px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-.forecast-label--now { color: var(--orange); }
+.forecast-label--now { color: #fff; }
 
 .forecast-tooltip {
   position: absolute; bottom: calc(100% + 8px); left: 50%;
@@ -761,12 +760,10 @@ html, body {
 }
 
 .forecast-tooltip__day { font-family: var(--font-display); font-size: 13px; font-weight: 700; text-transform: uppercase; margin-bottom: 3px; }
-.forecast-tooltip__level { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
-.forecast-tooltip__level--low { color: var(--text-muted); }
-.forecast-tooltip__level--med { color: var(--green-live); opacity: 0.8; }
-.forecast-tooltip__level--high { color: var(--green-live); }
-.forecast-tooltip__level--packed { color: var(--orange); }
+.forecast-tooltip__level { font-size: 11px; font-weight: 600; margin-bottom: 4px; color: #0077F6; }
 .forecast-tooltip__peak { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.forecast-yaxis__label--active { color: #fff; }
 
 /* Checked-in players */
 .checkins-section { margin-bottom: 24px; }
@@ -2366,6 +2363,16 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 
+.nav-drawer__header-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: #878787;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 16px;
+}
+
 .nav-drawer__close {
   background: none;
   border: 1px solid var(--border);
@@ -2399,15 +2406,16 @@ html, body {
   align-items: center;
   gap: 14px;
   padding: 14px 24px;
-  color: var(--text-secondary);
+  color: #fff;
   text-decoration: none;
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   transition: var(--transition);
   position: relative;
+  line-height: 24px;
 }
 
 .nav-drawer__link:hover {
@@ -2416,7 +2424,7 @@ html, body {
 }
 
 .nav-drawer__link--active {
-  color: var(--orange);
+  color: #F74501;
   background: rgba(255,90,31,0.06);
 }
 
@@ -2427,7 +2435,7 @@ html, body {
   top: 8px;
   bottom: 8px;
   width: 3px;
-  background: var(--orange);
+  background: #F74501;
   border-radius: 0 3px 3px 0;
 }
 
@@ -2440,13 +2448,6 @@ html, body {
 .nav-drawer__link--soon:hover {
   color: var(--text-muted);
   background: transparent;
-}
-
-.nav-drawer__link-icon {
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-  flex-shrink: 0;
 }
 
 .nav-drawer__link-label {
@@ -2462,6 +2463,13 @@ html, body {
   border-radius: 100px;
   background: rgba(107,107,107,0.2);
   color: var(--text-muted);
+}
+
+.nav-drawer__link-selector {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .nav-drawer__footer {
@@ -2489,6 +2497,10 @@ html, body {
   color: white;
   flex-shrink: 0;
   overflow: hidden;
+}
+
+.nav-drawer__user-info {
+  flex: 1;
 }
 
 .nav-drawer__user-name {

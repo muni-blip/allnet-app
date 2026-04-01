@@ -865,23 +865,24 @@ function openSheet(court) {
   const today = new Date().getDay();
   const todayIdx = today === 0 ? 6 : today - 1;
   const dayLabelsFull = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const peakWindows = { low: 'Low traffic expected', med: 'Moderate \u2014 try 5\u20138 PM', high: 'Busy \u2014 peak around 5\u20138 PM', packed: 'Very busy \u2014 expect waits' };
-  const levelLabels = { low: 'Quiet', med: 'Moderate', high: 'Busy', packed: 'Packed' };
+  const peakWindows = { low: 'Low traffic expected', med: 'Moderate \u2014 try 5\u20138 PM', high: 'Busy \u2014 peak around 5\u20138 PM' };
+  const levelLabels = { low: 'Quiet', med: 'Moderate', high: 'Busy' };
+  const todayVal = court.forecast[todayIdx] || 0;
+  const todayLevel = todayVal >= 50 ? 'high' : todayVal >= 25 ? 'med' : 'low';
   const forecastBars = court.forecast.map((val, i) => {
     const h = Math.max(6, (val / maxForecast) * 78);
-    const level = val >= 80 ? 'packed' : val >= 50 ? 'high' : val >= 25 ? 'med' : 'low';
+    const level = val >= 50 ? 'high' : val >= 25 ? 'med' : 'low';
     const isNow = i === todayIdx;
     return `<div class="forecast-bar-wrapper" onclick="toggleForecastTooltip(this)">
       <div class="forecast-tooltip">
         <div class="forecast-tooltip__day">${dayLabelsFull[i]}${isNow ? ' (Today)' : ''}</div>
-        <div class="forecast-tooltip__level forecast-tooltip__level--${level}">${levelLabels[level]}</div>
+        <div class="forecast-tooltip__level">${levelLabels[level]}</div>
         <div class="forecast-tooltip__peak">${peakWindows[level]}</div>
       </div>
-      <div class="forecast-bar forecast-bar--${level} ${isNow ? 'forecast-bar--now' : ''}" style="height:${h}px;"></div>
+      <div class="forecast-bar ${isNow ? 'forecast-bar--today' : ''}" style="height:${h}px;"></div>
       <span class="forecast-label ${isNow ? 'forecast-label--now' : ''}">${dayLabels[i]}</span>
     </div>`;
   }).join('');
-
   const checkinHTML = court.checkedIn.length > 0
     ? court.checkedIn.map(p => {
         const avatarContent = buildCompositeAvatarHtml({
@@ -936,9 +937,9 @@ function openSheet(court) {
       <div class="forecast-title">// Weekly Forecast</div>
       <div class="forecast-chart-container">
         <div class="forecast-yaxis">
-          <span class="forecast-yaxis__label">Busy</span>
-          <span class="forecast-yaxis__label">Moderate</span>
-          <span class="forecast-yaxis__label">Quiet</span>
+          <span class="forecast-yaxis__label ${todayLevel === 'high' ? 'forecast-yaxis__label--active' : ''}">Busy</span>
+          <span class="forecast-yaxis__label ${todayLevel === 'med' ? 'forecast-yaxis__label--active' : ''}">Moderate</span>
+          <span class="forecast-yaxis__label ${todayLevel === 'low' ? 'forecast-yaxis__label--active' : ''}">Quiet</span>
         </div>
         <div class="forecast-chart">${forecastBars}</div>
       </div>

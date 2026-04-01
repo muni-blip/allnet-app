@@ -367,7 +367,95 @@ async function initNavBar() {
 
 // Fallback handlers for secondary pages (overridden by app.js on Play page)
 if (typeof openNotifications === 'undefined') {
-  var openNotifications = function() { window.location.href = 'allnet-app.html'; };
+  var _sharedNotifsLoaded = false;
+
+  var openNotifications = function() {
+    // Inject notifications panel if it doesn't exist on this page
+    if (!document.getElementById('sharedAlertsScreen')) {
+      var panel = document.createElement('div');
+      panel.className = 'alerts-screen';
+      panel.id = 'sharedAlertsScreen';
+      panel.innerHTML = '<button class="profile-back" onclick="closeSharedNotifications()">← Back</button>' +
+        '<div class="alerts-content">' +
+          '<div class="alerts-header">' +
+            '<div class="alerts-title">Notifications</div>' +
+            '<button class="alerts-mark-all" id="sp_alertsMarkAll" onclick="sharedMarkAllRead()" style="display:none;">Mark all read</button>' +
+          '</div>' +
+          '<div class="alerts-list" id="sp_alertsList">' +
+            '<div class="alerts-empty"><div class="alerts-empty__icon">⏳</div><div class="alerts-empty__text">Loading...</div></div>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(panel);
+    }
+    document.getElementById('sharedAlertsScreen').classList.add('open');
+    if (!_sharedNotifsLoaded) loadSharedNotifications();
+  };
+
+  var closeSharedNotifications = function() {
+    var panel = document.getElementById('sharedAlertsScreen');
+    if (panel) panel.classList.remove('open');
+  };
+
+  var loadSharedNotifications = async function() {
+    var list = document.getElementById('sp_alertsList');
+    try {
+      var notifications = await getNotifications(50);
+      if (!notifications || notifications.length === 0) {
+        list.innerHTML = '<div class="alerts-empty"><div class="alerts-empty__icon">🔔</div><div class="alerts-empty__text">No alerts yet</div><div class="alerts-empty__sub">Watch a court to get notified when players check in</div></div>';
+        document.getElementById('sp_alertsMarkAll').style.display = 'none';
+        _sharedNotifsLoaded = true;
+        return;
+      }
+      var hasUnread = notifications.some(function(n) { return !n.read; });
+      document.getElementById('sp_alertsMarkAll').style.display = hasUnread ? 'block' : 'none';
+
+      list.innerHTML = notifications.map(function(n) {
+        var iconMap = { court_active:'🏀', court_heating_up:'🔥', court_packed:'🔥', post_sprayed:'🎨', player_joined:'👋', review_reminder:'📝', game_complete:'🏆', review_penalty:'⚠️' };
+        var icon = iconMap[n.type] || '🏀';
+        var t = timeAgo(new Date(n.created_at));
+        return '<div class="alert-card ' + (n.read ? '' : 'alert-card--unread') + '" data-notification-id="' + n.id + '" onclick="sharedNotifTap(\'' + n.id + '\',\'' + (n.court_id||'') + '\',\'' + (n.type||'') + '\',\'' + (n.match_id||'') + '\',\'' + (n.game_id||'') + '\')">' +
+          '<div class="alert-card__icon">' + icon + '</div>' +
+          '<div class="alert-card__body"><div class="alert-card__title">' + n.title + '</div><div class="alert-card__text">' + n.body + '</div><div class="alert-card__time">' + t + '</div></div></div>';
+      }).join('');
+      _sharedNotifsLoaded = true;
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+      list.innerHTML = '<div class="alerts-empty"><div class="alerts-empty__text">Failed to load</div></div>';
+    }
+  };
+
+  var sharedNotifTap = async function(id, courtId, type, matchId, gameId) {
+    await markNotificationRead(id);
+    var card = document.querySelector('.alert-card[data-notification-id="' + id + '"]');
+    if (card) card.classList.remove('alert-card--unread');
+    // Update badge
+    var badgeEl = document.getElementById('navBellBadge');
+    if (badgeEl) {
+      var curr = parseInt(badgeEl.textContent) || 0;
+      if (curr > 1) { badgeEl.textContent = curr - 1; }
+      else { badgeEl.style.display = 'none'; }
+    }
+    // Navigate based on type
+    if (type === 'player_joined' && gameId) {
+      window.location.href = 'allnet-phase2.html?mode=lobby&game_id=' + gameId;
+    } else if (type === 'review_reminder' && gameId) {
+      window.location.href = 'allnet-phase2.html?mode=review&game_id=' + gameId;
+    } else if (type === 'game_complete') {
+      window.location.href = 'allnet-career.html';
+    } else if (type === 'post_sprayed' && matchId) {
+      window.location.href = 'allnet-activity.html?match=' + matchId;
+    } else if (courtId) {
+      window.location.href = 'allnet-app.html?court=' + courtId;
+    }
+  };
+
+  var sharedMarkAllRead = async function() {
+    await markAllNotificationsRead();
+    document.querySelectorAll('.alert-card--unread').forEach(function(c) { c.classList.remove('alert-card--unread'); });
+    document.getElementById('sp_alertsMarkAll').style.display = 'none';
+    var badgeEl = document.getElementById('navBellBadge');
+    if (badgeEl) badgeEl.style.display = 'none';
+  };
 }
 if (typeof handleProfileClick === 'undefined') {
   var handleProfileClick = function() { openSharedProfile(); };

@@ -1989,11 +1989,52 @@ async function processAvatar(storagePath) {
    ══════════════════════════════ */
 let pendingGameCourt = null;
 
-function startGame(courtName) {
+async function startGame(courtName) {
   if (!currentProfile) return;
 
+  // Gate 1: Check for existing active/lobby/review game
+  try {
+    const { data: activeGames } = await supabase
+      .from('game_players')
+      .select('game_id, team, status, game_sessions!inner(id, format, status, started_at, created_at, court_id, courts(name))')
+      .eq('user_id', currentUser.id)
+      .eq('status', 'active')
+      .in('game_sessions.status', ['active', 'lobby', 'review']);
+
+    const resumable = (activeGames || []).filter(g =>
+      g.game_sessions && ['active', 'lobby', 'review'].includes(g.game_sessions.status)
+    );
+
+    if (resumable.length > 0) {
+      resumable.sort((a, b) => new Date(b.game_sessions.created_at) - new Date(a.game_sessions.created_at));
+      const g = resumable[0];
+      const gs = g.game_sessions;
+      const courtDisplayName = gs.courts?.name || 'Unknown Court';
+      const isActive = gs.status === 'active';
+      const isReview = gs.status === 'review';
+
+      window._resumeGameData = { gameId: gs.id, status: gs.status, courtName: courtDisplayName, courtId: gs.court_id };
+
+      document.getElementById('resumeModalTitle').textContent = isActive ? 'Active Game in Progress' : isReview ? 'Pending Reviews' : 'Game Waiting in Lobby';
+      document.getElementById('resumeModalDesc').textContent = isActive
+        ? 'You have an active game. Would you like to resume?'
+        : isReview ? 'Your game ended but you have pending reviews to submit.'
+        : 'You have a game waiting in the lobby. Would you like to return?';
+      document.getElementById('resumeModalCourt').textContent = '📍 ' + courtDisplayName + ' · ' + gs.format.toUpperCase();
+      document.getElementById('resumeModalPenalty').textContent = isActive
+        ? 'Leaving an active game will reduce your social rating by 0.3.'
+        : isReview ? 'Missing reviews will result in a rating penalty after the deadline.'
+        : 'No penalty for leaving a lobby game.';
+      document.getElementById('leaveResumeBtn').textContent = isReview ? 'Skip Reviews' : 'Leave Game';
+      document.getElementById('resumeBtn').textContent = isReview ? 'Submit Reviews' : 'Resume Game';
+      closeSheet();
+      document.getElementById('resumeGameModal').classList.add('active');
+      return;
+    }
+  } catch (err) { console.error('Active game check error:', err); }
+
+  // Gate 2: Check for profile photo
   if (!currentProfile.avatar_url) {
-    // Gate: require photo before joining a game
     pendingGameCourt = courtName;
     const initials = currentProfile.initials || 'U';
     document.getElementById('promptAvatarInitials').textContent = initials;
@@ -2006,6 +2047,7 @@ function startGame(courtName) {
     document.getElementById('promptAvatarLabel').textContent = 'Tap to upload a photo';
     document.getElementById('photoPromptModal').classList.add('active');
   } else {
+    // All clear — navigate to game creation
     window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(courtName);
   }
 }

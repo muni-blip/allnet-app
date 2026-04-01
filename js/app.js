@@ -1541,6 +1541,17 @@ function hideUploadOverlay() {
   if (o) o.classList.remove('active');
 }
 
+// Timeout wrapper for async operations
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(label + ' timed out after ' + (ms/1000) + 's')), ms))
+  ]);
+}
+
+// Max file size: 5MB
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
+
 /* ══════════════════════════════
    PROFILE AVATAR — change from profile screen
    ══════════════════════════════ */
@@ -1552,13 +1563,21 @@ function triggerProfileAvatarUpload() {
 async function handleProfileAvatarChange(input) {
   const file = input.files[0];
   if (!file || !currentUser) return;
+
+  if (file.size > MAX_AVATAR_SIZE) {
+    showAlert('File Too Large', 'Please select a photo under 5MB.', { icon: '⚠️' });
+    input.value = '';
+    return;
+  }
+
   showUploadOverlay('Uploading photo...');
   try {
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
     const path = currentUser.id + '/avatar.' + ext;
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(path, file, { upsert: true, contentType: file.type });
+    const { error: uploadError } = await withTimeout(
+      supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type }),
+      30000, 'Upload'
+    );
     if (uploadError) throw uploadError;
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
@@ -1567,7 +1586,7 @@ async function handleProfileAvatarChange(input) {
 
     // Await background removal — keep overlay visible
     showUploadOverlay('Removing background...');
-    const cutoutUrl = await processAvatar(path);
+    const cutoutUrl = await withTimeout(processAvatar(path), 45000, 'Background removal');
     hideUploadOverlay();
     if (cutoutUrl) {
       showToast('Career card updated 🏀');
@@ -1579,7 +1598,7 @@ async function handleProfileAvatarChange(input) {
     hideUploadOverlay();
     const avatarEl = document.getElementById('profileCardAvatar');
     if (avatarEl) avatarEl.textContent = currentProfile?.initials || 'U';
-    showAlert('Upload Failed', 'Photo upload failed. Please try again.', { icon: '⚠️' });
+    showAlert('Upload Failed', err.message || 'Photo upload failed. Please try again.', { icon: '⚠️' });
   }
   input.value = '';
 }
@@ -1706,18 +1725,25 @@ async function submitOnboardAvatar() {
   if (!file || !currentUser) return;
 
   const btn = document.getElementById('onboardPhotoBtn');
+  const errorEl = document.getElementById('onboardPhotoError');
+
+  if (file.size > MAX_AVATAR_SIZE) {
+    errorEl.textContent = 'Photo is too large. Please select one under 5MB.';
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = 'Uploading...';
-  const errorEl = document.getElementById('onboardPhotoError');
   showUploadOverlay('Uploading photo...');
 
   try {
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
     const path = currentUser.id + '/avatar.' + ext;
 
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(path, file, { upsert: true, contentType: file.type });
+    const { error: uploadError } = await withTimeout(
+      supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type }),
+      30000, 'Upload'
+    );
 
     if (uploadError) throw uploadError;
 
@@ -1734,7 +1760,7 @@ async function submitOnboardAvatar() {
 
     // Await background removal — keep overlay visible
     showUploadOverlay('Removing background...');
-    const cutoutUrl = await processAvatar(path);
+    const cutoutUrl = await withTimeout(processAvatar(path), 45000, 'Background removal');
     hideUploadOverlay();
 
     if (cutoutUrl) {
@@ -2019,18 +2045,25 @@ async function submitPromptAvatar() {
   if (!file || !currentUser) return;
 
   const btn = document.getElementById('promptPhotoBtn');
+  const errorEl = document.getElementById('promptPhotoError');
+
+  if (file.size > MAX_AVATAR_SIZE) {
+    errorEl.textContent = 'Photo is too large. Please select one under 5MB.';
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = 'Uploading...';
-  const errorEl = document.getElementById('promptPhotoError');
   showUploadOverlay('Uploading photo...');
 
   try {
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
     const path = currentUser.id + '/avatar.' + ext;
 
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(path, file, { upsert: true, contentType: file.type });
+    const { error: uploadError } = await withTimeout(
+      supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type }),
+      30000, 'Upload'
+    );
 
     if (uploadError) throw uploadError;
 
@@ -2042,7 +2075,7 @@ async function submitPromptAvatar() {
 
     // Await background removal — keep overlay visible
     showUploadOverlay('Removing background...');
-    const cutoutUrl = await processAvatar(path);
+    const cutoutUrl = await withTimeout(processAvatar(path), 45000, 'Background removal');
     hideUploadOverlay();
 
     if (cutoutUrl) {

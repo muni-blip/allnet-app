@@ -1051,18 +1051,19 @@ async function fetchAndRenderLeaderboard(courtId) {
     }
 
     section.style.display = 'block';
+    const skillBars = '<span style="display:inline-flex;gap:1px;vertical-align:middle;margin-right:2px;"><span style="width:4px;height:10px;background:#F74501;display:inline-block;"></span><span style="width:4px;height:10px;background:#F74501;display:inline-block;"></span></span>';
     list.innerHTML = data.map((p, i) => {
       const rank = i + 1;
       const rankCls = rank <= 3 ? ' leaderboard-rank--' + rank : '';
       const avatarContent = (typeof buildCompositeAvatarHtml === 'function' && (p.avatar_cutout_url || p.avatar_url))
         ? buildCompositeAvatarHtml(p) : (p.initials || '??');
       const winLoss = p.total_wins + 'W-' + p.total_losses + 'L';
-      return `<div class="leaderboard-row" onclick="closeSheet();showPlayerCard('${(p.name||'').replace(/'/g,"\\'")}','${p.user_id}')">
+      return `<div class="leaderboard-row" onclick="showPlayerCard('${(p.name||'').replace(/'/g,"\\'")}','${p.user_id}')">
         <div class="leaderboard-rank${rankCls}">${rank}</div>
         <div class="leaderboard-avatar">${avatarContent}</div>
         <div class="leaderboard-info">
           <div class="leaderboard-name">${p.name || 'Unknown'}</div>
-          <div class="leaderboard-stats">${Number(p.avg_skill).toFixed(1)} ⭐ · ${winLoss}</div>
+          <div class="leaderboard-stats">${skillBars}${Number(p.avg_skill).toFixed(1)} · ${winLoss}</div>
         </div>
         <div class="leaderboard-score">${Number(p.score).toFixed(2)}</div>
       </div>`;

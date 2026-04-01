@@ -1299,20 +1299,41 @@ async function loadPendingReviewGame(gameId) {
   dbGameId = gameId;
   dbCourtId = game.court_id;
 
-  // Build team rosters
-  const myTeamLetter = players.find(p => p.user_id === currentUser.id)?.team || 'a';
+  // Build team rosters — prefer JSONB (includes fake players), fallback to game_players
+  const teamAData = game.team_a_data || [];
+  const teamBData = game.team_b_data || [];
+  let myTeamLetter = 'a';
+
   G.teamA = [];
   G.teamB = [];
-  players.forEach(p => {
-    const entry = {
-      name: p.profiles?.name || 'Unknown',
-      initials: p.profiles?.initials || '??',
-      isYou: p.user_id === currentUser.id,
-      userId: p.user_id
-    };
-    if (p.team === 'a') G.teamA.push(entry);
-    else G.teamB.push(entry);
-  });
+
+  if (teamAData.length > 0 || teamBData.length > 0) {
+    // Rebuild from persisted JSONB
+    G.teamA = teamAData.map(p => ({
+      name: p.name, initials: p.initials,
+      isYou: p.isYou || (p.userId === currentUser.id),
+      userId: p.userId || null
+    }));
+    G.teamB = teamBData.map(p => ({
+      name: p.name, initials: p.initials,
+      isYou: p.isYou || (p.userId === currentUser.id),
+      userId: p.userId || null
+    }));
+    myTeamLetter = G.teamA.some(p => p.isYou) ? 'a' : 'b';
+  } else {
+    // Fallback to game_players
+    myTeamLetter = players.find(p => p.user_id === currentUser.id)?.team || 'a';
+    players.forEach(p => {
+      const entry = {
+        name: p.profiles?.name || 'Unknown',
+        initials: p.profiles?.initials || '??',
+        isYou: p.user_id === currentUser.id,
+        userId: p.user_id
+      };
+      if (p.team === 'a') G.teamA.push(entry);
+      else G.teamB.push(entry);
+    });
+  }
 
   // Build reviews list — only players not yet reviewed
   const allOthers = [...G.teamA, ...G.teamB].filter(p => !p.isYou && !reviewedIds.has(p.userId));

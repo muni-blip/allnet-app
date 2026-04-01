@@ -521,6 +521,7 @@ html, body {
 .sheet__body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px 20px 32px;
   min-height: 0;
 }
@@ -1070,7 +1071,7 @@ html, body {
 
 /* Directions button */
 /* ── Court Leaderboard ── */
-.leaderboard-section { padding: 0 16px; margin-top: 20px; }
+.leaderboard-section { margin-top: 20px; margin-bottom: 24px; }
 .leaderboard-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .leaderboard-title-row .forecast-title { margin-bottom: 0; }
 .leaderboard-info-btn {

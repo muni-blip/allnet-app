@@ -2167,6 +2167,8 @@ async function initApp() {
         await loadUserProfile(session.user);
       } else {
         console.log('AllNet: No session — user not logged in');
+        const navRight = document.getElementById('navBarRight');
+        if (navRight) navRight.style.opacity = '1';
       }
     }
 
@@ -2503,6 +2505,10 @@ async function loadUserProfile(user) {
         starsCount.textContent = (currentProfile.stars_balance || 0).toLocaleString();
         starsEl.style.display = 'flex';
       }
+
+      // Reveal nav bar right section (was hidden to prevent flash)
+      const navRight = document.getElementById('navBarRight');
+      if (navRight) navRight.style.opacity = '1';
     }
 
     const myCheckins = await getUserCheckins(currentUser.id);

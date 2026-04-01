@@ -323,14 +323,22 @@ async function initNavBar() {
   var bellEl = document.getElementById('navBell');
   var badgeEl = document.getElementById('navBellBadge');
   var profileBtn = document.getElementById('profileBtn');
+  var navRight = document.getElementById('navBarRight');
   if (!profileBtn) return; // no nav bar on this page
 
   try {
     var session = (await supabase.auth.getSession()).data.session;
-    if (!session) return; // not logged in — keep "Get Started" CTA
+    if (!session) {
+      // Not logged in — reveal "Get Started" CTA
+      if (navRight) navRight.style.opacity = '1';
+      return;
+    }
 
     var profile = await getUserProfile(session.user.id);
-    if (!profile) return;
+    if (!profile) {
+      if (navRight) navRight.style.opacity = '1';
+      return;
+    }
 
     // Stars
     if (starsEl && starsCount) {
@@ -360,8 +368,12 @@ async function initNavBar() {
     profileBtn.className = 'nav-bar__avatar';
     profileBtn.onclick = function() { openSharedProfile(); };
     profileBtn.innerHTML = buildCompositeAvatarHtml(profile);
+
+    // Reveal nav bar right section with correct content
+    if (navRight) navRight.style.opacity = '1';
   } catch (err) {
     console.error('initNavBar error:', err);
+    if (navRight) navRight.style.opacity = '1';
   }
 }
 

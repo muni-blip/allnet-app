@@ -587,7 +587,11 @@ function createGame(){
 }
 
 function renderLobby(){
-  const rTeam=(list,cid,avCls)=>{let h='';list.forEach(p=>{h+='<div class="lobby-player"><div class="lobby-player__avatar '+avCls+'">'+p.initials+'</div><div style="flex:1"><div class="lobby-player__name">'+p.name+'</div><div class="lobby-player__meta">'+(p.isYou?'Game creator':'Joined just now')+'</div></div>'+(p.isYou?'<span class="lobby-player__you">You</span>':'')+'</div>';});for(let i=0;i<G.teamSize-list.length;i++){h+='<div class="lobby-slot"><div class="lobby-slot__dot">?</div>Waiting for player...</div>';}document.getElementById(cid).innerHTML=h;};
+  const rTeam=(list,cid,avCls)=>{let h='';list.forEach(p=>{
+    const avatarContent = (typeof buildCompositeAvatarHtml === 'function' && (p.avatar_cutout_url || p.avatar_url))
+      ? buildCompositeAvatarHtml(p) : p.initials;
+    h+='<div class="lobby-player"><div class="lobby-player__avatar '+avCls+'">'+avatarContent+'</div><div style="flex:1"><div class="lobby-player__name">'+p.name+'</div><div class="lobby-player__meta">'+(p.isYou?'Game creator':'Joined just now')+'</div></div>'+(p.isYou?'<span class="lobby-player__you">You</span>':'')+'</div>';
+  });for(let i=0;i<G.teamSize-list.length;i++){h+='<div class="lobby-slot"><div class="lobby-slot__dot">?</div>Waiting for player...</div>';}document.getElementById(cid).innerHTML=h;};
   rTeam(G.teamA,'teamAList','avatar--a');rTeam(G.teamB,'teamBList','avatar--b');
   // Persist team data to DB (debounced)
   persistTeamData();
@@ -599,8 +603,8 @@ function persistTeamData() {
   clearTimeout(_persistTimer);
   _persistTimer = setTimeout(async () => {
     try {
-      const teamAData = G.teamA.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
-      const teamBData = G.teamB.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
+      const teamAData = G.teamA.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null, avatar_cutout_url: p.avatar_cutout_url || null, avatar_url: p.avatar_url || null, selected_cover: p.selected_cover || null }));
+      const teamBData = G.teamB.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null, avatar_cutout_url: p.avatar_cutout_url || null, avatar_url: p.avatar_url || null, selected_cover: p.selected_cover || null }));
       await supabase.from('game_sessions').update({ team_a_data: teamAData, team_b_data: teamBData }).eq('id', dbGameId);
     } catch (err) { console.error('persistTeamData error:', err); }
   }, 500);
@@ -642,7 +646,10 @@ function startGame(){
   const c=document.getElementById('teamsVsContainer');
   const labelA=G.format==='1v1'?'You':'Team A';
   const labelB=G.format==='1v1'?(G.teamB[0]?G.teamB[0].name:'Opponent'):'Team B';
-  const rr=(team,label,cls,avCls)=>{let h='<div class="team-roster"><div class="team-roster__label team-roster__label--'+cls+'">'+label+'</div>';team.forEach(p=>{h+='<div class="team-roster__player"><div class="team-roster__avatar '+avCls+'">'+p.initials+'</div><div class="team-roster__name">'+(p.isYou?'You':p.name)+'</div></div>';});return h+'</div>';};
+  const rr=(team,label,cls,avCls)=>{let h='<div class="team-roster"><div class="team-roster__label team-roster__label--'+cls+'">'+label+'</div>';team.forEach(p=>{
+    const av = (typeof buildCompositeAvatarHtml === 'function' && (p.avatar_cutout_url || p.avatar_url))
+      ? buildCompositeAvatarHtml(p) : p.initials;
+    h+='<div class="team-roster__player"><div class="team-roster__avatar '+avCls+'">'+av+'</div><div class="team-roster__name">'+(p.isYou?'You':p.name)+'</div></div>';});return h+'</div>';};
   c.innerHTML=rr(G.teamA,labelA,'a','avatar--a')+'<div class="vs-divider">VS</div>'+rr(G.teamB,labelB,'b','avatar--b');
   G.timerSeconds=0;G.timerInterval=setInterval(()=>{G.timerSeconds++;const m=String(Math.floor(G.timerSeconds/60)).padStart(2,'0');const s=String(G.timerSeconds%60).padStart(2,'0');document.getElementById('gameTimer').textContent=m+':'+s;},1000);
 }
@@ -661,7 +668,9 @@ function renderReview(){
   document.getElementById('reviewSub').textContent='Player '+(idx+1)+' of '+total+' · '+(p.team==='opponent'?'Opponent':'Teammate');
   document.getElementById('reviewProgress').innerHTML=G.reviews.map((_,i)=>'<div class="review-progress__dot '+(i<idx||(i===idx&&p.skill!==null)?'done':i===idx?'current':'')+'"></div>').join('');
   const avCls=p.team==='opponent'?'avatar--b':'avatar--a';
-  document.getElementById('reviewPlayerHeader').innerHTML='<div class="lobby-player__avatar '+avCls+'">'+p.initials+'</div><div style="flex:1"><div class="lobby-player__name">'+p.name+'</div><div class="lobby-player__meta">'+(p.team==='opponent'?'Opponent':'Teammate')+' · '+G.format+'</div></div><div class="review-player-header__count">'+(idx+1)+'/'+total+'</div>';
+  const reviewAv = (typeof buildCompositeAvatarHtml === 'function' && (p.avatar_cutout_url || p.avatar_url))
+    ? buildCompositeAvatarHtml(p) : p.initials;
+  document.getElementById('reviewPlayerHeader').innerHTML='<div class="lobby-player__avatar '+avCls+'">'+reviewAv+'</div><div style="flex:1"><div class="lobby-player__name">'+p.name+'</div><div class="lobby-player__meta">'+(p.team==='opponent'?'Opponent':'Teammate')+' · '+G.format+'</div></div><div class="review-player-header__count">'+(idx+1)+'/'+total+'</div>';
 
   document.getElementById('reviewPrevBtn').style.display=isFirst?'none':'';
 
@@ -1286,6 +1295,9 @@ async function initPhase2() {
     if (currentProfile) {
       ME.name = currentProfile.name || ME.name;
       ME.initials = currentProfile.initials || ME.initials;
+      ME.avatar_cutout_url = currentProfile.avatar_cutout_url || null;
+      ME.avatar_url = currentProfile.avatar_url || null;
+      ME.selected_cover = currentProfile.selected_cover || null;
       // Load social rating
       if (currentProfile.social_rating !== null) G.socialRating = parseFloat(currentProfile.social_rating);
       if (currentProfile.social_games_count) G.socialGamesCount = currentProfile.social_games_count;
@@ -1340,7 +1352,7 @@ async function loadPendingReviewGame(gameId) {
 
   // Load players
   const { data: players, error: playersErr } = await supabase.from('game_players')
-    .select('*, profiles(name, initials)').eq('game_id', gameId);
+    .select('*, profiles(name, initials, avatar_cutout_url, avatar_url, selected_cover)').eq('game_id', gameId);
   if (playersErr || !players || players.length === 0) { console.error('No players found'); return; }
 
   // Load existing reviews by this user for this game
@@ -1367,12 +1379,18 @@ async function loadPendingReviewGame(gameId) {
     G.teamA = teamAData.map(p => ({
       name: p.name, initials: p.initials,
       isYou: p.isYou || (p.userId === currentUser.id),
-      userId: p.userId || null
+      userId: p.userId || null,
+      avatar_cutout_url: p.avatar_cutout_url || null,
+      avatar_url: p.avatar_url || null,
+      selected_cover: p.selected_cover || null
     }));
     G.teamB = teamBData.map(p => ({
       name: p.name, initials: p.initials,
       isYou: p.isYou || (p.userId === currentUser.id),
-      userId: p.userId || null
+      userId: p.userId || null,
+      avatar_cutout_url: p.avatar_cutout_url || null,
+      avatar_url: p.avatar_url || null,
+      selected_cover: p.selected_cover || null
     }));
     myTeamLetter = G.teamA.some(p => p.isYou) ? 'a' : 'b';
   } else {
@@ -1383,7 +1401,10 @@ async function loadPendingReviewGame(gameId) {
         name: p.profiles?.name || 'Unknown',
         initials: p.profiles?.initials || '??',
         isYou: p.user_id === currentUser.id,
-        userId: p.user_id
+        userId: p.user_id,
+        avatar_cutout_url: p.profiles?.avatar_cutout_url || null,
+        avatar_url: p.profiles?.avatar_url || null,
+        selected_cover: p.profiles?.selected_cover || null
       };
       if (p.team === 'a') G.teamA.push(entry);
       else G.teamB.push(entry);
@@ -1426,7 +1447,7 @@ async function loadLobbyGame(gameId) {
 
   // Load players who have joined
   const { data: players, error: playersErr } = await supabase.from('game_players')
-    .select('*, profiles(name, initials)').eq('game_id', gameId);
+    .select('*, profiles(name, initials, avatar_cutout_url, avatar_url, selected_cover)').eq('game_id', gameId);
 
   // Set game state
   G.format = game.format;
@@ -1461,7 +1482,10 @@ async function loadLobbyGame(gameId) {
         name: p.profiles?.name || 'Unknown',
         initials: p.profiles?.initials || '??',
         isYou: p.user_id === currentUser.id,
-        userId: p.user_id
+        userId: p.user_id,
+        avatar_cutout_url: p.profiles?.avatar_cutout_url || null,
+        avatar_url: p.profiles?.avatar_url || null,
+        selected_cover: p.profiles?.selected_cover || null
       };
       if (p.team === 'a') G.teamA.push(entry);
       else G.teamB.push(entry);
@@ -1513,7 +1537,7 @@ async function resumeActiveGame(gameId) {
   if (teamA.length === 0 && teamB.length === 0) {
     // Fallback: load from game_players table
     const { data: players } = await supabase.from('game_players')
-      .select('*, profiles(name, initials)')
+      .select('*, profiles(name, initials, avatar_cutout_url, avatar_url, selected_cover)')
       .eq('game_id', gameId).eq('status', 'active');
     if (players) {
       players.forEach(p => {
@@ -1602,8 +1626,8 @@ startGame = async function() {
     try {
       await startGameSession(dbGameId);
       // Persist team composition for resume
-      const teamAData = G.teamA.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
-      const teamBData = G.teamB.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
+      const teamAData = G.teamA.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null, avatar_cutout_url: p.avatar_cutout_url || null, avatar_url: p.avatar_url || null, selected_cover: p.selected_cover || null }));
+      const teamBData = G.teamB.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null, avatar_cutout_url: p.avatar_cutout_url || null, avatar_url: p.avatar_url || null, selected_cover: p.selected_cover || null }));
       await supabase.from('game_sessions').update({ team_a_data: teamAData, team_b_data: teamBData }).eq('id', dbGameId);
     } catch (err) { console.error('DB start error:', err); }
   }

@@ -1196,6 +1196,34 @@ html, body {
   line-height: 1.4;
 }
 
+/* ── Player Sheet / Career Badge Area ── */
+.player-sheet__badge,
+.career-badge {
+  text-align: center;
+  padding: 0 16px 12px;
+}
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--orange-glow);
+  border: 1px solid rgba(255, 90, 31, 0.3);
+  color: var(--orange);
+}
+.badge-court {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
 /* ── Report Modal ── */
 .report-modal {
   display: none;

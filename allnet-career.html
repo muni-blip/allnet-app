@@ -208,6 +208,7 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
       <button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button>
     </div>
   </div>
+  <div class="career-badge" id="careerBadge"></div>
   <div class="cc-wrapper"><div class="cc-border"><div class="cc" id="careerCard"><div class="cc__placeholder"><div class="cc__placeholder-icon">📷</div><div class="cc__placeholder-text">Upload a photo to generate your career card</div></div></div></div></div>
   <div class="cc-actions"><button class="cc-action-btn" onclick="openPhotoModal()">CHANGE PHOTO</button><button class="cc-action-btn" onclick="openCoverPicker()">UPDATE COVER</button></div>
   <div class="match-history"><div class="match-history__title" id="matchHistoryTitle">MATCH HISTORY</div><div id="matchHistoryList"><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div></div></div>
@@ -269,6 +270,7 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 <div class="player-sheet-overlay" id="playerSheetOverlay" onclick="if(event.target===this)closePlayerSheet()">
   <div class="player-sheet" onclick="event.stopPropagation()">
     <div class="player-sheet__handle"></div>
+    <div class="player-sheet__badge" id="playerSheetBadge"></div>
     <div class="cc-border"><div class="cc" id="playerSheetCard"><div class="player-sheet__loading">Loading...</div></div></div>
     <div class="player-sheet__close">
       <button class="player-sheet__close-btn" onclick="closePlayerSheet()">✕</button>
@@ -644,20 +646,41 @@ async function openPlayerCard(uid) {
   if (!uid) return;
   var overlay = document.getElementById('playerSheetOverlay');
   var cardEl = document.getElementById('playerSheetCard');
+  var badgeEl = document.getElementById('playerSheetBadge');
   if (!overlay || !cardEl) return;
 
   // Show overlay with loading state
   cardEl.innerHTML = '<div class="player-sheet__loading">Loading...</div>';
+  if (badgeEl) badgeEl.innerHTML = '';
   overlay.classList.add('active');
 
   try {
-    var { data: player } = await supabase.from('profiles')
-      .select('id, first_name, last_name, name, avatar_cutout_url, selected_cover, social_rating, skill_rating')
-      .eq('id', uid).single();
+    var [{ data: player }, { data: stats }, { data: topCourt }] = await Promise.all([
+      supabase.from('profiles')
+        .select('id, first_name, last_name, name, avatar_url, avatar_cutout_url, selected_cover, social_rating, skill_rating, is_founding_hooper, founding_number')
+        .eq('id', uid).single(),
+      supabase.from('player_division_stats')
+        .select('*').eq('user_id', uid),
+      supabase.from('checkins')
+        .select('court_id, courts(name)')
+        .eq('user_id', uid)
+    ]);
     if (!player) { closePlayerSheet(); return; }
 
-    var { data: stats } = await supabase.from('player_division_stats')
-      .select('*').eq('user_id', uid);
+    // Populate badge area
+    if (badgeEl) {
+      var badgeHtml = '';
+      if (player.is_founding_hooper) {
+        badgeHtml += '<div class="badge-pill">🏅 Founding Hooper #' + (player.founding_number || '') + '</div>';
+      }
+      if (topCourt && topCourt.length > 0) {
+        var counts = {};
+        topCourt.forEach(function(c) { var n = c.courts?.name; if (n) counts[n] = (counts[n] || 0) + 1; });
+        var best = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; })[0];
+        if (best) badgeHtml += '<div class="badge-court">📍 Most played: ' + best[0] + '</div>';
+      }
+      badgeEl.innerHTML = badgeHtml;
+    }
 
     var playerDivStats = {};
     var bestDiv = '1v1', bestGames = 0;
@@ -947,6 +970,25 @@ async function initCareerPage() {
   currentUser = sess.data.session.user; currentProfile = await getUserProfile(currentUser.id);
   if (!currentProfile) { window.location.href = 'allnet-app.html'; return; }
   updateNavDrawerUser(); initNavBar(); await loadDivisionStats(); renderCard(); loadMatchHistory();
+
+  // Render founding badge + most played court
+  var badgeEl = document.getElementById('careerBadge');
+  if (badgeEl && currentProfile) {
+    var html = '';
+    if (currentProfile.is_founding_hooper) {
+      html += '<div class="badge-pill">🏅 Founding Hooper #' + (currentProfile.founding_number || '') + '</div>';
+    }
+    try {
+      var { data: courts } = await supabase.from('checkins').select('court_id, courts(name)').eq('user_id', currentUser.id);
+      if (courts && courts.length > 0) {
+        var counts = {};
+        courts.forEach(function(c) { var n = c.courts?.name; if (n) counts[n] = (counts[n] || 0) + 1; });
+        var best = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; })[0];
+        if (best) html += '<div class="badge-court">📍 Most played: ' + best[0] + '</div>';
+      }
+    } catch (e) { console.error('Most played court error:', e); }
+    badgeEl.innerHTML = html;
+  }
 }
 initCareerPage();
 </script>

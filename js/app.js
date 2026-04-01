@@ -18,24 +18,44 @@ async function showPlayerCard(name, userId) {
   if (!userId) return;
   const overlay = document.getElementById('playerSheetOverlay');
   const cardEl = document.getElementById('playerSheetCard');
+  const badgeEl = document.getElementById('playerSheetBadge');
   if (!overlay || !cardEl) return;
 
   // Show overlay immediately with spinner
   cardEl.innerHTML = '<div class="player-sheet__loader"><div class="player-sheet__spinner"></div></div>';
+  if (badgeEl) badgeEl.innerHTML = '';
   overlay.classList.add('active');
 
   try {
-    const [{ data: player }, { data: stats }] = await Promise.all([
+    const [{ data: player }, { data: stats }, { data: topCourt }] = await Promise.all([
       supabase.from('profiles')
-        .select('id, first_name, last_name, name, avatar_url, avatar_cutout_url, selected_cover, social_rating, skill_rating')
+        .select('id, first_name, last_name, name, avatar_url, avatar_cutout_url, selected_cover, social_rating, skill_rating, is_founding_hooper, founding_number')
         .eq('id', userId).single(),
       supabase.from('player_division_stats')
-        .select('*').eq('user_id', userId)
+        .select('*').eq('user_id', userId),
+      supabase.from('checkins')
+        .select('court_id, courts(name)')
+        .eq('user_id', userId)
     ]);
 
     // If overlay was closed while loading, bail out
     if (!overlay.classList.contains('active')) return;
     if (!player) { overlay.classList.remove('active'); return; }
+
+    // Populate badge area
+    if (badgeEl) {
+      let badgeHtml = '';
+      if (player.is_founding_hooper) {
+        badgeHtml += '<div class="badge-pill">🏅 Founding Hooper #' + (player.founding_number || '') + '</div>';
+      }
+      if (topCourt && topCourt.length > 0) {
+        const courtCounts = {};
+        topCourt.forEach(c => { const n = c.courts?.name; if (n) courtCounts[n] = (courtCounts[n] || 0) + 1; });
+        const best = Object.entries(courtCounts).sort((a, b) => b[1] - a[1])[0];
+        if (best) badgeHtml += '<div class="badge-court">📍 Most played: ' + best[0] + '</div>';
+      }
+      badgeEl.innerHTML = badgeHtml;
+    }
 
     const divStats = {};
     let bestDiv = '1v1', bestGames = 0;

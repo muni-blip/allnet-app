@@ -535,7 +535,23 @@ function createGame(){
 function renderLobby(){
   const rTeam=(list,cid,avCls)=>{let h='';list.forEach(p=>{h+='<div class="lobby-player"><div class="lobby-player__avatar '+avCls+'">'+p.initials+'</div><div style="flex:1"><div class="lobby-player__name">'+p.name+'</div><div class="lobby-player__meta">'+(p.isYou?'Game creator':'Joined just now')+'</div></div>'+(p.isYou?'<span class="lobby-player__you">You</span>':'')+'</div>';});for(let i=0;i<G.teamSize-list.length;i++){h+='<div class="lobby-slot"><div class="lobby-slot__dot">?</div>Waiting for player...</div>';}document.getElementById(cid).innerHTML=h;};
   rTeam(G.teamA,'teamAList','avatar--a');rTeam(G.teamB,'teamBList','avatar--b');
+  // Persist team data to DB (debounced)
+  persistTeamData();
 }
+
+let _persistTimer = null;
+function persistTeamData() {
+  if (!dbGameId) return;
+  clearTimeout(_persistTimer);
+  _persistTimer = setTimeout(async () => {
+    try {
+      const teamAData = G.teamA.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
+      const teamBData = G.teamB.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
+      await supabase.from('game_sessions').update({ team_a_data: teamAData, team_b_data: teamBData }).eq('id', dbGameId);
+    } catch (err) { console.error('persistTeamData error:', err); }
+  }, 500);
+}
+
 function checkReady(){if(G.teamA.length>=G.teamSize&&G.teamB.length>=G.teamSize){document.getElementById('readyBtn').disabled=false;document.getElementById('waitingIndicator').style.display='none';document.getElementById('lobbyTitle').textContent=G.format==='1v1'?"Your opponent is here!":"Everyone's here!";}}
 
 function onJoinInput(inp){inp.value=inp.value.replace(/\D/g,'');document.getElementById('joinBtn').disabled=inp.value.length!==4;}
@@ -1342,10 +1358,26 @@ async function loadLobbyGame(gameId) {
   dbGameId = gameId;
   dbCourtId = game.court_id;
 
-  // Build team rosters from DB
+  // Build team rosters — prefer JSONB (includes fake players), fallback to game_players
   G.teamA = [];
   G.teamB = [];
-  if (players) {
+  const teamAData = game.team_a_data || [];
+  const teamBData = game.team_b_data || [];
+
+  if (teamAData.length > 0 || teamBData.length > 0) {
+    // Rebuild from persisted JSONB (includes simulated players)
+    G.teamA = teamAData.map(p => ({
+      name: p.name, initials: p.initials,
+      isYou: p.isYou || (p.userId === currentUser.id),
+      userId: p.userId || null
+    }));
+    G.teamB = teamBData.map(p => ({
+      name: p.name, initials: p.initials,
+      isYou: p.isYou || (p.userId === currentUser.id),
+      userId: p.userId || null
+    }));
+  } else if (players) {
+    // Fallback to game_players table (real users only)
     players.forEach(p => {
       const entry = {
         name: p.profiles?.name || 'Unknown',

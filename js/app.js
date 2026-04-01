@@ -2101,10 +2101,10 @@ async function initApp() {
           .select('game_id, team, status, game_sessions!inner(id, format, status, started_at, created_at, court_id, courts(name))')
           .eq('user_id', currentUser.id)
           .eq('status', 'active')
-          .in('game_sessions.status', ['active', 'lobby']);
+          .in('game_sessions.status', ['active', 'lobby', 'review']);
 
         const resumable = (activeGames || []).filter(g =>
-          g.game_sessions && (g.game_sessions.status === 'active' || g.game_sessions.status === 'lobby')
+          g.game_sessions && ['active', 'lobby', 'review'].includes(g.game_sessions.status)
         );
         // Sort by most recently created — always resume the newest game
         resumable.sort((a, b) => new Date(b.game_sessions.created_at) - new Date(a.game_sessions.created_at));
@@ -2122,17 +2122,22 @@ async function initApp() {
           const gs = g.game_sessions;
           const courtDisplayName = gs.courts?.name || 'Unknown Court';
           const isActive = gs.status === 'active';
+          const isReview = gs.status === 'review';
 
           window._resumeGameData = { gameId: gs.id, status: gs.status, courtName: courtDisplayName, courtId: gs.court_id };
 
-          document.getElementById('resumeModalTitle').textContent = isActive ? 'Active Game in Progress' : 'Game Waiting in Lobby';
+          document.getElementById('resumeModalTitle').textContent = isActive ? 'Active Game in Progress' : isReview ? 'Pending Reviews' : 'Game Waiting in Lobby';
           document.getElementById('resumeModalDesc').textContent = isActive
             ? 'You have an active game. Would you like to resume?'
+            : isReview ? 'Your game ended but you have pending reviews to submit.'
             : 'You have a game waiting in the lobby. Would you like to return?';
           document.getElementById('resumeModalCourt').textContent = '📍 ' + courtDisplayName + ' · ' + gs.format.toUpperCase();
           document.getElementById('resumeModalPenalty').textContent = isActive
             ? 'Leaving an active game will reduce your social rating by 0.3.'
+            : isReview ? 'Missing reviews will result in a rating penalty after the deadline.'
             : 'No penalty for leaving a lobby game.';
+          document.getElementById('leaveResumeBtn').textContent = isReview ? 'Skip Reviews' : 'Leave Game';
+          document.getElementById('resumeBtn').textContent = isReview ? 'Submit Reviews' : 'Resume Game';
           document.getElementById('resumeGameModal').classList.add('active');
         }
       } catch (err) { console.error('Resume check error:', err); }
@@ -2507,7 +2512,7 @@ function resumeGame() {
   const data = window._resumeGameData;
   if (!data) return;
   document.getElementById('resumeGameModal').classList.remove('active');
-  const mode = data.status === 'active' ? 'resume' : 'lobby';
+  const mode = data.status === 'active' ? 'resume' : data.status === 'review' ? 'review' : 'lobby';
   window.location.href = 'allnet-phase2.html?mode=' + mode + '&game_id=' + data.gameId + '&court=' + encodeURIComponent(data.courtName);
 }
 
@@ -2520,8 +2525,12 @@ async function leaveFromResume() {
 
   try {
     const isActive = data.status === 'active';
+    const isReview = data.status === 'review';
 
-    if (isActive) {
+    if (isReview) {
+      // Skip reviews — no immediate penalty, pg_cron deadline will handle it
+      // Just dismiss the modal
+    } else if (isActive) {
       // Apply -0.3 social penalty
       await supabase.from('game_players')
         .update({ status: 'abandoned', left_at: new Date().toISOString() })
@@ -2581,7 +2590,7 @@ async function leaveFromResume() {
   document.getElementById('resumeGameModal').classList.remove('active');
   btn.textContent = 'Leave Game';
   btn.disabled = false;
-  showToast(data.status === 'active' ? 'You left the match. Social rating −0.3' : 'You left the game');
+  showToast(data.status === 'active' ? 'You left the match. Social rating −0.3' : data.status === 'review' ? 'Reviews skipped' : 'You left the game');
 }
 
 // Step 4: Init app — load courts, then check for existing session

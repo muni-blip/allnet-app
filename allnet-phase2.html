@@ -1253,6 +1253,10 @@ async function initPhase2() {
       try {
         await loadLobbyGame(reviewGameId);
       } catch (err) { console.error('Failed to load lobby game:', err); }
+    } else if (reviewMode === 'resume' && reviewGameId && currentUser) {
+      try {
+        await resumeActiveGame(reviewGameId);
+      } catch (err) { console.error('Failed to resume active game:', err); }
     }
   } catch (err) { console.error('Phase 2 init error:', err); }
 }
@@ -1378,6 +1382,71 @@ async function loadLobbyGame(gameId) {
   console.log('Phase 2: Loaded lobby for game', gameId, '— Team A:', G.teamA.length, 'Team B:', G.teamB.length);
 }
 
+async function resumeActiveGame(gameId) {
+  const { data: game, error: gameErr } = await supabase.from('game_sessions')
+    .select('*, courts(name)').eq('id', gameId).single();
+  if (gameErr || !game || game.status !== 'active') {
+    console.error('Cannot resume game:', gameErr || 'not active');
+    return;
+  }
+
+  G.format = game.format;
+  G.teamSize = FORMAT_SIZES[G.format];
+  dbGameId = gameId;
+  dbCourtId = game.court_id;
+
+  // Rebuild teams from persisted JSONB
+  const teamA = game.team_a_data || [];
+  const teamB = game.team_b_data || [];
+  G.teamA = teamA.map(p => ({
+    name: p.name, initials: p.initials,
+    isYou: p.isYou || (p.userId === currentUser.id),
+    userId: p.userId || null
+  }));
+  G.teamB = teamB.map(p => ({
+    name: p.name, initials: p.initials,
+    isYou: p.isYou || (p.userId === currentUser.id),
+    userId: p.userId || null
+  }));
+
+  // Update court context
+  const courtDisplayName = game.courts?.name || courtName;
+  document.querySelector('.court-context__name').textContent = courtDisplayName + ' · Resumed';
+
+  // Jump to active screen with teams rendered
+  goTo('screenActive');
+  document.getElementById('activeFormat').textContent = G.format;
+
+  const c = document.getElementById('teamsVsContainer');
+  const labelA = G.format === '1v1' ? 'You' : 'Team A';
+  const labelB = G.format === '1v1' ? (G.teamB[0] ? G.teamB[0].name : 'Opponent') : 'Team B';
+  const rr = (team, label, cls, avCls) => {
+    let h = '<div class="team-roster"><div class="team-roster__label team-roster__label--' + cls + '">' + label + '</div>';
+    team.forEach(p => {
+      h += '<div class="team-roster__player"><div class="team-roster__avatar ' + avCls + '">' + p.initials + '</div><div class="team-roster__name">' + (p.isYou ? 'You' : p.name) + '</div></div>';
+    });
+    return h + '</div>';
+  };
+  c.innerHTML = rr(G.teamA, labelA, 'a', 'avatar--a') + '<div class="vs-divider">VS</div>' + rr(G.teamB, labelB, 'b', 'avatar--b');
+
+  // Resume timer from started_at
+  const startedAt = new Date(game.started_at);
+  const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
+  G.timerSeconds = elapsed;
+  const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const s = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('gameTimer').textContent = m + ':' + s;
+
+  G.timerInterval = setInterval(() => {
+    G.timerSeconds++;
+    const mm = String(Math.floor(G.timerSeconds / 60)).padStart(2, '0');
+    const ss = String(G.timerSeconds % 60).padStart(2, '0');
+    document.getElementById('gameTimer').textContent = mm + ':' + ss;
+  }, 1000);
+
+  console.log('Phase 2: Resumed active game', gameId, '— elapsed', elapsed, 'seconds');
+}
+
 // Override createGame to persist to Supabase
 const _origCreateGame = createGame;
 createGame = async function() {
@@ -1395,12 +1464,18 @@ createGame = async function() {
   }
 };
 
-// Override startGame to update DB status
+// Override startGame to update DB status + persist team data
 const _origStartGame = startGame;
 startGame = async function() {
   _origStartGame();
   if (dbGameId) {
-    try { await startGameSession(dbGameId); } catch (err) { console.error('DB start error:', err); }
+    try {
+      await startGameSession(dbGameId);
+      // Persist team composition for resume
+      const teamAData = G.teamA.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
+      const teamBData = G.teamB.map(p => ({ name: p.name, initials: p.initials, isYou: p.isYou || false, userId: p.userId || null }));
+      await supabase.from('game_sessions').update({ team_a_data: teamAData, team_b_data: teamBData }).eq('id', dbGameId);
+    } catch (err) { console.error('DB start error:', err); }
   }
 };
 

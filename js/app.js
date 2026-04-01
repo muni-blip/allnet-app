@@ -2092,6 +2092,38 @@ async function initApp() {
       setTimeout(() => showToast('You left the match. Social rating −0.3'), 500);
       history.replaceState(null, '', window.location.pathname);
     }
+
+    // ── Step 4: Check for active/lobby game to resume ──
+    if (currentUser && !toastParam) {
+      try {
+        const { data: activeGames } = await supabase
+          .from('game_players')
+          .select('game_id, team, status, game_sessions(id, format, status, started_at, court_id, courts(name))')
+          .eq('user_id', currentUser.id)
+          .eq('status', 'active')
+          .in('game_sessions.status', ['active', 'lobby']);
+
+        const resumable = (activeGames || []).filter(g => g.game_sessions && g.game_sessions.status);
+        if (resumable.length > 0) {
+          const g = resumable[0];
+          const gs = g.game_sessions;
+          const courtDisplayName = gs.courts?.name || 'Unknown Court';
+          const isActive = gs.status === 'active';
+
+          window._resumeGameData = { gameId: gs.id, status: gs.status, courtName: courtDisplayName, courtId: gs.court_id };
+
+          document.getElementById('resumeModalTitle').textContent = isActive ? 'Active Game in Progress' : 'Game Waiting in Lobby';
+          document.getElementById('resumeModalDesc').textContent = isActive
+            ? 'You have an active game. Would you like to resume?'
+            : 'You have a game waiting in the lobby. Would you like to return?';
+          document.getElementById('resumeModalCourt').textContent = '📍 ' + courtDisplayName + ' · ' + gs.format.toUpperCase();
+          document.getElementById('resumeModalPenalty').textContent = isActive
+            ? 'Leaving an active game will reduce your social rating by 0.3.'
+            : 'No penalty for leaving a lobby game.';
+          document.getElementById('resumeGameModal').classList.add('active');
+        }
+      } catch (err) { console.error('Resume check error:', err); }
+    }
   } catch (err) {
     console.error('AllNet: Supabase init error', err);
     dismissSplash(); // Dismiss even on error so user isn't stuck
@@ -2452,6 +2484,92 @@ function handleCourtDeepLink() {
   }
 }
 handleCourtDeepLink();
+
+// ═══════════════════════════════════════
+// RESUME GAME — modal handlers
+// ═══════════════════════════════════════
+const LEAVE_PENALTY_AMOUNT = 0.3;
+
+function resumeGame() {
+  const data = window._resumeGameData;
+  if (!data) return;
+  document.getElementById('resumeGameModal').classList.remove('active');
+  const mode = data.status === 'active' ? 'resume' : 'lobby';
+  window.location.href = 'allnet-phase2.html?mode=' + mode + '&game_id=' + data.gameId + '&court=' + encodeURIComponent(data.courtName);
+}
+
+async function leaveFromResume() {
+  const data = window._resumeGameData;
+  if (!data || !currentUser) return;
+  const btn = document.getElementById('leaveResumeBtn');
+  btn.textContent = 'Leaving...';
+  btn.disabled = true;
+
+  try {
+    const isActive = data.status === 'active';
+
+    if (isActive) {
+      // Apply -0.3 social penalty
+      await supabase.from('game_players')
+        .update({ status: 'abandoned', left_at: new Date().toISOString() })
+        .eq('game_id', data.gameId).eq('user_id', currentUser.id);
+
+      const newSocial = Math.max(1.0, (currentProfile?.social_rating || 3.0) - LEAVE_PENALTY_AMOUNT);
+      await supabase.from('profiles')
+        .update({ social_rating: newSocial })
+        .eq('id', currentUser.id);
+
+      await supabase.from('notifications').insert({
+        user_id: currentUser.id,
+        type: 'leave_penalty',
+        title: 'You left an active match',
+        body: 'Social rating reduced by ' + LEAVE_PENALTY_AMOUNT.toFixed(1) + ' for leaving during a game.',
+        game_id: data.gameId,
+        read: false
+      });
+
+      // Auto-void if team empty
+      const { data: remaining } = await supabase.from('game_players')
+        .select('team, status').eq('game_id', data.gameId).eq('status', 'active');
+      if (remaining) {
+        const teamsWithPlayers = new Set(remaining.map(p => p.team));
+        if (teamsWithPlayers.size < 2) {
+          await supabase.from('game_sessions')
+            .update({ status: 'nulled', ended_at: new Date().toISOString() })
+            .eq('id', data.gameId);
+        }
+      }
+
+      if (currentProfile) currentProfile.social_rating = newSocial;
+    } else {
+      // Lobby — no penalty, clean up
+      await supabase.from('game_players')
+        .delete().eq('game_id', data.gameId).eq('user_id', currentUser.id);
+
+      // Reassign creator or cancel
+      const { data: game } = await supabase.from('game_sessions')
+        .select('creator_id').eq('id', data.gameId).single();
+      if (game && game.creator_id === currentUser.id) {
+        const { data: others } = await supabase.from('game_players')
+          .select('user_id').eq('game_id', data.gameId).limit(1);
+        if (others && others.length > 0) {
+          await supabase.from('game_sessions')
+            .update({ creator_id: others[0].user_id }).eq('id', data.gameId);
+        } else {
+          await supabase.from('game_sessions')
+            .update({ status: 'cancelled' }).eq('id', data.gameId);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Leave from resume error:', err);
+  }
+
+  document.getElementById('resumeGameModal').classList.remove('active');
+  btn.textContent = 'Leave Game';
+  btn.disabled = false;
+  showToast(data.status === 'active' ? 'You left the match. Social rating −0.3' : 'You left the game');
+}
 
 // Step 4: Init app — load courts, then check for existing session
 initApp();

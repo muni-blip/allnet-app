@@ -38,6 +38,21 @@
 .player-sheet__close{display:flex;justify-content:center;margin-top:16px;}
 .player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
 .player-sheet__close-btn:hover{background:rgba(255,255,255,0.15);}
+
+/* ═══ Resume Game Modal ═══ */
+.resume-modal-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;}
+.resume-modal-overlay.active{display:flex;}
+.resume-modal{background:var(--bg-card,#1a1a1a);border:1px solid var(--border,#2e2e2e);border-radius:16px;padding:32px 24px;max-width:360px;width:100%;text-align:center;}
+.resume-modal__icon{font-size:48px;margin-bottom:16px;}
+.resume-modal__title{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+.resume-modal__desc{font-size:14px;color:var(--text-secondary,#999);line-height:1.5;margin-bottom:16px;}
+.resume-modal__court{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:var(--orange,#F74501);margin-bottom:20px;}
+.resume-modal__actions{display:flex;flex-direction:column;gap:10px;}
+.resume-modal__btn{padding:14px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;cursor:pointer;border:none;width:100%;transition:opacity 0.2s;}
+.resume-modal__btn--primary{background:linear-gradient(135deg,#F8981D,#F74501);color:#fff;}
+.resume-modal__btn--secondary{background:transparent;border:1px solid var(--border,#2e2e2e);color:var(--text-secondary,#999);}
+.resume-modal__btn--secondary:hover{border-color:var(--text-muted,#666);}
+.resume-modal__penalty{font-size:12px;color:var(--text-muted,#666);margin-top:12px;line-height:1.4;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 <style>
@@ -432,6 +447,21 @@
       <div class="player-sheet__close">
         <button class="player-sheet__close-btn" onclick="closePlayerSheet()">✕</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══ Resume Game Modal ═══ -->
+  <div class="resume-modal-overlay" id="resumeGameModal">
+    <div class="resume-modal">
+      <div class="resume-modal__icon">🏀</div>
+      <div class="resume-modal__title" id="resumeModalTitle">Active Game</div>
+      <div class="resume-modal__desc" id="resumeModalDesc">You have an active game. Would you like to resume?</div>
+      <div class="resume-modal__court" id="resumeModalCourt"></div>
+      <div class="resume-modal__actions">
+        <button class="resume-modal__btn resume-modal__btn--primary" id="resumeBtn" onclick="resumeGame()">Resume Game</button>
+        <button class="resume-modal__btn resume-modal__btn--secondary" id="leaveResumeBtn" onclick="leaveFromResume()">Leave Game</button>
+      </div>
+      <div class="resume-modal__penalty" id="resumeModalPenalty"></div>
     </div>
   </div>
 

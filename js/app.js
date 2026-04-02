@@ -1201,9 +1201,12 @@ function closeSignUpModal() {
 async function oauthSignIn(provider) {
   if (!supabase) return;
   try {
+    // Stash referral code before OAuth redirect (URL params are lost during redirect)
+    var ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref) localStorage.setItem('allnet_ref', ref);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: provider,
-      options: { redirectTo: window.location.href }
+      options: { redirectTo: window.location.href.split('?')[0] }
     });
     if (error) {
       showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
@@ -2619,6 +2622,31 @@ async function loadUserProfile(user) {
     if (typeof PushManager_ !== 'undefined') {
       PushManager_.resubscribeSilently().catch(err => console.error('Push resubscribe failed:', err));
       PushManager_.showA2HSBannerIfNeeded();
+    }
+
+    // Process referral if one was stashed before OAuth redirect
+    try {
+      const storedRef = localStorage.getItem('allnet_ref');
+      if (storedRef && currentProfile && !currentProfile.referred_by) {
+        console.log('AllNet: Processing referral code:', storedRef);
+        const { data: refResult, error: refErr } = await supabase.rpc('process_referral', { p_referral_code: storedRef });
+        if (refErr) {
+          console.error('AllNet: Referral RPC error:', refErr);
+        } else if (refResult && refResult.success) {
+          console.log('AllNet: Referral success! Awarded', refResult.stars_awarded, 'stars');
+          // Update local balance
+          currentProfile.stars_balance = (currentProfile.stars_balance || 0) + refResult.stars_awarded;
+          const starsCount = document.getElementById('topBarStarsCount');
+          if (starsCount) starsCount.textContent = currentProfile.stars_balance.toLocaleString();
+          showToast('⭐ You earned ' + refResult.stars_awarded + ' Stars from a referral!');
+        } else {
+          console.log('AllNet: Referral not applied:', refResult?.error);
+        }
+        localStorage.removeItem('allnet_ref');
+      }
+    } catch (refCatchErr) {
+      console.error('AllNet: Referral processing failed:', refCatchErr);
+      localStorage.removeItem('allnet_ref');
     }
 
     console.log('AllNet: Profile loaded — ' + currentProfile?.name);

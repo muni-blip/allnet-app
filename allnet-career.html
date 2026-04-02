@@ -49,6 +49,34 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 .career-share__toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #22C55E; color: #000; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; padding: 10px 24px; border-radius: 100px; z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .career-share__toast.active { opacity: 1; }
 
+/* Export Image */
+.career-share__export { margin-top: 12px; }
+.career-share__export-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 8px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; color: #fff; background: linear-gradient(135deg, #F74501, #ff6b35); border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; letter-spacing: 0.03em; }
+.career-share__export-btn:hover { opacity: 0.85; }
+.career-share__export-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Format Picker Overlay */
+.export-picker-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; padding: 20px; }
+.export-picker-overlay.active { display: flex; }
+.export-picker { background: #1a1a1a; border-radius: 16px; padding: 28px 24px; max-width: 340px; width: 100%; text-align: center; }
+.export-picker__title { font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 4px; }
+.export-picker__sub { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #888; margin-bottom: 20px; }
+.export-picker__options { display: flex; gap: 12px; margin-bottom: 20px; }
+.export-picker__opt { flex: 1; background: #111; border: 2px solid #333; border-radius: 12px; padding: 16px 8px; cursor: pointer; transition: all 0.2s; text-align: center; }
+.export-picker__opt:hover { border-color: #666; }
+.export-picker__opt.selected { border-color: #F74501; background: rgba(247,69,1,0.08); }
+.export-picker__opt-icon { font-size: 28px; margin-bottom: 6px; }
+.export-picker__opt-label { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: #fff; }
+.export-picker__opt-dim { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #666; margin-top: 2px; }
+.export-picker__go { width: 100%; padding: 14px; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 14px; color: #fff; background: #F74501; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; text-transform: uppercase; }
+.export-picker__go:disabled { opacity: 0.4; cursor: default; }
+.export-picker__cancel { width: 100%; padding: 12px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 13px; color: #888; background: transparent; border: 1px solid #333; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+.export-picker__progress { display: none; padding: 20px 0; }
+.export-picker__progress.active { display: block; }
+.export-picker__progress-text { font-family: 'Montserrat', sans-serif; font-size: 13px; color: #999; }
+.export-picker__progress-bar { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.export-picker__progress-fill { width: 0%; height: 100%; background: #F74501; border-radius: 2px; transition: width 0.3s; }
+
 .match-history { padding: 40px 16px 0; max-width: 375px; margin: 0 auto; }
 .match-history__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; margin-bottom: 16px; }
 .match-history__empty { text-align: center; padding: 32px 16px; color: #666; font-size: 14px; font-family: 'Montserrat', sans-serif; }
@@ -272,8 +300,40 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
       </button>
     </div>
     <div class="career-share__url" id="shareUrl"></div>
+    <div class="career-share__export">
+      <button class="career-share__export-btn" onclick="openExportPicker()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        EXPORT IMAGE FOR SOCIAL
+      </button>
+    </div>
   </div>
   <div class="career-share__toast" id="shareToast">Link copied!</div>
+
+  <!-- Export Format Picker -->
+  <div class="export-picker-overlay" id="exportPickerOverlay" onclick="if(event.target===this)closeExportPicker()">
+    <div class="export-picker">
+      <div class="export-picker__title">Export Card Image</div>
+      <div class="export-picker__sub">Choose a format for sharing</div>
+      <div class="export-picker__options" id="exportOptions">
+        <div class="export-picker__opt selected" data-format="story" onclick="selectExportFormat(this,'story')">
+          <div class="export-picker__opt-icon">📱</div>
+          <div class="export-picker__opt-label">Story</div>
+          <div class="export-picker__opt-dim">9:16 · 1080×1920</div>
+        </div>
+        <div class="export-picker__opt" data-format="post" onclick="selectExportFormat(this,'post')">
+          <div class="export-picker__opt-icon">🖼️</div>
+          <div class="export-picker__opt-label">Feed Post</div>
+          <div class="export-picker__opt-dim">1:1 · 1080×1080</div>
+        </div>
+      </div>
+      <div class="export-picker__progress" id="exportProgress">
+        <div class="export-picker__progress-text" id="exportProgressText">Rendering card...</div>
+        <div class="export-picker__progress-bar"><div class="export-picker__progress-fill" id="exportProgressFill"></div></div>
+      </div>
+      <button class="export-picker__go" id="exportGoBtn" onclick="executeExport()">GENERATE IMAGE</button>
+      <button class="export-picker__cancel" onclick="closeExportPicker()">Cancel</button>
+    </div>
+  </div>
 
   <div class="match-history"><div class="match-history__title" id="matchHistoryTitle">MATCH HISTORY</div><div id="matchHistoryList"><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div><div class="mh-skeleton"><div class="mh-skeleton__thumb"></div><div class="mh-skeleton__body"><div class="mh-skeleton__line mh-skeleton__line--medium"></div><div class="mh-skeleton__line mh-skeleton__line--short"></div><div class="mh-skeleton__line mh-skeleton__line--long"></div></div></div></div></div>
 </div>
@@ -359,6 +419,7 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
 <script src="js/career-card.js"></script>
@@ -1176,6 +1237,180 @@ function copyCardLink() {
     toast.classList.add('active');
     setTimeout(function() { toast.classList.remove('active'); }, 2000);
   });
+}
+
+/* ── Export Image for Social ── */
+var _exportFormat = 'story';
+
+function openExportPicker() {
+  document.getElementById('exportPickerOverlay').classList.add('active');
+  document.getElementById('exportProgress').classList.remove('active');
+  document.getElementById('exportGoBtn').disabled = false;
+  document.getElementById('exportGoBtn').textContent = 'GENERATE IMAGE';
+}
+
+function closeExportPicker() {
+  document.getElementById('exportPickerOverlay').classList.remove('active');
+}
+
+function selectExportFormat(el, fmt) {
+  _exportFormat = fmt;
+  document.querySelectorAll('.export-picker__opt').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+async function executeExport() {
+  var goBtn = document.getElementById('exportGoBtn');
+  var progress = document.getElementById('exportProgress');
+  var progressText = document.getElementById('exportProgressText');
+  var progressFill = document.getElementById('exportProgressFill');
+
+  goBtn.disabled = true;
+  goBtn.textContent = 'GENERATING...';
+  progress.classList.add('active');
+  progressText.textContent = 'Rendering card...';
+  progressFill.style.width = '20%';
+
+  try {
+    // Dimensions
+    var isStory = _exportFormat === 'story';
+    var canvasW = 1080;
+    var canvasH = isStory ? 1920 : 1080;
+
+    // Step 1: Capture the card with html2canvas
+    var cardEl = document.querySelector('.cc-border');
+    if (!cardEl) throw new Error('Card element not found');
+
+    progressFill.style.width = '40%';
+    progressText.textContent = 'Capturing card...';
+
+    var capture = await html2canvas(cardEl, {
+      backgroundColor: null,
+      scale: 3,
+      useCORS: true,
+      logging: false
+    });
+
+    progressFill.style.width = '60%';
+    progressText.textContent = 'Compositing image...';
+
+    // Step 2: Create final canvas
+    var canvas = document.createElement('canvas');
+    canvas.width = canvasW;
+    canvas.height = canvasH;
+    var ctx = canvas.getContext('2d');
+
+    // Dark background with subtle gradient
+    var grad = ctx.createLinearGradient(0, 0, 0, canvasH);
+    grad.addColorStop(0, '#0a0a0a');
+    grad.addColorStop(0.5, '#111');
+    grad.addColorStop(1, '#0a0a0a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    // Subtle radial glow behind card
+    var glowGrad = ctx.createRadialGradient(canvasW / 2, canvasH * 0.42, 50, canvasW / 2, canvasH * 0.42, 500);
+    glowGrad.addColorStop(0, 'rgba(247,69,1,0.06)');
+    glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+
+    // Step 3: Draw the card centered
+    // Card aspect ratio from capture
+    var cardAspect = capture.width / capture.height;
+    var targetCardW, targetCardH;
+
+    if (isStory) {
+      targetCardW = canvasW * 0.82;
+      targetCardH = targetCardW / cardAspect;
+    } else {
+      // 1:1 — card fills more of the space
+      targetCardH = canvasH * 0.72;
+      targetCardW = targetCardH * cardAspect;
+    }
+
+    var cardX = (canvasW - targetCardW) / 2;
+    var cardY = isStory ? (canvasH - targetCardH) * 0.38 : (canvasH - targetCardH) * 0.42;
+
+    ctx.drawImage(capture, cardX, cardY, targetCardW, targetCardH);
+
+    progressFill.style.width = '80%';
+    progressText.textContent = 'Adding branding...';
+
+    // Step 4: AllNet logo text at top
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 ' + (isStory ? '52' : '40') + 'px Oswald, sans-serif';
+    var logoY = isStory ? 120 : 60;
+    ctx.fillText('ALLNET', canvasW / 2, logoY);
+
+    // Tagline
+    ctx.fillStyle = '#888';
+    ctx.font = '500 ' + (isStory ? '22' : '18') + 'px "DM Sans", sans-serif';
+    ctx.fillText('The Pickup Basketball Network', canvasW / 2, logoY + (isStory ? 36 : 30));
+
+    // Step 5: Profile URL + referral at bottom
+    var profileSlug = currentProfile.username || currentProfile.short_code || '';
+    var urlText = 'allnetgames.com/p/' + profileSlug;
+    var bottomY = isStory ? canvasH - 100 : canvasH - 50;
+
+    ctx.fillStyle = '#F74501';
+    ctx.font = '700 ' + (isStory ? '26' : '22') + 'px "JetBrains Mono", monospace';
+    ctx.fillText(urlText, canvasW / 2, bottomY);
+
+    // Referral text
+    ctx.fillStyle = '#666';
+    ctx.font = '500 ' + (isStory ? '18' : '15') + 'px "DM Sans", sans-serif';
+    ctx.fillText('Join with my link & earn 500 Stars', canvasW / 2, bottomY + (isStory ? 32 : 26));
+
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Done!';
+
+    // Step 6: Export as blob
+    canvas.toBlob(async function(blob) {
+      if (!blob) { throw new Error('Failed to create image'); }
+
+      var fileName = 'allnet-card-' + profileSlug + '-' + _exportFormat + '.png';
+      var file = new File([blob], fileName, { type: 'image/png' });
+
+      // Try Web Share API with file sharing (mobile)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'My AllNet Career Card',
+            text: 'Check out my basketball career card on AllNet! ' + getShareUrl()
+          });
+          closeExportPicker();
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') { closeExportPicker(); return; }
+          // Fall through to download
+        }
+      }
+
+      // Fallback: download
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+
+      var toast = document.getElementById('shareToast');
+      toast.textContent = 'Image saved!';
+      toast.classList.add('active');
+      setTimeout(function() { toast.classList.remove('active'); toast.textContent = 'Link copied!'; }, 2500);
+      closeExportPicker();
+    }, 'image/png', 1.0);
+
+  } catch (err) {
+    console.error('Export error:', err);
+    progressText.textContent = 'Export failed: ' + err.message;
+    goBtn.disabled = false;
+    goBtn.textContent = 'TRY AGAIN';
+  }
 }
 
 /* ── Init ── */

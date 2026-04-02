@@ -187,7 +187,7 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 .cover-picker__grid { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 120px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; align-content: start; min-height: 0; }
 
 /* Each tile: fixed aspect ratio box, everything inside is absolute */
-.cover-picker__item { position: relative; width: 100%; padding-bottom: 100%; overflow: hidden; cursor: pointer; border-radius: 4px; background: #111; }
+.cover-picker__item { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; cursor: pointer; border-radius: 4px; background: #111; }
 .cover-picker__item::after { content: ''; position: absolute; inset: 0; border: 4px solid transparent; transition: border-color 0.2s; z-index: 4; pointer-events: none; border-radius: 4px; }
 .cover-picker__item.selected::after { border-color: #fff; }
 .cover-picker__item.locked .cover-picker__item-img { filter: brightness(0.35); }

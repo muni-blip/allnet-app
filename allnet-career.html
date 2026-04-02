@@ -1277,86 +1277,38 @@ async function executeExport() {
     var canvasW = 1080;
     var canvasH = isStory ? 1920 : 1080;
 
-    // Step 1: Preload images and bake object-fit:cover into pixel data
-    // html2canvas doesn't support object-fit, so we pre-render images at exact size
-    progressFill.style.width = '20%';
-    progressText.textContent = 'Preparing images...';
+    // Step 1: Hide cover/cutout/overlay for clean text-only card export
+    // html2canvas can't reliably render cross-origin images with object-fit
+    // The clean card (name + stats + ratings on black) looks better for social anyway
+    progressFill.style.width = '30%';
+    progressText.textContent = 'Preparing card...';
 
-    var _restoreQueue = []; // functions to restore original state after capture
-
-    // Helper: fetch image blob, load as Image, draw onto canvas with cover-fit
-    async function bakeImageCoverFit(url, targetW, targetH) {
-      var resp = await fetch(url);
-      var blob = await resp.blob();
-      var blobUrl = URL.createObjectURL(blob);
-      var img = new Image();
-      await new Promise(function(resolve, reject) {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = blobUrl;
-      });
-      var c = document.createElement('canvas');
-      c.width = targetW; c.height = targetH;
-      var ctx = c.getContext('2d');
-      // Cover-fit: scale to fill, crop excess
-      var imgR = img.naturalWidth / img.naturalHeight;
-      var boxR = targetW / targetH;
-      var sw, sh, sx, sy;
-      if (imgR > boxR) {
-        sh = img.naturalHeight; sw = sh * boxR;
-        sx = (img.naturalWidth - sw) / 2; sy = 0;
-      } else {
-        sw = img.naturalWidth; sh = sw / boxR;
-        sx = 0; sy = (img.naturalHeight - sh) / 2;
+    var _restoreQueue = [];
+    var hideSelectors = ['#careerCard .cc__cover', '#careerCard .cc__player-frame', '#careerCard .cc__overlay', '#careerCard .cc__placeholder'];
+    hideSelectors.forEach(function(sel) {
+      var el = document.querySelector(sel);
+      if (el) {
+        var orig = el.style.display;
+        el.style.display = 'none';
+        _restoreQueue.push(function() { el.style.display = orig; });
       }
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-      URL.revokeObjectURL(blobUrl);
-      return c.toDataURL('image/png');
-    }
+    });
 
-    // Bake cutout image (319x319 to match .cc__player-frame)
-    var cutoutImg = document.querySelector('#careerCard .cc__player-frame img');
-    if (cutoutImg && cutoutImg.src && !cutoutImg.src.startsWith('data:')) {
-      try {
-        var origSrc = cutoutImg.src;
-        var origStyle = cutoutImg.style.cssText;
-        var bakedUrl = await bakeImageCoverFit(origSrc, 319, 319);
-        cutoutImg.src = bakedUrl;
-        cutoutImg.style.objectFit = 'fill';
-        _restoreQueue.push(function() { cutoutImg.src = origSrc; cutoutImg.style.cssText = origStyle; });
-      } catch (e) { console.warn('Cutout bake failed:', e); }
-    }
-
-    // Bake cover background image (319x319 to match .cc__cover)
-    var coverEl = document.querySelector('#careerCard .cc__cover');
-    if (coverEl) {
-      var coverUrl = coverEl.style.backgroundImage.replace(/url\(['"]?/, '').replace(/['"]?\)/, '');
-      if (coverUrl && !coverUrl.startsWith('data:')) {
-        try {
-          var origBg = coverEl.style.backgroundImage;
-          var bakedCover = await bakeImageCoverFit(coverUrl, 319, 319);
-          coverEl.style.backgroundImage = 'url(' + bakedCover + ')';
-          _restoreQueue.push(function() { coverEl.style.backgroundImage = origBg; });
-        } catch (e) { console.warn('Cover bake failed:', e); }
-      }
-    }
-
-    await new Promise(function(r) { setTimeout(r, 150); }); // let DOM settle
+    await new Promise(function(r) { setTimeout(r, 50); });
 
     var cardEl = document.querySelector('.cc-border');
     if (!cardEl) throw new Error('Card element not found');
 
-    progressFill.style.width = '40%';
+    progressFill.style.width = '50%';
     progressText.textContent = 'Capturing card...';
 
     var capture = await html2canvas(cardEl, {
       backgroundColor: null,
       scale: 3,
-      useCORS: true,
       logging: false
     });
 
-    // Restore original images immediately after capture
+    // Restore hidden elements immediately
     _restoreQueue.forEach(function(fn) { fn(); });
 
     progressFill.style.width = '60%';

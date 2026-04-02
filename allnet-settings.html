@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Settings</title>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/tour.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
 <style>
@@ -206,6 +207,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
+<script src="js/tour.js"></script>
 <script>
 let currentUser = null;
 let currentProfile = null;
@@ -292,6 +294,15 @@ async function handleGameAlertsToggle(enabled) {
 }
 
 initSettings();
+
+// Settings page tour — first visit only
+setTimeout(function() {
+  if (typeof Tour !== 'undefined') {
+    Tour.start('settings', [
+      { target: '.settings-section', text: '<strong>Control your alerts</strong> — toggle push notifications for court activity, games, and sprays.', button: 'Got it!' }
+    ]);
+  }
+}, 1000);
 </script>
 
 </body>

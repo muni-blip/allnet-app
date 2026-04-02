@@ -6,6 +6,7 @@
 <title>AllNet — Stars</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/tour.css">
 <style>
 /* ═══ Stars Page Specific Styles ═══ */
 html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
@@ -499,6 +500,7 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
+<script src="js/tour.js"></script>
 <script>
 /* ══════════════════════════════
    STARS PAGE — AllNet
@@ -868,6 +870,17 @@ async function initStarsPage() {
 }
 
 initStarsPage();
+
+// Stars page tour — first visit only
+setTimeout(function() {
+  if (typeof Tour !== 'undefined') {
+    Tour.start('stars', [
+      { target: '#heroBalance', text: '<strong>Your Stars balance.</strong> Earn Stars by playing games, referring friends, and completing challenges.', button: 'Next →' },
+      { target: '[data-tab="covers"]', text: '<strong>Customize your career card</strong> by unlocking covers with your Stars.', button: 'Next →' },
+      { target: '[data-tab="sprays"]', text: '<strong>Unlock sprays</strong> to tag other players\' posts on the Activity feed.', button: 'Got it! ⭐' }
+    ]);
+  }
+}, 1500);
 </script>
 </body>
 </html>

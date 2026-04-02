@@ -6,6 +6,7 @@
 <title>AllNet — Activity</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/tour.css">
 <link rel="stylesheet" href="css/career-card.css">
 <style>
 html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
@@ -28,30 +29,6 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 .activity-topbar__title {
   font-family: var(--font-display); font-size: 24px;
   font-weight: 700; text-transform: uppercase;
-}
-
-/* Filter tabs */
-.feed-filters {
-  display: flex; gap: 0; padding: 0 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.feed-filter {
-  flex: 1; padding: 12px 8px; text-align: center;
-  font-family: var(--font-display); font-size: 12px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-muted); cursor: pointer; border: none; background: none;
-  border-bottom: 2px solid transparent; transition: var(--transition);
-}
-
-.feed-filter:hover { color: var(--text-secondary); }
-
-.feed-filter.active {
-  color: var(--orange); border-bottom-color: var(--orange);
-}
-
-.feed-filter--disabled {
-  opacity: 0.35; cursor: not-allowed;
 }
 
 /* Match cards */
@@ -574,13 +551,6 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
     <div class="activity-topbar__title">Activity</div>
   </div>
 
-  <!-- Filter Tabs -->
-  <div class="feed-filters">
-    <button class="feed-filter active" data-filter="all" onclick="setFeedFilter('all', this)">All Games</button>
-    <button class="feed-filter feed-filter--disabled" onclick="return false">My Games</button>
-    <button class="feed-filter feed-filter--disabled" onclick="return false">Nearby</button>
-  </div>
-
   <!-- Feed -->
   <div class="feed-list" id="feedList">
     <div class="feed-loading">Loading games...</div>
@@ -652,6 +622,7 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
 <script src="js/career-card.js"></script>
+<script src="js/tour.js"></script>
 <script>
 /* ══════════════════════════════
    ACTIVITY FEED — AllNet
@@ -705,12 +676,6 @@ function updateNavDrawerUser() {
 }
 
 // ── Feed Filter ──
-function setFeedFilter(filter, el) {
-  if (el.classList.contains('feed-filter--disabled')) return;
-  document.querySelectorAll('.feed-filter').forEach(f => f.classList.remove('active'));
-  el.classList.add('active');
-}
-
 // timeAgo() defined in js/supabase-helpers.js
 
 /* ══════════════════════════════
@@ -1357,6 +1322,22 @@ async function initActivityPage() {
 }
 
 initActivityPage();
+
+// Activity page tour — first visit only
+setTimeout(function() {
+  if (typeof Tour !== 'undefined') {
+    var steps = [
+      { target: '#feedList', text: '<strong>Your match feed.</strong> See completed games, results, and who you played with.', button: 'Next →' }
+    ];
+    // Add spray step only if there are match cards with spray buttons
+    if (document.querySelector('.spray-btn')) {
+      steps.push({ target: '.spray-btn', text: '<strong>Spray a match</strong> — tag posts with graffiti reactions. Unlock more sprays in the Stars store.', button: 'Got it! 🎨' });
+    } else {
+      steps[0].button = 'Got it! 🎨';
+    }
+    Tour.start('activity', steps);
+  }
+}, 2000);
 </script>
 </body>
 </html>

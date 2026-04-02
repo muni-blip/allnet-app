@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/career-card.css">
+<link rel="stylesheet" href="css/tour.css">
 <style>
 html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 .career-page { min-height: 100vh; background: #000; padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px); }
@@ -423,6 +424,7 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
 <script src="js/career-card.js"></script>
+<script src="js/tour.js"></script>
 <script>
 /* ══════════════════════════════
    CAREER PAGE — uses CareerCard component
@@ -1483,6 +1485,18 @@ async function initCareerPage() {
   }
 }
 initCareerPage();
+
+// Career page tour — first visit only
+setTimeout(function() {
+  if (typeof Tour !== 'undefined') {
+    Tour.start('career', [
+      { target: '.cc-border', text: '<strong>Your basketball identity.</strong> Your record, ratings, and reputation are all here.', button: 'Next →' },
+      { target: '#shareSection', text: '<strong>Claim a username</strong> and share your card to invite friends. You both earn 500 Stars.', button: 'Next →' },
+      { target: '.career-share__export-btn', text: '<strong>Share on Instagram/TikTok</strong> — export a clean card image sized for Stories or Feed posts.', button: 'Got it! 🏀' }
+    ]);
+  }
+}, 1500);
+
 </script>
 </body>
 </html>

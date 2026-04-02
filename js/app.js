@@ -1882,9 +1882,16 @@ function closeOnboarding() {
   nameBtn.disabled = false;
   nameBtn.textContent = 'Continue →';
 
-  // Soft prompt: let new users know about court alerts
-  if (typeof PushManager_ !== 'undefined') {
-    setTimeout(() => PushManager_.showSoftPrompt(), 800);
+  // Start Play page tour for new users (after a short delay for page to settle)
+  if (typeof Tour !== 'undefined') {
+    setTimeout(function() {
+      Tour.start('play', [
+        { target: '#map', text: '<strong>Tap any court</strong> to see who\'s playing, check the weekly forecast, and check in.', button: 'Next →' },
+        { target: '#mobileRadiusFilter', fallbackTarget: '#radiusWrapper', text: '<strong>Filter by distance</strong> to find courts near you. Your location stays private.', button: 'Next →' },
+        { target: '#navBell', text: '<strong>Get notified</strong> when players check in at courts you\'re watching.', button: 'Next →' },
+        { target: '.nav-bar__menu', text: '<strong>Explore AllNet</strong> — your Career card, Stars, Activity, and Settings are all here.', button: "Let's go! 🏀" }
+      ]);
+    }, 1000);
   }
 }
 

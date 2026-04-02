@@ -93,6 +93,30 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
   border-radius: var(--radius-sm); font-size: 13px; color: var(--red);
 }
 .permission-banner.visible { display: block; }
+
+/* ── Delete Account ── */
+.delete-section { padding: 24px 16px 48px; text-align: center; }
+.delete-btn { width: 100%; padding: 14px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: #EF4444; background: transparent; border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+.delete-btn:hover { background: rgba(239,68,68,0.1); border-color: #EF4444; }
+
+/* ── Delete Confirmation Modal ── */
+.delete-modal { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; padding: 20px; }
+.delete-modal.active { display: flex; }
+.delete-modal__card { background: #1a1a1a; border: 1px solid rgba(239,68,68,0.3); border-radius: 16px; padding: 28px 24px; max-width: 360px; width: 100%; text-align: center; animation: deleteSlide 0.3s ease; }
+@keyframes deleteSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.delete-modal__icon { font-size: 40px; margin-bottom: 12px; }
+.delete-modal__title { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 800; color: #EF4444; text-transform: uppercase; margin-bottom: 8px; }
+.delete-modal__desc { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #999; line-height: 1.5; margin-bottom: 20px; }
+.delete-modal__desc strong { color: #fff; }
+.delete-modal__input { width: 100%; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; color: #fff; background: #111; border: 1px solid #333; border-radius: 10px; text-align: center; letter-spacing: 0.1em; outline: none; transition: border-color 0.2s; }
+.delete-modal__input:focus { border-color: #EF4444; }
+.delete-modal__input::placeholder { color: #444; letter-spacing: 0.1em; }
+.delete-modal__actions { display: flex; gap: 10px; margin-top: 16px; }
+.delete-modal__cancel { flex: 1; padding: 14px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: #999; background: transparent; border: 1px solid #333; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+.delete-modal__cancel:hover { border-color: #666; color: #fff; }
+.delete-modal__confirm { flex: 1; padding: 14px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: #fff; background: #EF4444; border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.2s; }
+.delete-modal__confirm:disabled { opacity: 0.3; cursor: not-allowed; }
+.delete-modal__confirm:not(:disabled):hover { opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -185,6 +209,24 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
     </div>
 
     <div class="settings-status" id="settingsStatus"></div>
+
+    <div class="delete-section">
+      <button class="delete-btn" onclick="openDeleteModal()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="delete-modal" id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="delete-modal__card">
+    <div class="delete-modal__icon">⚠️</div>
+    <div class="delete-modal__title">Delete Account</div>
+    <div class="delete-modal__desc">This will <strong>permanently delete</strong> your profile, career history, ratings, Stars, and all associated data. This action cannot be undone.</div>
+    <input class="delete-modal__input" id="deleteConfirmInput" type="text" placeholder="Type CONFIRM" autocomplete="off" oninput="checkDeleteInput()">
+    <div class="delete-modal__actions">
+      <button class="delete-modal__cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="delete-modal__confirm" id="deleteConfirmBtn" disabled onclick="executeDeleteAccount()">Delete</button>
+    </div>
   </div>
 </div>
 
@@ -294,6 +336,48 @@ async function handleGameAlertsToggle(enabled) {
 }
 
 initSettings();
+
+/* ── Delete Account ── */
+function openDeleteModal() {
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('deleteConfirmBtn').disabled = true;
+  document.getElementById('deleteConfirmBtn').textContent = 'Delete';
+  document.getElementById('deleteModal').classList.add('active');
+  setTimeout(function() { document.getElementById('deleteConfirmInput').focus(); }, 300);
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('active');
+}
+
+function checkDeleteInput() {
+  var val = document.getElementById('deleteConfirmInput').value.trim();
+  document.getElementById('deleteConfirmBtn').disabled = val !== 'CONFIRM';
+}
+
+async function executeDeleteAccount() {
+  var btn = document.getElementById('deleteConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+
+  try {
+    var { data, error } = await supabase.rpc('delete_user_account');
+    if (error) throw error;
+    if (data && !data.success) throw new Error(data.error || 'Deletion failed');
+
+    // Sign out client-side and redirect
+    try { await supabase.auth.signOut(); } catch(e) {}
+    window.location.href = '/allnet-landing.html';
+  } catch (err) {
+    console.error('Delete account error:', err);
+    btn.textContent = 'Delete';
+    btn.disabled = false;
+    var status = document.getElementById('settingsStatus');
+    status.textContent = 'Failed to delete account: ' + (err.message || 'Please try again');
+    status.style.color = '#EF4444';
+    setTimeout(function() { status.textContent = ''; status.style.color = ''; }, 4000);
+  }
+}
 
 // Settings page tour — first visit only
 setTimeout(function() {

@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/p/:slug",
-      "destination": "/allnet-player.html?slug=:slug"
+      "destination": "/api/player?slug=:slug"
     }
   ]
 }

@@ -110,8 +110,14 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function getSlug() {
+  // Check query param first (direct access)
   var params = new URLSearchParams(window.location.search);
-  return params.get('slug') || '';
+  var slug = params.get('slug');
+  if (slug) return slug;
+  // Check path: /p/{slug}
+  var match = window.location.pathname.match(/\/p\/([^\/\?]+)/);
+  if (match) return match[1];
+  return '';
 }
 
 function getRef() {

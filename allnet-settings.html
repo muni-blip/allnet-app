@@ -367,7 +367,7 @@ async function executeDeleteAccount() {
 
     // Sign out client-side and redirect
     try { await supabase.auth.signOut(); } catch(e) {}
-    window.location.href = '/allnet-landing.html';
+    window.location.href = '/allnet-landing.html?toast=account_deleted';
   } catch (err) {
     console.error('Delete account error:', err);
     btn.textContent = 'Delete';

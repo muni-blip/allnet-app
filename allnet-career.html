@@ -1277,22 +1277,33 @@ async function executeExport() {
     var canvasW = 1080;
     var canvasH = isStory ? 1920 : 1080;
 
-    // Step 1: Hide cover/cutout/overlay for clean text-only card export
-    // html2canvas can't reliably render cross-origin images with object-fit
-    // The clean card (name + stats + ratings on black) looks better for social anyway
+    // Step 1: Hide cover/cutout/overlay and collapse card for compact export
     progressFill.style.width = '30%';
     progressText.textContent = 'Preparing card...';
 
     var _restoreQueue = [];
-    var hideSelectors = ['#careerCard .cc__cover', '#careerCard .cc__player-frame', '#careerCard .cc__overlay', '#careerCard .cc__placeholder'];
-    hideSelectors.forEach(function(sel) {
+
+    // Helper to override a style and queue restoration
+    function overrideStyle(sel, prop, val) {
       var el = document.querySelector(sel);
       if (el) {
-        var orig = el.style.display;
-        el.style.display = 'none';
-        _restoreQueue.push(function() { el.style.display = orig; });
+        var orig = el.style[prop];
+        el.style[prop] = val;
+        _restoreQueue.push(function() { el.style[prop] = orig; });
       }
+    }
+
+    // Hide image elements
+    ['#careerCard .cc__cover', '#careerCard .cc__player-frame', '#careerCard .cc__overlay', '#careerCard .cc__placeholder'].forEach(function(sel) {
+      overrideStyle(sel, 'display', 'none');
     });
+
+    // Collapse card: shift W/L/D, ratings, tabs up by 272px and shrink card height
+    overrideStyle('#careerCard', 'height', '320px');
+    overrideStyle('#careerCard .cc__wld', 'top', '100px');
+    overrideStyle('#careerCard .cc__skill-row', 'top', '212px');
+    overrideStyle('#careerCard .cc__social-row', 'top', '245px');
+    overrideStyle('#careerCard .cc__div-tabs', 'top', '286px');
 
     await new Promise(function(r) { setTimeout(r, 50); });
 
@@ -1308,7 +1319,7 @@ async function executeExport() {
       logging: false
     });
 
-    // Restore hidden elements immediately
+    // Restore everything immediately
     _restoreQueue.forEach(function(fn) { fn(); });
 
     progressFill.style.width = '60%';

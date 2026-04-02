@@ -2625,9 +2625,14 @@ async function loadUserProfile(user) {
     }
 
     // Process referral if one was stashed before OAuth redirect
-    // Check both localStorage (set before OAuth) and URL params (passed via redirectTo)
+    // Priority: cookie (most reliable across OAuth) > localStorage > URL param
     try {
-      const storedRef = localStorage.getItem('allnet_ref') 
+      function getCookieVal(name) {
+        var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : '';
+      }
+      const storedRef = getCookieVal('allnet_ref')
+        || localStorage.getItem('allnet_ref') 
         || new URLSearchParams(window.location.search).get('ref')
         || '';
       if (storedRef && currentProfile && !currentProfile.referred_by) {
@@ -2637,7 +2642,6 @@ async function loadUserProfile(user) {
           console.error('AllNet: Referral RPC error:', refErr);
         } else if (refResult && refResult.success) {
           console.log('AllNet: Referral success! Awarded', refResult.stars_awarded, 'stars');
-          // Update local balance
           currentProfile.stars_balance = (currentProfile.stars_balance || 0) + refResult.stars_awarded;
           const starsCount = document.getElementById('topBarStarsCount');
           if (starsCount) starsCount.textContent = currentProfile.stars_balance.toLocaleString();
@@ -2645,14 +2649,16 @@ async function loadUserProfile(user) {
         } else {
           console.log('AllNet: Referral not applied:', refResult?.error);
         }
+        // Clean up all referral storage
+        document.cookie = 'allnet_ref=;path=/;max-age=0';
         localStorage.removeItem('allnet_ref');
-        // Clean ref from URL without reload
         if (new URLSearchParams(window.location.search).get('ref')) {
           window.history.replaceState({}, '', window.location.pathname);
         }
       }
     } catch (refCatchErr) {
       console.error('AllNet: Referral processing failed:', refCatchErr);
+      document.cookie = 'allnet_ref=;path=/;max-age=0';
       localStorage.removeItem('allnet_ref');
     }
 

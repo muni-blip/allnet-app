@@ -2148,7 +2148,10 @@ async function signInWithGoogle() {
   if (!supabase) { alert('Loading... please try again in a moment.'); return; }
   try {
     var ref = new URLSearchParams(window.location.search).get('ref');
-    if (ref) localStorage.setItem('allnet_ref', ref);
+    if (ref) {
+      document.cookie = 'allnet_ref=' + encodeURIComponent(ref) + ';path=/;max-age=3600;SameSite=Lax';
+      localStorage.setItem('allnet_ref', ref);
+    }
     var redirectUrl = window.location.origin + '/allnet-app.html';
     if (ref) redirectUrl += '?ref=' + encodeURIComponent(ref);
     const { error } = await supabase.auth.signInWithOAuth({
@@ -2165,7 +2168,10 @@ async function signInWithApple() {
   if (!supabase) { alert('Loading... please try again in a moment.'); return; }
   try {
     var ref = new URLSearchParams(window.location.search).get('ref');
-    if (ref) localStorage.setItem('allnet_ref', ref);
+    if (ref) {
+      document.cookie = 'allnet_ref=' + encodeURIComponent(ref) + ';path=/;max-age=3600;SameSite=Lax';
+      localStorage.setItem('allnet_ref', ref);
+    }
     var redirectUrl = window.location.origin + '/allnet-app.html';
     if (ref) redirectUrl += '?ref=' + encodeURIComponent(ref);
     const { error } = await supabase.auth.signInWithOAuth({

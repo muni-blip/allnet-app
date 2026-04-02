@@ -320,11 +320,14 @@ function closeSignupModal() {
 }
 
 async function ppOauthSignIn(provider) {
-  // Stash referral code via BOTH localStorage AND URL param
+  // Stash referral code via cookie (most reliable across OAuth redirects),
+  // localStorage, AND URL param as redundant fallbacks
   var ref = getRef() || _profileShortCode || '';
-  if (ref) localStorage.setItem('allnet_ref', ref);
+  if (ref) {
+    document.cookie = 'allnet_ref=' + encodeURIComponent(ref) + ';path=/;max-age=3600;SameSite=Lax';
+    localStorage.setItem('allnet_ref', ref);
+  }
 
-  // Include ref in redirectTo so it survives even if localStorage is lost
   var redirectUrl = window.location.origin + '/allnet-app.html';
   if (ref) redirectUrl += '?ref=' + encodeURIComponent(ref);
 

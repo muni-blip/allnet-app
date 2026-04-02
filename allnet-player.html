@@ -44,7 +44,13 @@ html, body { height: auto; overflow: auto; background: #000; color: #fff; font-f
 .pp-badge-court { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #888; margin-top: 8px; }
 
 /* Card wrapper */
-.pp-card { padding: 16px 16px 0; }
+.pp-card { padding: 16px 16px 0; position: relative; }
+.pp-card__loader { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 5; background: #000; transition: opacity 0.4s ease; }
+.pp-card__loader.hidden { opacity: 0; pointer-events: none; }
+.pp-card__loader-spin { width: 32px; height: 32px; border: 3px solid #333; border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.pp-card .cc-border { opacity: 0; transition: opacity 0.4s ease; }
+.pp-card.loaded .cc-border { opacity: 1; }
+.pp-card.loaded .pp-card__loader { opacity: 0; pointer-events: none; }
 
 /* Stats row */
 .pp-stats { display: flex; justify-content: center; gap: 24px; padding: 24px 16px 0; }
@@ -238,8 +244,8 @@ async function loadPlayer() {
   }
   html += '</div>';
 
-  // Career card
-  html += '<div class="pp-card"><div class="cc-border"><div class="cc" id="playerCard"></div></div></div>';
+  // Career card with loader
+  html += '<div class="pp-card" id="ppCard"><div class="pp-card__loader"><div class="pp-card__loader-spin"></div></div><div class="cc-border"><div class="cc" id="playerCard"></div></div></div>';
 
   // CTA
   html += '<div class="pp-cta"><div class="pp-cta__box">';
@@ -276,6 +282,31 @@ async function loadPlayer() {
       showDeltas: false
     });
     requestAnimationFrame(function() { CareerCard.fitNames('psc'); });
+
+    // Wait for cutout image to load, then fade in the card
+    var ppCardEl = document.getElementById('ppCard');
+    var cutoutImg = cardEl.querySelector('.cc__player-frame img');
+    var coverEl = cardEl.querySelector('.cc__cover');
+
+    function revealCard() {
+      if (ppCardEl && !ppCardEl.classList.contains('loaded')) {
+        ppCardEl.classList.add('loaded');
+      }
+    }
+
+    if (cutoutImg && cutoutImg.src) {
+      if (cutoutImg.complete) {
+        revealCard();
+      } else {
+        cutoutImg.onload = revealCard;
+        cutoutImg.onerror = revealCard;
+        // Timeout fallback in case image stalls
+        setTimeout(revealCard, 4000);
+      }
+    } else {
+      // No cutout — reveal immediately
+      revealCard();
+    }
   }
 }
 

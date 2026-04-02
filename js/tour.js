@@ -117,6 +117,18 @@ var Tour = (function() {
       return;
     }
 
+    // Check if element is off-screen — scroll into view first, then position
+    var rect = el.getBoundingClientRect();
+    var isOffScreen = rect.bottom < 0 || rect.top > window.innerHeight;
+    if (isOffScreen) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(function() { _positionAndShow(el, step); }, 450);
+    } else {
+      _positionAndShow(el, step);
+    }
+  }
+
+  function _positionAndShow(el, step) {
     _positionSpotlight(el);
 
     var isLast = _current === _steps.length - 1;

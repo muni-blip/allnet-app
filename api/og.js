@@ -1,18 +1,17 @@
 import { ImageResponse } from '@vercel/og';
 import { createClient } from '@supabase/supabase-js';
 
-export const config = { runtime: 'edge' };
+// Node.js serverless function (not Edge — @supabase/supabase-js needs Node APIs)
 
 const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   try {
-    const { searchParams } = new URL(req.url);
-    const slug = searchParams.get('slug') || '';
+    const slug = req.query.slug || '';
 
     if (!slug) {
-      return new Response('Missing slug', { status: 400 });
+      return res.status(400).send('Missing slug');
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -48,7 +47,7 @@ export default async function handler(req) {
     const isFH = profile.is_founding_hooper;
     const fhNum = profile.founding_number;
 
-    return new ImageResponse(
+    const imageResponse = new ImageResponse(
       (
         <div
           style={{
@@ -203,13 +202,15 @@ export default async function handler(req) {
       {
         width: 1200,
         height: 630,
-        headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400',
-        },
       }
     );
+
+    const buffer = Buffer.from(await imageResponse.arrayBuffer());
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400');
+    return res.status(200).send(buffer);
   } catch (e) {
     console.error('OG image error:', e);
-    return new Response('Error generating image', { status: 500 });
+    return res.status(500).send('Error generating image');
   }
 }

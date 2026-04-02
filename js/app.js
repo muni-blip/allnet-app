@@ -2242,10 +2242,10 @@ async function initApp() {
     // is established before any authenticated API calls happen.
     if (!currentUser) {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session && session.user) {
+      if (session && session.user && !currentUser) {
         console.log('AllNet: getSession found session — loading profile');
         await loadUserProfile(session.user);
-      } else {
+      } else if (!session) {
         console.log('AllNet: No session — user not logged in');
         const navRight = document.getElementById('navBarRight');
         if (navRight) navRight.style.opacity = '1';

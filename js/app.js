@@ -1883,7 +1883,13 @@ function closeOnboarding() {
   nameBtn.textContent = 'Continue →';
 
   // Start Play page tour for new users (after a short delay for page to settle)
+  // Clear any stale tour flags from previous accounts on this browser
   if (typeof Tour !== 'undefined') {
+    try {
+      ['play','career','stars','activity','settings'].forEach(function(k) {
+        localStorage.removeItem('allnet_tour_' + k);
+      });
+    } catch(e) {}
     setTimeout(function() {
       Tour.start('play', [
         { target: '#map', text: '<strong>Tap any court</strong> to see who\'s playing, check the weekly forecast, and check in.', button: 'Next →' },

@@ -23,11 +23,10 @@
   transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease;
 }
 
-/* Tooltip bubble */
+/* Tooltip bubble — fixed at top or bottom of viewport */
 .tour-tooltip {
   position: fixed;
   z-index: 8002;
-  width: calc(100vw - 40px);
   max-width: 320px;
   background: #1a1a1a;
   border: 1px solid rgba(247, 69, 1, 0.3);
@@ -38,28 +37,6 @@
   transition: opacity 0.3s ease 0.15s, transform 0.3s ease 0.15s;
 }
 .tour-overlay.active .tour-tooltip { opacity: 1; transform: translateY(0); }
-
-/* Arrow */
-.tour-tooltip__arrow {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  background: #1a1a1a;
-  border: 1px solid rgba(247, 69, 1, 0.3);
-  transform: rotate(45deg);
-}
-.tour-tooltip__arrow--top {
-  top: -8px;
-  left: 24px;
-  border-bottom: none;
-  border-right: none;
-}
-.tour-tooltip__arrow--bottom {
-  bottom: -8px;
-  left: 24px;
-  border-top: none;
-  border-left: none;
-}
 
 /* Step counter */
 .tour-tooltip__step {

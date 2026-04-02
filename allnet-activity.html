@@ -1327,9 +1327,8 @@ initActivityPage();
 setTimeout(function() {
   if (typeof Tour !== 'undefined') {
     var steps = [
-      { target: '#feedList', text: '<strong>Your match feed.</strong> See completed games, results, and who you played with.', button: 'Next →' }
+      { target: '.match-card', fallbackTarget: '#feedList', text: '<strong>Your match feed.</strong> See completed games, results, and who you played with.' }
     ];
-    // Add spray step only if there are match cards with spray buttons
     if (document.querySelector('.spray-btn')) {
       steps.push({ target: '.spray-btn', text: '<strong>Spray a match</strong> — tag posts with graffiti reactions. Unlock more sprays in the Stars store.', button: 'Got it! 🎨' });
     } else {

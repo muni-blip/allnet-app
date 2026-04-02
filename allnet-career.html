@@ -1277,7 +1277,45 @@ async function executeExport() {
     var canvasW = 1080;
     var canvasH = isStory ? 1920 : 1080;
 
-    // Step 1: Capture the card with html2canvas
+    // Step 1: Preload cutout image as data URL to bypass CORS
+    progressFill.style.width = '20%';
+    progressText.textContent = 'Preparing images...';
+
+    var cutoutImg = document.querySelector('.cc__player-frame img');
+    if (cutoutImg && cutoutImg.src) {
+      try {
+        var resp = await fetch(cutoutImg.src);
+        var blob = await resp.blob();
+        var dataUrl = await new Promise(function(resolve) {
+          var reader = new FileReader();
+          reader.onloadend = function() { resolve(reader.result); };
+          reader.readAsDataURL(blob);
+        });
+        cutoutImg.src = dataUrl;
+        // Wait for the image to re-render with data URL
+        await new Promise(function(r) { setTimeout(r, 100); });
+      } catch (e) { console.warn('Cutout preload failed:', e); }
+    }
+
+    // Also preload cover image
+    var coverEl = document.querySelector('.cc__cover');
+    if (coverEl) {
+      var coverUrl = coverEl.style.backgroundImage.replace(/url\(['"]?/, '').replace(/['"]?\)/, '');
+      if (coverUrl) {
+        try {
+          var cResp = await fetch(coverUrl);
+          var cBlob = await cResp.blob();
+          var cDataUrl = await new Promise(function(resolve) {
+            var reader = new FileReader();
+            reader.onloadend = function() { resolve(reader.result); };
+            reader.readAsDataURL(cBlob);
+          });
+          coverEl.style.backgroundImage = 'url(' + cDataUrl + ')';
+          await new Promise(function(r) { setTimeout(r, 100); });
+        } catch (e) { console.warn('Cover preload failed:', e); }
+      }
+    }
+
     var cardEl = document.querySelector('.cc-border');
     if (!cardEl) throw new Error('Card element not found');
 
@@ -1316,52 +1354,62 @@ async function executeExport() {
     ctx.fillRect(0, 0, canvasW, canvasH);
 
     // Step 3: Draw the card centered
-    // Card aspect ratio from capture
     var cardAspect = capture.width / capture.height;
     var targetCardW, targetCardH;
 
     if (isStory) {
-      targetCardW = canvasW * 0.82;
+      targetCardW = canvasW * 0.88;
       targetCardH = targetCardW / cardAspect;
     } else {
-      // 1:1 — card fills more of the space
-      targetCardH = canvasH * 0.72;
+      targetCardH = canvasH * 0.78;
       targetCardW = targetCardH * cardAspect;
     }
 
     var cardX = (canvasW - targetCardW) / 2;
-    var cardY = isStory ? (canvasH - targetCardH) * 0.38 : (canvasH - targetCardH) * 0.42;
+    var cardY = isStory ? (canvasH - targetCardH) * 0.32 : (canvasH - targetCardH) * 0.38;
 
     ctx.drawImage(capture, cardX, cardY, targetCardW, targetCardH);
 
     progressFill.style.width = '80%';
     progressText.textContent = 'Adding branding...';
 
-    // Step 4: AllNet logo text at top
-    ctx.textAlign = 'center';
+    // Step 4: Draw AllNet SVG logo at top (rendered as path on canvas)
+    var logoY = isStory ? 80 : 40;
+    var logoScale = isStory ? 0.14 : 0.10;
+    ctx.save();
+    ctx.translate(canvasW / 2 - (685 * logoScale / 2), logoY);
+    ctx.scale(logoScale, logoScale);
     ctx.fillStyle = '#fff';
-    ctx.font = '700 ' + (isStory ? '52' : '40') + 'px Oswald, sans-serif';
-    var logoY = isStory ? 120 : 60;
-    ctx.fillText('ALLNET', canvasW / 2, logoY);
+    // AllNet logo paths
+    var logoPaths = [
+      'M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z',
+      'M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z',
+      'M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z',
+      'M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z',
+      'M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z',
+      'M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z',
+      'M626 26.5L653 10.5V98.5H626V26.5Z'
+    ];
+    logoPaths.forEach(function(d) {
+      var p = new Path2D(d);
+      ctx.fill(p);
+    });
+    ctx.restore();
 
-    // Tagline
-    ctx.fillStyle = '#888';
-    ctx.font = '500 ' + (isStory ? '22' : '18') + 'px "DM Sans", sans-serif';
-    ctx.fillText('The Pickup Basketball Network', canvasW / 2, logoY + (isStory ? 36 : 30));
-
-    // Step 5: Profile URL + referral at bottom
+    // Step 5: Profile URL at bottom
     var profileSlug = currentProfile.username || currentProfile.short_code || '';
     var urlText = 'allnetgames.com/p/' + profileSlug;
     var bottomY = isStory ? canvasH - 100 : canvasH - 50;
 
+    ctx.textAlign = 'center';
     ctx.fillStyle = '#F74501';
-    ctx.font = '700 ' + (isStory ? '26' : '22') + 'px "JetBrains Mono", monospace';
+    ctx.font = '700 ' + (isStory ? '28' : '22') + 'px "JetBrains Mono", monospace';
     ctx.fillText(urlText, canvasW / 2, bottomY);
 
     // Referral text
     ctx.fillStyle = '#666';
-    ctx.font = '500 ' + (isStory ? '18' : '15') + 'px "DM Sans", sans-serif';
-    ctx.fillText('Join with my link & earn 500 Stars', canvasW / 2, bottomY + (isStory ? 32 : 26));
+    ctx.font = '500 ' + (isStory ? '20' : '16') + 'px "DM Sans", sans-serif';
+    ctx.fillText('Join with my link & earn 500 Stars', canvasW / 2, bottomY + (isStory ? 34 : 26));
 
     progressFill.style.width = '100%';
     progressText.textContent = 'Done!';
@@ -1379,7 +1427,7 @@ async function executeExport() {
           await navigator.share({
             files: [file],
             title: 'My AllNet Career Card',
-            text: 'Check out my basketball career card on AllNet! ' + getShareUrl()
+            text: 'Check out my career card on AllNet! Join with my link and earn 500 Stars ⭐\n\n' + getShareUrl()
           });
           closeExportPicker();
           return;

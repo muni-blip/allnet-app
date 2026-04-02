@@ -23,7 +23,6 @@ html, body { height: auto; overflow: auto; background: #000; color: #fff; font-f
 /* Top bar */
 .pp-topbar { position: sticky; top: 0; z-index: 100; padding: 14px 16px; background: rgba(0,0,0,0.95); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
 .pp-topbar__logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-.pp-topbar__logo-text { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700; color: #fff; text-transform: uppercase; }
 .pp-topbar__join { padding: 8px 20px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; color: #fff; background: var(--orange); border: none; border-radius: 8px; cursor: pointer; text-decoration: none; transition: opacity 0.2s; }
 .pp-topbar__join:hover { opacity: 0.85; }
 
@@ -82,8 +81,7 @@ html, body { height: auto; overflow: auto; background: #000; color: #fff; font-f
 <!-- Top Bar -->
 <div class="pp-topbar">
   <a href="allnet-landing.html" class="pp-topbar__logo">
-    <svg height="18" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/></svg>
-    <span class="pp-topbar__logo-text">AllNet</span>
+    <svg height="28" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
   </a>
   <a href="allnet-landing.html" class="pp-topbar__join" id="topJoinBtn">Join AllNet</a>
 </div>
@@ -125,15 +123,6 @@ function getRef() {
   return params.get('ref') || '';
 }
 
-function timeAgo(date) {
-  var s = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (s < 60) return 'just now';
-  var m = Math.floor(s / 60); if (m < 60) return m + 'm ago';
-  var h = Math.floor(m / 60); if (h < 24) return h + 'h ago';
-  var d = Math.floor(h / 24); if (d < 30) return d + 'd ago';
-  var mo = Math.floor(d / 30); return mo + 'mo ago';
-}
-
 function showError(title, sub) {
   document.getElementById('pageContent').innerHTML =
     '<div class="pp-error">' +
@@ -170,11 +159,10 @@ async function loadPlayer() {
   var displayName = (profile.first_name || '') + ' ' + (profile.last_name || '');
   document.title = 'AllNet — ' + displayName.trim();
 
-  // Fetch division stats, checkins, and match history in parallel
-  var [divRes, checkinRes, matchData] = await Promise.all([
+  // Fetch division stats and checkins (no match history needed)
+  var [divRes, checkinRes] = await Promise.all([
     sb.from('player_division_stats').select('*').eq('user_id', profile.id),
-    sb.from('checkins').select('court_id, courts(name)').eq('user_id', profile.id),
-    loadMatchHistory(profile.id)
+    sb.from('checkins').select('court_id, courts(name)').eq('user_id', profile.id)
   ]);
 
   // Division stats
@@ -215,31 +203,6 @@ async function loadPlayer() {
   // Career card
   html += '<div class="pp-card"><div class="cc-border"><div class="cc" id="playerCard"></div></div></div>';
 
-  // Stats row
-  html += '<div class="pp-stats">';
-  html += '<div class="pp-stat"><div class="pp-stat__val">' + (profile.total_checkins || 0) + '</div><div class="pp-stat__label">Check-ins</div></div>';
-  html += '<div class="pp-stat"><div class="pp-stat__val">' + (profile.unique_courts || 0) + '</div><div class="pp-stat__label">Courts</div></div>';
-  html += '<div class="pp-stat"><div class="pp-stat__val">' + (profile.days_active || 0) + '</div><div class="pp-stat__label">Days Active</div></div>';
-  html += '</div>';
-
-  // Match history
-  html += '<div class="pp-matches">';
-  html += '<div class="pp-matches__title">MATCH HISTORY (' + matchData.length + ')</div>';
-  if (matchData.length === 0) {
-    html += '<div class="pp-match__empty">No matches yet — they\'re getting started.</div>';
-  } else {
-    matchData.forEach(function(m) {
-      var resultClass = m.result === 'WIN' ? '--win' : (m.result === 'LOSE' ? '--lose' : '--draw');
-      html += '<div class="pp-match">';
-      html += '<div class="pp-match__format pp-match__format' + resultClass + '">' + m.result + '</div>';
-      html += '<div class="pp-match__info">';
-      html += '<div class="pp-match__opp">' + m.oppName + '</div>';
-      html += '<div class="pp-match__meta">' + m.format.toUpperCase() + ' · ' + m.timeStr + '</div>';
-      html += '</div></div>';
-    });
-  }
-  html += '</div>';
-
   // CTA
   html += '<div class="pp-cta"><div class="pp-cta__box">';
   html += '<div class="pp-cta__icon">🏀</div>';
@@ -274,64 +237,6 @@ async function loadPlayer() {
   }
 }
 
-async function loadMatchHistory(userId) {
-  try {
-    var pgRes = await sb.from('game_players').select('game_id,team').eq('user_id', userId);
-    var pg = pgRes.data;
-    if (!pg || !pg.length) return [];
-
-    var gids = pg.map(function(p) { return p.game_id; });
-    var tm = {};
-    pg.forEach(function(p) { tm[p.game_id] = p.team; });
-
-    var gRes = await sb.from('game_sessions').select('id,format,winner,ended_at')
-      .in('id', gids).in('status', ['completed','nulled'])
-      .order('ended_at', { ascending: false }).limit(10);
-    var games = gRes.data;
-    if (!games || !games.length) return [];
-
-    var apRes = await sb.from('game_players').select('game_id,user_id,team').in('game_id', gids);
-    var ap = apRes.data || [];
-
-    var oids = new Set();
-    ap.forEach(function(a) { if (a.user_id !== userId) oids.add(a.user_id); });
-
-    var op = {};
-    if (oids.size > 0) {
-      var prRes = await sb.from('profiles').select('id,name,first_name,last_name').in('id', Array.from(oids));
-      if (prRes.data) prRes.data.forEach(function(p) { op[p.id] = p; });
-    }
-
-    return games.map(function(g) {
-      var mt = tm[g.id];
-      var r = 'DRAW';
-      if (g.winner === 'team_' + mt) r = 'WIN';
-      else if (g.winner && g.winner !== 'draw' && g.winner !== 'null') r = 'LOSE';
-
-      var isTeamGame = g.format !== '1v1';
-      var opp = null;
-      if (ap.length) {
-        var x = ap.find(function(a) { return a.game_id === g.id && a.user_id !== userId && a.team !== mt; })
-             || ap.find(function(a) { return a.game_id === g.id && a.user_id !== userId; });
-        if (x) opp = op[x.user_id];
-      }
-
-      var oppName = isTeamGame ? g.format.toUpperCase() : (opp ? (opp.first_name ? opp.first_name + ' ' + (opp.last_name || '') : opp.name) : 'Unknown');
-
-      return {
-        result: r,
-        oppName: oppName.trim(),
-        format: g.format,
-        timeStr: g.ended_at ? timeAgo(new Date(g.ended_at)) : ''
-      };
-    });
-  } catch (e) {
-    console.error('Match history error:', e);
-    return [];
-  }
-}
-
-// Check RLS for game tables — they need public SELECT
 loadPlayer();
 </script>
 </body>

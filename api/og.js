@@ -46,42 +46,42 @@ export default async function handler(req) {
 
     // Build Satori element tree using h() helper
     const wldCol = (label, val) =>
-      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
-        h('span', { style: { color: '#888', fontSize: '14px', fontWeight: 700 } }, label),
-        h('span', { style: { color: '#fff', fontSize: '36px', fontWeight: 900 } }, val)
+      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' } },
+        h('span', { style: { color: '#888', fontSize: '18px', fontWeight: 700, letterSpacing: '2px' } }, label),
+        h('span', { style: { color: '#fff', fontSize: '52px', fontWeight: 900 } }, val)
       );
 
     const ratingRow = (label, val, color) =>
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '40px' } },
-        h('span', { style: { color: '#aaa', fontSize: '16px', fontWeight: 600 } }, label),
-        h('span', { style: { color, fontSize: '24px', fontWeight: 900 } }, val)
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '48px' } },
+        h('span', { style: { color: '#aaa', fontSize: '20px', fontWeight: 600 } }, label),
+        h('span', { style: { color, fontSize: '32px', fontWeight: 900 } }, val)
       );
 
     const badgeEl = isFH
-      ? h('div', { style: { display: 'flex', alignItems: 'center', background: 'rgba(247,69,1,0.12)', border: '1px solid rgba(247,69,1,0.3)', borderRadius: '100px', padding: '6px 16px', marginBottom: '16px' } },
-          h('span', { style: { color: '#F74501', fontSize: '14px', fontWeight: 700 } }, `FOUNDING HOOPER #${fhNum}`)
+      ? h('div', { style: { display: 'flex', alignItems: 'center', background: 'rgba(247,69,1,0.12)', border: '1px solid rgba(247,69,1,0.3)', borderRadius: '100px', padding: '8px 20px', marginBottom: '20px' } },
+          h('span', { style: { color: '#F74501', fontSize: '18px', fontWeight: 700 } }, `FOUNDING HOOPER #${fhNum}`)
         )
       : null;
 
     const nameEls = [
-      h('span', { style: { color: '#fff', fontSize: '56px', fontWeight: 900, lineHeight: 1 } }, firstName)
+      h('span', { style: { color: '#fff', fontSize: '72px', fontWeight: 900, lineHeight: 1 } }, firstName)
     ];
     if (lastName) {
-      nameEls.push(h('span', { style: { color: '#fff', fontSize: '56px', fontWeight: 900, lineHeight: 1 } }, lastName));
+      nameEls.push(h('span', { style: { color: '#fff', fontSize: '72px', fontWeight: 900, lineHeight: 1 } }, lastName));
     }
 
     const leftSide = h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' } },
       ...[badgeEl].filter(Boolean),
       h('div', { style: { display: 'flex', flexDirection: 'column' } }, ...nameEls),
-      h('div', { style: { display: 'flex', width: '200px', height: '8px', background: 'linear-gradient(90deg, #F74501, #0040FF)', borderRadius: '4px', marginTop: '16px' } })
+      h('div', { style: { display: 'flex', width: '260px', height: '10px', background: 'linear-gradient(90deg, #F74501, #0040FF)', borderRadius: '5px', marginTop: '20px' } })
     );
 
-    const rightSide = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '20px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '28px 36px' } },
-      h('div', { style: { display: 'flex', gap: '32px' } },
+    const rightSide = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '24px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '36px 44px' } },
+      h('div', { style: { display: 'flex', gap: '40px' } },
         wldCol('W', wins), wldCol('L', losses), wldCol('D', draws)
       ),
       h('div', { style: { display: 'flex', width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)' } }),
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
         ratingRow('SKILL RATING', skill, '#F74501'),
         ratingRow('SOCIAL RATING', social, '#FACC15')
       )
@@ -90,12 +90,12 @@ export default async function handler(req) {
     const element = h('div', {
       style: { width: '1200px', height: '630px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%)', fontFamily: 'sans-serif', position: 'relative' }
     },
-      h('div', { style: { display: 'flex', position: 'absolute', top: '32px', left: '48px' } },
-        h('span', { style: { color: '#fff', fontSize: '28px', fontWeight: 800 } }, 'ALLNET')
+      h('div', { style: { display: 'flex', position: 'absolute', top: '28px', left: '40px' } },
+        h('span', { style: { color: '#fff', fontSize: '32px', fontWeight: 800 } }, 'ALLNET')
       ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '60px' } }, leftSide, rightSide),
-      h('div', { style: { display: 'flex', position: 'absolute', bottom: '28px' } },
-        h('span', { style: { color: '#555', fontSize: '16px', fontWeight: 500 } }, 'allnetgames.com')
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: '80px' } }, leftSide, rightSide),
+      h('div', { style: { display: 'flex', position: 'absolute', bottom: '24px', right: '40px' } },
+        h('span', { style: { color: '#555', fontSize: '18px', fontWeight: 500 } }, 'allnetgames.com')
       )
     );
 

@@ -478,7 +478,12 @@ function renderCard() {
     showDeltas: false
   });
 
-  requestAnimationFrame(function() { CareerCard.fitNames('cc'); });
+  requestAnimationFrame(function() {
+    CareerCard.fitNames('cc');
+    // Make placeholder tappable to upload photo
+    var ph = document.querySelector('#careerCard .cc__placeholder');
+    if (ph) ph.onclick = function() { openPhotoModal(); };
+  });
 }
 
 function switchDivision(dv) { activeDivision = dv; renderCard(); }

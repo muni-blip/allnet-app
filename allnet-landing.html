@@ -2147,14 +2147,13 @@ document.getElementById('signupModal').addEventListener('click', (e) => {
 async function signInWithGoogle() {
   if (!supabase) { alert('Loading... please try again in a moment.'); return; }
   try {
-    // Stash referral code before OAuth redirect (URL params are lost during redirect)
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
+    var redirectUrl = window.location.origin + '/allnet-app.html';
+    if (ref) redirectUrl += '?ref=' + encodeURIComponent(ref);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/allnet-app.html'
-      }
+      options: { redirectTo: redirectUrl }
     });
     if (error) throw error;
   } catch (err) {
@@ -2165,14 +2164,13 @@ async function signInWithGoogle() {
 async function signInWithApple() {
   if (!supabase) { alert('Loading... please try again in a moment.'); return; }
   try {
-    // Stash referral code before OAuth redirect
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
+    var redirectUrl = window.location.origin + '/allnet-app.html';
+    if (ref) redirectUrl += '?ref=' + encodeURIComponent(ref);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
-      options: {
-        redirectTo: window.location.origin + '/allnet-app.html'
-      }
+      options: { redirectTo: redirectUrl }
     });
     if (error) throw error;
   } catch (err) {

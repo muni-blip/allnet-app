@@ -2625,8 +2625,11 @@ async function loadUserProfile(user) {
     }
 
     // Process referral if one was stashed before OAuth redirect
+    // Check both localStorage (set before OAuth) and URL params (passed via redirectTo)
     try {
-      const storedRef = localStorage.getItem('allnet_ref');
+      const storedRef = localStorage.getItem('allnet_ref') 
+        || new URLSearchParams(window.location.search).get('ref')
+        || '';
       if (storedRef && currentProfile && !currentProfile.referred_by) {
         console.log('AllNet: Processing referral code:', storedRef);
         const { data: refResult, error: refErr } = await supabase.rpc('process_referral', { p_referral_code: storedRef });
@@ -2643,6 +2646,10 @@ async function loadUserProfile(user) {
           console.log('AllNet: Referral not applied:', refResult?.error);
         }
         localStorage.removeItem('allnet_ref');
+        // Clean ref from URL without reload
+        if (new URLSearchParams(window.location.search).get('ref')) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
       }
     } catch (refCatchErr) {
       console.error('AllNet: Referral processing failed:', refCatchErr);

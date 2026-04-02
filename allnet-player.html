@@ -320,14 +320,18 @@ function closeSignupModal() {
 }
 
 async function ppOauthSignIn(provider) {
-  // Stash referral code before OAuth redirect
+  // Stash referral code via BOTH localStorage AND URL param
   var ref = getRef() || _profileShortCode || '';
   if (ref) localStorage.setItem('allnet_ref', ref);
+
+  // Include ref in redirectTo so it survives even if localStorage is lost
+  var redirectUrl = window.location.origin + '/allnet-app.html';
+  if (ref) redirectUrl += '?ref=' + encodeURIComponent(ref);
 
   try {
     var { error } = await sb.auth.signInWithOAuth({
       provider: provider,
-      options: { redirectTo: window.location.origin + '/allnet-app.html' }
+      options: { redirectTo: redirectUrl }
     });
     if (error) console.error('OAuth error:', error);
   } catch (err) {

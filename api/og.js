@@ -44,58 +44,55 @@ export default async function handler(req) {
     const isFH = profile.is_founding_hooper;
     const fhNum = profile.founding_number;
 
-    // Build Satori element tree using h() helper
-    const wldCol = (label, val) =>
-      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' } },
-        h('span', { style: { color: '#888', fontSize: '18px', fontWeight: 700, letterSpacing: '2px' } }, label),
-        h('span', { style: { color: '#fff', fontSize: '52px', fontWeight: 900 } }, val)
-      );
-
-    const ratingRow = (label, val, color) =>
-      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '48px' } },
-        h('span', { style: { color: '#aaa', fontSize: '20px', fontWeight: 600 } }, label),
-        h('span', { style: { color, fontSize: '32px', fontWeight: 900 } }, val)
-      );
-
-    const badgeEl = isFH
-      ? h('div', { style: { display: 'flex', alignItems: 'center', background: 'rgba(247,69,1,0.12)', border: '1px solid rgba(247,69,1,0.3)', borderRadius: '100px', padding: '8px 20px', marginBottom: '20px' } },
-          h('span', { style: { color: '#F74501', fontSize: '18px', fontWeight: 700 } }, `FOUNDING HOOPER #${fhNum}`)
-        )
-      : null;
-
-    const nameEls = [
-      h('span', { style: { color: '#fff', fontSize: '72px', fontWeight: 900, lineHeight: 1 } }, firstName)
-    ];
-    if (lastName) {
-      nameEls.push(h('span', { style: { color: '#fff', fontSize: '72px', fontWeight: 900, lineHeight: 1 } }, lastName));
-    }
-
-    const leftSide = h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' } },
-      ...[badgeEl].filter(Boolean),
-      h('div', { style: { display: 'flex', flexDirection: 'column' } }, ...nameEls),
-      h('div', { style: { display: 'flex', width: '260px', height: '10px', background: 'linear-gradient(90deg, #F74501, #0040FF)', borderRadius: '5px', marginTop: '20px' } })
+    // Build card-style OG image matching the compact social export design
+    const nameRow1 = h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', width: '100%' } },
+      h('span', { style: { color: '#fff', fontSize: '64px', fontWeight: 900, lineHeight: 1, flexShrink: 0 } }, firstName),
+      h('div', { style: { display: 'flex', flex: 1, height: '28px', background: 'linear-gradient(90deg, #F74501, #0040FF)', borderRadius: '4px' } })
     );
 
-    const rightSide = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '24px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '36px 44px' } },
-      h('div', { style: { display: 'flex', gap: '40px' } },
-        wldCol('W', wins), wldCol('L', losses), wldCol('D', draws)
+    const nameRow2 = lastName ? h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', width: '100%' } },
+      h('div', { style: { display: 'flex', flex: 1, height: '28px', background: 'linear-gradient(90deg, #F74501, #0040FF)', borderRadius: '4px' } }),
+      h('span', { style: { color: '#fff', fontSize: '64px', fontWeight: 900, lineHeight: 1, flexShrink: 0 } }, lastName)
+    ) : null;
+
+    const wldSection = h('div', { style: { display: 'flex', justifyContent: 'center', gap: '80px', width: '100%', marginTop: '32px' } },
+      ...[['W', wins], ['L', losses], ['D', draws]].map(([label, val]) =>
+        h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+          h('span', { style: { color: '#fff', fontSize: '48px', fontWeight: 900 } }, label),
+          h('span', { style: { color: '#fff', fontSize: '56px', fontWeight: 900 } }, val)
+        )
+      )
+    );
+
+    const ratingsSection = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '28px' } },
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 12px' } },
+        h('span', { style: { color: '#fff', fontSize: '24px', fontWeight: 600 } }, 'SKILL RATING'),
+        h('span', { style: { color: '#F74501', fontSize: '28px', fontWeight: 900 } }, skill)
       ),
-      h('div', { style: { display: 'flex', width: '100%', height: '1px', background: 'rgba(255,255,255,0.1)' } }),
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
-        ratingRow('SKILL RATING', skill, '#F74501'),
-        ratingRow('SOCIAL RATING', social, '#FACC15')
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 12px' } },
+        h('span', { style: { color: '#fff', fontSize: '24px', fontWeight: 600 } }, 'SOCIAL RATING'),
+        h('span', { style: { color: '#FACC15', fontSize: '28px', fontWeight: 900 } }, social)
+      )
+    );
+
+    // Card with gradient border
+    const card = h('div', { style: { display: 'flex', padding: '3px', borderRadius: '24px', background: 'linear-gradient(180deg, #F74501 0%, #0040FF 100%)' } },
+      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: '#000', borderRadius: '21px', padding: '28px 36px 32px', width: '560px' } },
+        ...[nameRow1, nameRow2].filter(Boolean),
+        wldSection,
+        ratingsSection
       )
     );
 
     const element = h('div', {
-      style: { width: '1200px', height: '630px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%)', fontFamily: 'sans-serif', position: 'relative' }
+      style: { width: '1200px', height: '630px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111', fontFamily: 'sans-serif', position: 'relative' }
     },
-      h('div', { style: { display: 'flex', position: 'absolute', top: '28px', left: '40px' } },
-        h('span', { style: { color: '#fff', fontSize: '32px', fontWeight: 800 } }, 'ALLNET')
+      card,
+      h('div', { style: { display: 'flex', position: 'absolute', top: '24px', left: '36px' } },
+        h('span', { style: { color: '#fff', fontSize: '28px', fontWeight: 800 } }, 'ALLNET')
       ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '80px' } }, leftSide, rightSide),
-      h('div', { style: { display: 'flex', position: 'absolute', bottom: '24px', right: '40px' } },
-        h('span', { style: { color: '#555', fontSize: '18px', fontWeight: 500 } }, 'allnetgames.com')
+      h('div', { style: { display: 'flex', position: 'absolute', bottom: '20px', right: '36px' } },
+        h('span', { style: { color: '#555', fontSize: '16px', fontWeight: 500 } }, 'allnetgames.com')
       )
     );
 

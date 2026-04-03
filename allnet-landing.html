@@ -41,9 +41,37 @@ html{scroll-behavior:smooth}body{background:var(--bg);color:#fff;font-family:var
 .hr__d{font-size:15px;color:var(--ts);line-height:1.6;margin-bottom:24px}
 .hr__c{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
 .hr__f{font-family:var(--fm);font-size:10px;color:var(--tm);text-align:center}
-.sts{display:flex;justify-content:space-between;padding:24px 0;margin-top:24px;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
-.st{text-align:center;flex:1}.st__n{font-family:var(--fh);font-size:24px;font-weight:800;line-height:1;margin-bottom:2px}
-.st__n-o{color:var(--or)}.st__l{font-family:var(--fm);font-size:9px;color:var(--tm);text-transform:uppercase;letter-spacing:.06em}
+
+/* Hero stagger entrance */
+.hi{opacity:0;transform:translateY(18px);animation:heroIn .7s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes heroIn{to{opacity:1;transform:translateY(0)}}
+.hi-1{animation-delay:.1s}
+.hi-2{animation-delay:.25s}
+.hi-3{animation-delay:.45s}
+.hi-4{animation-delay:.65s}
+.hi-5{animation-delay:.8s}
+
+/* Hero title line-by-line reveal */
+.hr__t .tl{display:block;overflow:hidden}
+.hr__t .tl>span{display:inline-block;opacity:0;transform:translateY(100%);animation:lineUp .6s cubic-bezier(.16,1,.3,1) forwards}
+.hr__t .tl:nth-child(1)>span{animation-delay:.15s}
+.hr__t .tl:nth-child(2)>span{animation-delay:.3s}
+.hr__t .tl:nth-child(3)>span{animation-delay:.45s}
+@keyframes lineUp{to{opacity:1;transform:translateY(0)}}
+
+/* Career card float */
+.rp__img img{animation:ccFloat 4s ease-in-out infinite}
+@keyframes ccFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* CTA glow */
+.ct .bt-p{position:relative;overflow:visible}
+.ct .bt-p::after{content:'';position:absolute;inset:-2px;border-radius:12px;background:var(--or);opacity:0;filter:blur(20px);z-index:-1;animation:ctaGlow 3s ease-in-out infinite}
+@keyframes ctaGlow{0%,100%{opacity:0}50%{opacity:.25}}
+
+/* Section heading reveal */
+.rv{opacity:0;transform:translateX(-20px);transition:opacity .6s ease,transform .6s ease}
+.rv.vis{opacity:1;transform:translateX(0)}
+
 
 /* Map */
 .ms{padding:48px 0}.ms .sc{margin-bottom:20px}
@@ -139,24 +167,23 @@ html{scroll-behavior:smooth}body{background:var(--bg);color:#fff;font-family:var
 <nav class="nv"><div><a href="#"><svg height="22" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a><div class="nv__r"><a href="allnet-app.html" class="nv__lk">Open App</a><button class="bt bt-p bt-s" onclick="openModal()">Join Free</button></div></div></nav>
 
 <section class="hr">
-<div class="hr__g">Live in OC &amp; LA</div>
-<h1 class="hr__t">See which courts<br>are running.<br>Play. Get <em>rated.</em></h1>
-<p class="hr__d">AllNet is the reputation network for pickup basketball. 266 real courts, verified games, and a skill rating that proves your game.</p>
-<div class="hr__c"><button class="bt bt-p bt-l" onclick="openModal()">Claim Your Founding Spot</button><a href="allnet-app.html" class="bt bt-g bt-l">Open the App →</a></div>
-<p class="hr__f">Free forever · 10-second signup · Founding badge is permanent</p>
-<div class="sts"><div class="st"><div class="st__n st__n-o" id="sC">266</div><div class="st__l">Courts</div></div><div class="st"><div class="st__n" id="sH">38</div><div class="st__l">Founding Hoopers</div></div><div class="st"><div class="st__n" id="sG">35</div><div class="st__l">Games Verified</div></div></div>
+<div class="hr__g hi hi-1">Live in OC &amp; LA</div>
+<h1 class="hr__t"><span class="tl"><span>See which courts</span></span><span class="tl"><span>are running.</span></span><span class="tl"><span>Play. Get <em>rated.</em></span></span></h1>
+<p class="hr__d hi hi-3">AllNet is the reputation network for pickup basketball. 266 real courts, verified games, and a skill rating that proves your game.</p>
+<div class="hr__c hi hi-4"><button class="bt bt-p bt-l" onclick="openModal()">Claim Your Founding Spot</button><a href="allnet-app.html" class="bt bt-g bt-l">Open the App →</a></div>
+<p class="hr__f hi hi-5">Free forever · 10-second signup · Founding badge is permanent</p>
 </section>
 
 <section class="ms fu">
-<div class="sc"><div class="sl">// Live Now</div><div class="ms__t">Never drive to an<br><em>empty court</em> again.</div><div class="ms__s">Real courts. Live check-ins. Weekly forecasts. Tap any court to see the details.</div></div>
+<div class="sc"><div class="sl rv">// Live Now</div><div class="ms__t rv">Never drive to an<br><em>empty court</em> again.</div><div class="ms__s">Real courts. Live check-ins. Weekly forecasts. Tap any court to see the details.</div></div>
 <div class="mw"><div id="map"></div><div class="ml"><div class="ml__i"><div class="ml__d" style="background:#22C55E"></div> Active</div><div class="ml__i"><div class="ml__d" style="background:#FF5A1F"></div> Packed</div><div class="ml__i"><div class="ml__d" style="background:#3B82F6"></div> Quiet</div></div></div>
 <div class="mc"><div class="mc__t"><strong>266 courts</strong> across OC &amp; LA with weekly forecast data.</div><a href="allnet-app.html" class="bt bt-g" style="width:100%">Explore the Full Map →</a></div>
 </section>
 
 <section class="rp fu">
 <div class="sc">
-<div class="sl">// Your Basketball Identity</div>
-<div class="rp__t">Build a reputation<br>that <em>proves your game.</em></div>
+<div class="sl rv">// Your Basketball Identity</div>
+<div class="rp__t rv">Build a reputation<br>that <em>proves your game.</em></div>
 <div class="rp__d">Play verified games — 1v1 through 5v5. Rate every opponent on skill and sportsmanship. Build a career card you can share anywhere.</div>
 <div class="rs"><div class="rb"><div class="rb__i">📊</div><div class="rb__t">Skill Rating</div><div class="rb__d">How good you are — scored per format by real opponents.</div></div><div class="rb"><div class="rb__i">🤝</div><div class="rb__t">Social Rating</div><div class="rb__d">Reliable and respectful — sportsmanship matters here.</div></div></div>
 <div class="rp__img"><img src="img/career-card-landing.png" alt="AllNet Career Card" loading="lazy"></div>
@@ -166,8 +193,8 @@ html{scroll-behavior:smooth}body{background:var(--bg);color:#fff;font-family:var
 
 <section class="hw fu">
 <div class="sc">
-<div class="sl">// How It Works</div>
-<div class="hw__t">Four steps.<br><em>Ten seconds</em> to start.</div>
+<div class="sl rv">// How It Works</div>
+<div class="hw__t rv">Four steps.<br><em>Ten seconds</em> to start.</div>
 <div class="sps">
 <div class="sp"><div class="sp__n">01</div><div><div class="sp__t">Sign Up</div><div class="sp__d">Google or Apple. One tap. Founding Hooper badge activates immediately.</div></div></div>
 <div class="sp"><div class="sp__n">02</div><div><div class="sp__t">Find a Court</div><div class="sp__d">See which courts are active near you. Watch favorites for push alerts.</div></div></div>
@@ -201,8 +228,6 @@ html{scroll-behavior:smooth}body{background:var(--bg);color:#fff;font-family:var
 var SU='https://orrpowyewsioyxztwkdq.supabase.co',SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
 var sb;try{sb=window.supabase.createClient(SU,SK)}catch(e){}var supabase=sb;
 
-(async()=>{if(!supabase)return;try{var[c,p,g]=await Promise.all([supabase.from('courts').select('id',{count:'exact',head:true}),supabase.from('profiles').select('id',{count:'exact',head:true}),supabase.from('game_sessions').select('id',{count:'exact',head:true}).eq('status','completed')]);if(c.count)document.getElementById('sC').textContent=c.count;if(p.count)document.getElementById('sH').textContent=p.count;if(g.count)document.getElementById('sG').textContent=g.count}catch(e){}})();
-
 mapboxgl.accessToken='pk.eyJ1IjoibWFzaHJhZnkiLCJhIjoiY21rYnJqd3UwMDc0NTNrcHMzZTNydGR6eiJ9.LJBgJ1mpL1Q9Xv9aoBTwNw';
 var map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',center:[-117.83,33.68],zoom:10,attributionControl:false,interactive:true,dragRotate:false,pitchWithRotate:false});
 map.on('load',async()=>{
@@ -216,7 +241,7 @@ map.on('click','dots',e=>{var f=e.features[0],sl=f.properties.status==='packed'?
 map.on('mouseenter','dots',()=>{map.getCanvas().style.cursor='pointer'});map.on('mouseleave','dots',()=>{map.getCanvas().style.cursor=''})});
 
 var obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('vis');obs.unobserve(x.target)}})},{threshold:.1});
-document.querySelectorAll('.fu').forEach(el=>obs.observe(el));
+document.querySelectorAll('.fu,.rv').forEach(el=>obs.observe(el));
 
 function openModal(){document.getElementById('signupModal').classList.add('active');document.body.style.overflow='hidden'}
 function closeModal(){document.getElementById('signupModal').classList.remove('active');document.body.style.overflow=''}

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Pickup Basketball Reputation Network</title>
+<meta name="description" content="Find real courts. Play verified games. Build a basketball reputation. Starting in OC and LA.">
+<meta property="og:title" content="AllNet — The Reputation Network for Pickup Basketball">
+<meta property="og:description" content="See which courts are running. Play verified games. Build your rating. 266 courts live in OC and LA.">
+<meta property="og:image" content="https://allnetgames.com/img/icon-512.png">
+<link rel="icon" href="/img/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/img/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0A0A0A;--card:#141414;--el:#1A1A1A;--bdr:#222;--bdr2:#333;--or:#F74501;--grn:#22C55E;--blu:#3B82F6;--ts:#999;--tm:#666;--fd:'Oswald',sans-serif;--fb:'DM Sans',sans-serif;--fm:'JetBrains Mono',monospace;--fh:'Montserrat',sans-serif;--r:12px}
+html{scroll-behavior:smooth}body{background:var(--bg);color:#fff;font-family:var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden}a{color:inherit}
+
+/* Nav */
+.nv{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 16px;background:rgba(10,10,10,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04)}
+.nv>div{max-width:600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.nv svg{display:block}.nv__r{display:flex;align-items:center;gap:12px}
+.nv__lk{font-family:var(--fh);font-size:12px;font-weight:600;color:var(--ts);text-decoration:none}
+.bt{display:inline-flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:700;font-size:14px;border:none;border-radius:10px;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
+.bt-p{background:var(--or);color:#fff;padding:12px 20px}.bt-p:hover{filter:brightness(1.1)}
+.bt-l{padding:16px 28px;font-size:15px;width:100%}
+.bt-g{background:0;color:var(--ts);border:1px solid var(--bdr2);padding:14px 20px}.bt-g:hover{border-color:#fff;color:#fff}
+.bt-s{padding:10px 16px;font-size:13px}
+.sc{padding:0 16px;max-width:600px;margin:0 auto}
+.sl{font-family:var(--fm);font-size:11px;color:var(--or);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+
+/* Hero */
+.hr{padding:76px 16px 0;max-width:600px;margin:0 auto}
+.hr__g{display:inline-flex;align-items:center;gap:6px;font-family:var(--fm);font-size:11px;color:var(--or);letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;background:rgba(247,69,1,.12);border:1px solid rgba(247,69,1,.15);border-radius:100px;margin-bottom:20px}
+.hr__g::before{content:'';width:6px;height:6px;background:var(--or);border-radius:50%;animation:pu 2s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+.hr__t{font-family:var(--fd);font-size:36px;font-weight:700;text-transform:uppercase;line-height:.95;margin-bottom:16px}
+.hr__t em{font-style:normal;color:var(--or)}
+.hr__d{font-size:15px;color:var(--ts);line-height:1.6;margin-bottom:24px}
+.hr__c{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.hr__f{font-family:var(--fm);font-size:10px;color:var(--tm);text-align:center}
+.sts{display:flex;justify-content:space-between;padding:24px 0;margin-top:24px;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.st{text-align:center;flex:1}.st__n{font-family:var(--fh);font-size:24px;font-weight:800;line-height:1;margin-bottom:2px}
+.st__n-o{color:var(--or)}.st__l{font-family:var(--fm);font-size:9px;color:var(--tm);text-transform:uppercase;letter-spacing:.06em}
+
+/* Map */
+.ms{padding:48px 0}.ms .sc{margin-bottom:20px}
+.ms__t{font-family:var(--fd);font-size:24px;font-weight:700;text-transform:uppercase;line-height:1.05;margin-bottom:8px}
+.ms__t em{font-style:normal;color:var(--or)}
+.ms__s{font-size:14px;color:var(--ts);line-height:1.5}
+.mw{position:relative;width:100%;height:50vh;min-height:320px;max-height:480px;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+#map{width:100%;height:100%}
+.ml{position:absolute;bottom:12px;left:12px;display:flex;gap:12px;padding:8px 14px;background:rgba(10,10,10,.88);backdrop-filter:blur(12px);border-radius:10px;border:1px solid var(--bdr);z-index:10}
+.ml__i{display:flex;align-items:center;gap:5px;font-family:var(--fm);font-size:10px;color:var(--ts)}
+.ml__d{width:8px;height:8px;border-radius:50%}
+.mc{padding:20px 16px 0;max-width:600px;margin:0 auto}
+.mc__t{font-size:13px;color:var(--tm);text-align:center;margin-bottom:12px}
+.mc__t strong{color:var(--ts)}
+
+/* Reputation */
+.rp{padding:48px 0;border-top:1px solid var(--bdr)}
+.rp__t{font-family:var(--fd);font-size:24px;font-weight:700;text-transform:uppercase;line-height:1.05;margin-bottom:10px}
+.rp__t em{font-style:normal;color:var(--or)}
+.rp__d{font-size:14px;color:var(--ts);line-height:1.6;margin-bottom:20px}
+.rs{display:flex;gap:10px;margin-bottom:24px}
+.rb{flex:1;padding:16px;border-radius:var(--r);background:var(--card);border:1px solid var(--bdr)}
+.rb__i{font-size:20px;margin-bottom:8px}
+.rb__t{font-family:var(--fd);font-size:14px;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.rb__d{font-size:12px;color:var(--tm);line-height:1.45}
+.rp__img{margin:24px auto 0;max-width:300px}
+.rp__img img{width:100%;border-radius:16px;box-shadow:0 16px 48px rgba(247,69,1,.08),0 4px 16px rgba(0,0,0,.4)}
+.pls{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px}
+.pl{font-family:var(--fm);font-size:10px;color:var(--ts);padding:5px 10px;background:var(--el);border:1px solid var(--bdr);border-radius:100px}
+
+/* How */
+.hw{padding:48px 0;border-top:1px solid var(--bdr)}
+.hw__t{font-family:var(--fd);font-size:24px;font-weight:700;text-transform:uppercase;line-height:1.05;margin-bottom:24px}
+.hw__t em{font-style:normal;color:var(--or)}
+.sps{display:flex;flex-direction:column;gap:2px}
+.sp{display:flex;gap:16px;align-items:flex-start;padding:20px 16px;background:var(--card)}
+.sp:first-child{border-radius:var(--r) var(--r) 0 0}.sp:last-child{border-radius:0 0 var(--r) var(--r)}
+.sp__n{font-family:var(--fh);font-size:28px;font-weight:800;color:rgba(247,69,1,.15);line-height:1;flex-shrink:0;width:32px}
+.sp__t{font-family:var(--fd);font-size:15px;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.sp__d{font-size:13px;color:var(--ts);line-height:1.5}
+
+/* CTA */
+.ct{padding:56px 0;text-align:center;border-top:1px solid var(--bdr);position:relative}
+.ct::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(247,69,1,.06) 0%,transparent 70%);pointer-events:none}
+.ct__t{font-family:var(--fd);font-size:28px;font-weight:700;text-transform:uppercase;line-height:1;margin-bottom:12px;position:relative}
+.ct__t em{font-style:normal;color:var(--or)}
+.ct__s{font-size:14px;color:var(--ts);line-height:1.55;max-width:340px;margin:0 auto 24px;position:relative}
+.ct__f{font-family:var(--fm);font-size:10px;color:var(--tm);margin-top:12px;position:relative}
+
+/* Footer */
+.ft{padding:24px 16px;border-top:1px solid var(--bdr);text-align:center}
+.ft__c{font-size:12px;color:var(--tm);margin-bottom:4px}
+.ft__x{font-family:var(--fm);font-size:10px;color:var(--tm)}
+.ft__x .on{color:var(--or)}
+
+/* Modal */
+.mo{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.mo.active{opacity:1;pointer-events:auto}
+.md{background:var(--card);border:1px solid var(--bdr);border-radius:20px 20px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;text-align:center;transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.mo.active .md{transform:translateY(0)}
+.md__h{width:40px;height:4px;background:var(--bdr2);border-radius:2px;margin:0 auto 20px}
+.md__b{font-family:var(--fm);font-size:10px;color:var(--or);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.md__t{font-family:var(--fd);font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.md__su{font-size:13px;color:var(--ts);margin-bottom:24px;line-height:1.45}
+.oa{width:100%;padding:14px;border-radius:10px;font-family:var(--fh);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;border:none}
+.oa-g{background:#fff;color:#333}.oa-g:hover{background:#f0f0f0}
+.oa-a{background:#000;color:#fff;border:1px solid #333}.oa-a:hover{background:#111}
+.oa svg{flex-shrink:0}
+.md__f{font-size:11px;color:var(--tm);margin-top:16px}
+.md__ok{display:none}.md__ok.visible{display:block}
+.md__ok-i{font-size:40px;margin-bottom:12px}
+.md__ok-t{font-family:var(--fd);font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+.md__ok-s{font-size:13px;color:var(--ts);margin-bottom:20px}
+
+/* Mapbox popup */
+.mapboxgl-popup-content{background:#1A1A1A!important;color:#fff!important;border-radius:10px!important;padding:12px 14px!important;border:1px solid #333!important;font-family:'DM Sans',sans-serif!important;box-shadow:0 8px 24px rgba(0,0,0,.5)!important}
+.mapboxgl-popup-tip{border-top-color:#1A1A1A!important}
+.cp-n{font-family:var(--fh);font-weight:700;font-size:13px;margin-bottom:2px}
+.cp-s{font-family:var(--fm);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.cp-d{font-size:11px;color:#999;margin-top:3px}
+
+.fu{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}.fu.vis{opacity:1;transform:translateY(0)}
+
+@media(min-width:640px){
+.hr__t{font-size:48px}.hr__c{flex-direction:row}.hr__c .bt{width:auto}
+.md{border-radius:20px;margin:auto;align-self:center}
+.mw{height:55vh;max-height:560px;border-radius:var(--r);margin:0 16px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nv"><div><a href="#"><svg height="22" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a><div class="nv__r"><a href="allnet-app.html" class="nv__lk">Open App</a><button class="bt bt-p bt-s" onclick="openModal()">Join Free</button></div></div></nav>
+
+<section class="hr">
+<div class="hr__g">Live in OC &amp; LA</div>
+<h1 class="hr__t">See which courts<br>are running.<br>Play. Get <em>rated.</em></h1>
+<p class="hr__d">AllNet is the reputation network for pickup basketball. 266 real courts, verified games, and a skill rating that proves your game.</p>
+<div class="hr__c"><button class="bt bt-p bt-l" onclick="openModal()">Claim Your Founding Spot</button><a href="allnet-app.html" class="bt bt-g bt-l">Open the App →</a></div>
+<p class="hr__f">Free forever · 10-second signup · Founding badge is permanent</p>
+<div class="sts"><div class="st"><div class="st__n st__n-o" id="sC">266</div><div class="st__l">Courts</div></div><div class="st"><div class="st__n" id="sH">38</div><div class="st__l">Founding Hoopers</div></div><div class="st"><div class="st__n" id="sG">35</div><div class="st__l">Games Verified</div></div></div>
+</section>
+
+<section class="ms fu">
+<div class="sc"><div class="sl">// Live Now</div><div class="ms__t">Never drive to an<br><em>empty court</em> again.</div><div class="ms__s">Real courts. Live check-ins. Weekly forecasts. Tap any court to see the details.</div></div>
+<div class="mw"><div id="map"></div><div class="ml"><div class="ml__i"><div class="ml__d" style="background:#22C55E"></div> Active</div><div class="ml__i"><div class="ml__d" style="background:#FF5A1F"></div> Packed</div><div class="ml__i"><div class="ml__d" style="background:#3B82F6"></div> Quiet</div></div></div>
+<div class="mc"><div class="mc__t"><strong>266 courts</strong> across OC &amp; LA with weekly forecast data.</div><a href="allnet-app.html" class="bt bt-g" style="width:100%">Explore the Full Map →</a></div>
+</section>
+
+<section class="rp fu">
+<div class="sc">
+<div class="sl">// Your Basketball Identity</div>
+<div class="rp__t">Build a reputation<br>that <em>proves your game.</em></div>
+<div class="rp__d">Play verified games — 1v1 through 5v5. Rate every opponent on skill and sportsmanship. Build a career card you can share anywhere.</div>
+<div class="rs"><div class="rb"><div class="rb__i">📊</div><div class="rb__t">Skill Rating</div><div class="rb__d">How good you are — scored per format by real opponents.</div></div><div class="rb"><div class="rb__i">🤝</div><div class="rb__t">Social Rating</div><div class="rb__d">Reliable and respectful — sportsmanship matters here.</div></div></div>
+<div class="rp__img"><img src="img/career-card-landing.png" alt="AllNet Career Card" loading="lazy"></div>
+<div class="pls"><span class="pl">🏅 Founding Hooper badge</span><span class="pl">📸 Export for Stories &amp; Feed</span><span class="pl">🔗 Public profile page</span><span class="pl">📨 Refer → 500 Stars each</span><span class="pl">⭐ Stars, covers &amp; sprays</span><span class="pl">🏆 Court leaderboards</span></div>
+</div>
+</section>
+
+<section class="hw fu">
+<div class="sc">
+<div class="sl">// How It Works</div>
+<div class="hw__t">Four steps.<br><em>Ten seconds</em> to start.</div>
+<div class="sps">
+<div class="sp"><div class="sp__n">01</div><div><div class="sp__t">Sign Up</div><div class="sp__d">Google or Apple. One tap. Founding Hooper badge activates immediately.</div></div></div>
+<div class="sp"><div class="sp__n">02</div><div><div class="sp__t">Find a Court</div><div class="sp__d">See which courts are active near you. Watch favorites for push alerts.</div></div></div>
+<div class="sp"><div class="sp__n">03</div><div><div class="sp__t">Play &amp; Get Rated</div><div class="sp__d">Start a game, play, rate every opponent on skill and sportsmanship.</div></div></div>
+<div class="sp"><div class="sp__n">04</div><div><div class="sp__t">Share Your Card</div><div class="sp__d">Export your career card for Instagram or send your profile link.</div></div></div>
+</div>
+</div>
+</section>
+
+<section class="ct fu">
+<div class="sc" style="text-align:center">
+<div class="ct__t">Your reputation<br>starts <em>the day<br>you join.</em></div>
+<div class="ct__s">Every game, every rating, every check-in compounds. Founding Hooper badges are permanent — the earlier you start, the stronger your standing.</div>
+<button class="bt bt-p bt-l" onclick="openModal()">Claim Your Founding Spot</button>
+<div class="ct__f">Free forever · No spam · One tap signup</div>
+</div>
+</section>
+
+<footer class="ft"><div class="ft__c">© 2026 AllNet. Built with 🏀 in OC.</div><div class="ft__x"><span class="on">OC</span> · <span class="on">LA</span> → San Diego · SF Bay · Dallas · NYC</div></footer>
+
+<div class="mo" id="signupModal"><div class="md"><div class="md__h"></div>
+<div id="modalForm"><div class="md__b">Founding Hooper Access</div><div class="md__t">Claim Your Spot</div><div class="md__su">Your verified history starts today. Founding badge is permanent.</div>
+<button class="oa oa-g" onclick="signInWithGoogle()"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>Continue with Google</button>
+<button class="oa oa-a" onclick="signInWithApple()"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M15.546 14.2c-.32.738-.694 1.417-1.126 2.043-.588.852-1.07 1.442-1.44 1.77-.576.538-1.193.813-1.853.828-.474 0-1.045-.135-1.71-.408-.667-.272-1.28-.407-1.838-.407-.588 0-1.218.135-1.893.407-.676.273-1.22.416-1.636.43-.633.028-1.264-.256-1.893-.852-.402-.358-.904-.972-1.506-1.84-.645-.928-1.175-2.005-1.59-3.234C.353 11.398.06 9.904.06 8.462c0-1.65.356-3.073 1.07-4.265a6.284 6.284 0 012.27-2.27A6.099 6.099 0 015.474.933c.503 0 1.162.156 1.98.463.816.308 1.34.464 1.573.464.173 0 .762-.183 1.762-.546.944-.337 1.74-.476 2.394-.42 1.769.143 3.098.84 3.98 2.098-1.582.96-2.365 2.303-2.35 4.026.014 1.342.5 2.46 1.46 3.348.434.412.919.73 1.457.957-.117.34-.24.664-.372.975zM11.91.36c0 1.052-.384 2.034-1.15 2.94-.924 1.08-2.043 1.703-3.255 1.605a3.276 3.276 0 01-.024-.399c0-1.01.44-2.09 1.22-2.974.39-.447.886-.82 1.487-1.117.6-.293 1.166-.455 1.698-.486.015.144.023.288.023.43z" fill="#fff"/></svg>Continue with Apple</button>
+<p class="md__f">Free forever · No spam · One tap signup</p></div>
+<div class="md__ok" id="modalSuccess"><div class="md__ok-i">🏀</div><div class="md__ok-t">You're In.</div><div class="md__ok-s">Welcome to the Founding Hoopers.</div><a href="allnet-app.html" class="bt bt-p bt-l" style="text-decoration:none">Open AllNet →</a></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+var SU='https://orrpowyewsioyxztwkdq.supabase.co',SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
+var sb;try{sb=window.supabase.createClient(SU,SK)}catch(e){}var supabase=sb;
+
+(async()=>{if(!supabase)return;try{var[c,p,g]=await Promise.all([supabase.from('courts').select('id',{count:'exact',head:true}),supabase.from('profiles').select('id',{count:'exact',head:true}),supabase.from('game_sessions').select('id',{count:'exact',head:true}).eq('status','completed')]);if(c.count)document.getElementById('sC').textContent=c.count;if(p.count)document.getElementById('sH').textContent=p.count;if(g.count)document.getElementById('sG').textContent=g.count}catch(e){}})();
+
+mapboxgl.accessToken='pk.eyJ1IjoibWFzaHJhZnkiLCJhIjoiY21rYnJqd3UwMDc0NTNrcHMzZTNydGR6eiJ9.LJBgJ1mpL1Q9Xv9aoBTwNw';
+var map=new mapboxgl.Map({container:'map',style:'mapbox://styles/mapbox/dark-v11',center:[-117.83,33.68],zoom:10,attributionControl:false,interactive:true,dragRotate:false,pitchWithRotate:false});
+map.on('load',async()=>{
+var courts=[];if(supabase){try{var{data}=await supabase.from('courts').select('id,name,lat,lng,current_checkins,status,address');if(data)courts=data}catch(e){}}
+if(!courts.length)return;
+var ft=courts.map(c=>{var cl=c.status==='packed'?'#FF5A1F':c.status==='active'?'#22C55E':'#3B82F6',r=c.status==='packed'?7:c.status==='active'?6:4;return{type:'Feature',geometry:{type:'Point',coordinates:[c.lng,c.lat]},properties:{id:c.id,name:c.name,color:cl,radius:r,status:c.status||'quiet',checkins:c.current_checkins||0,address:c.address||''}}});
+map.addSource('courts',{type:'geojson',data:{type:'FeatureCollection',features:ft}});
+map.addLayer({id:'glow',type:'circle',source:'courts',filter:['!=',['get','status'],'quiet'],paint:{'circle-radius':['*',['get','radius'],2.5],'circle-color':['get','color'],'circle-opacity':.12,'circle-blur':1}});
+map.addLayer({id:'dots',type:'circle',source:'courts',paint:{'circle-radius':['get','radius'],'circle-color':['get','color'],'circle-stroke-width':1.5,'circle-stroke-color':'rgba(255,255,255,0.7)'}});
+map.on('click','dots',e=>{var f=e.features[0],sl=f.properties.status==='packed'?'Packed':f.properties.status==='active'?'Active':'Quiet',sc=f.properties.status==='packed'?'#FF5A1F':f.properties.status==='active'?'#22C55E':'#666';new mapboxgl.Popup({offset:12,closeButton:false,maxWidth:'220px'}).setLngLat(e.lngLat).setHTML('<div class="cp-n">'+f.properties.name+'</div><div class="cp-s" style="color:'+sc+'">'+sl+(f.properties.checkins>0?' · '+f.properties.checkins+' in':'')+'</div>'+(f.properties.address?'<div class="cp-d">'+f.properties.address+'</div>':'')).addTo(map)});
+map.on('mouseenter','dots',()=>{map.getCanvas().style.cursor='pointer'});map.on('mouseleave','dots',()=>{map.getCanvas().style.cursor=''})});
+
+var obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('vis');obs.unobserve(x.target)}})},{threshold:.1});
+document.querySelectorAll('.fu').forEach(el=>obs.observe(el));
+
+function openModal(){document.getElementById('signupModal').classList.add('active');document.body.style.overflow='hidden'}
+function closeModal(){document.getElementById('signupModal').classList.remove('active');document.body.style.overflow=''}
+document.getElementById('signupModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+async function signInWithGoogle(){if(!supabase)return;try{var ref=new URLSearchParams(location.search).get('ref');if(ref){document.cookie='allnet_ref='+encodeURIComponent(ref)+';path=/;max-age=3600;SameSite=Lax';localStorage.setItem('allnet_ref',ref)}var u=location.origin+'/allnet-app.html';if(ref)u+='?ref='+encodeURIComponent(ref);await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:u}})}catch(e){}}
+async function signInWithApple(){if(!supabase)return;try{var ref=new URLSearchParams(location.search).get('ref');if(ref){document.cookie='allnet_ref='+encodeURIComponent(ref)+';path=/;max-age=3600;SameSite=Lax';localStorage.setItem('allnet_ref',ref)}var u=location.origin+'/allnet-app.html';if(ref)u+='?ref='+encodeURIComponent(ref);await supabase.auth.signInWithOAuth({provider:'apple',options:{redirectTo:u}})}catch(e){}}
+
+(async()=>{if(!supabase)return;var{data:{user}}=await supabase.auth.getUser();if(user&&location.pathname.includes('landing')){document.getElementById('modalForm').style.display='none';document.getElementById('modalSuccess').classList.add('visible');document.getElementById('signupModal').classList.add('active')}})();
+</script>
+</body>
+</html>

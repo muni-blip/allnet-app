@@ -1882,6 +1882,10 @@ function closeOnboarding() {
   nameBtn.disabled = false;
   nameBtn.textContent = 'Continue →';
 
+  // Fire Meta Pixel conversion event for new signups
+  if (typeof fbq === 'function') fbq('track', 'CompleteRegistration');
+  if (window.plausible) plausible('Signup');
+
   // Start Play page tour for new users (after a short delay for page to settle)
   // Clear any stale tour flags from previous accounts on this browser
   if (typeof Tour !== 'undefined') {

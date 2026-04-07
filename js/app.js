@@ -2397,12 +2397,14 @@ openSheet = async function(court) {
   if (reportSection) reportSection.style.opacity = '0.3';
 
   // Fetch live data in parallel
-  const isRealCourt = currentUser && court.id && typeof court.id === 'string' && court.id.length > 10;
+  const isRealCourt = court.id && typeof court.id === 'string' && court.id.length > 10;
   if (isRealCourt) {
     _sheetLoading = true;
     try {
+      // Court data (checkins) is public — fetch for all users
+      // Report status requires auth — skip for non-authenticated
       const [reportResult, checkinResult] = await Promise.all([
-        hasUserReported(court.id).catch(() => false),
+        currentUser ? hasUserReported(court.id).catch(() => false) : Promise.resolve(false),
         fetchCourtWithCheckins(court.id).catch(() => ({ court: null, checkins: null }))
       ]);
 

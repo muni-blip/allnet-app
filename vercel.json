@@ -3,6 +3,14 @@
     {
       "source": "/p/:slug",
       "destination": "/api/player?slug=:slug"
+    },
+    {
+      "source": "/courts/:slug",
+      "destination": "/api/court?slug=:slug"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
     }
   ]
 }

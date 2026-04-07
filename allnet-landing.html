@@ -10,6 +10,12 @@
 <meta property="og:image" content="https://allnetgames.com/img/icon-512.png">
 <link rel="icon" href="/img/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="/img/icon-192.png">
+<!-- Plausible Analytics (privacy-friendly, no cookies) -->
+<script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<!-- Meta Pixel — replace YOUR_PIXEL_ID after creating Meta Business account -->
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+// fbq('init','YOUR_PIXEL_ID');fbq('track','PageView');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
@@ -121,6 +127,21 @@ html{scroll-behavior:smooth}body{background:var(--bg);color:#fff;font-family:var
 .ct__s{font-size:14px;color:var(--ts);line-height:1.55;max-width:340px;margin:0 auto 24px;position:relative}
 .ct__f{font-family:var(--fm);font-size:10px;color:var(--tm);margin-top:12px;position:relative}
 
+/* Email capture */
+.ec{padding:40px 0;border-top:1px solid var(--bdr)}
+.ec__t{font-family:var(--fd);font-size:18px;font-weight:700;text-transform:uppercase;text-align:center;margin-bottom:6px}
+.ec__s{font-size:13px;color:var(--ts);text-align:center;margin-bottom:16px;line-height:1.5}
+.ec__form{display:flex;gap:8px;max-width:400px;margin:0 auto}
+.ec__input{flex:1;padding:14px 16px;border-radius:10px;border:1px solid var(--bdr2);background:var(--el);color:#fff;font-family:var(--fb);font-size:14px;outline:none;transition:border-color .2s}
+.ec__input:focus{border-color:var(--or)}
+.ec__input::placeholder{color:var(--tm)}
+.ec__btn{padding:14px 20px;border-radius:10px;border:none;background:var(--or);color:#fff;font-family:var(--fh);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.ec__btn:hover{filter:brightness(1.1)}
+.ec__btn:disabled{opacity:.5;cursor:default}
+.ec__ok{display:none;text-align:center;font-family:var(--fm);font-size:12px;color:var(--grn)}
+.ec__err{display:none;text-align:center;font-family:var(--fm);font-size:11px;color:#ef4444;margin-top:6px}
+.ec__note{font-family:var(--fm);font-size:10px;color:var(--tm);text-align:center;margin-top:10px}
+
 /* Footer */
 .ft{padding:24px 16px;border-top:1px solid var(--bdr);text-align:center}
 .ft__c{font-size:12px;color:var(--tm);margin-bottom:4px}
@@ -213,7 +234,23 @@ html{scroll-behavior:smooth}body{background:var(--bg);color:#fff;font-family:var
 </div>
 </section>
 
-<footer class="ft"><div class="ft__c">© 2026 AllNet. Built with 🏀 in OC.</div><div class="ft__x"><span class="on">OC</span> · <span class="on">LA</span> → San Diego · SF Bay · Dallas · NYC</div></footer>
+<section class="ec fu" id="emailCapture">
+<div class="sc">
+<div class="ec__t">Not ready to sign up?</div>
+<div class="ec__s">Drop your email — we'll let you know when hoopers are active near you.</div>
+<div class="ec__form" id="ecForm">
+  <input type="email" class="ec__input" id="ecEmail" placeholder="your@email.com" autocomplete="email">
+  <button class="ec__btn" id="ecBtn" onclick="submitWaitlist()">Notify Me</button>
+</div>
+<div class="ec__ok" id="ecOk">✓ You're on the list. We'll be in touch.</div>
+<div class="ec__err" id="ecErr"></div>
+<div class="ec__note">No spam. Just local basketball updates.</div>
+</div>
+</section>
+
+<footer class="ft"><div class="ft__c">© 2026 AllNet. Built with 🏀 in OC.</div><div class="ft__x"><span class="on">OC</span> · <span class="on">LA</span> → San Diego · SF Bay · Dallas · NYC</div>
+<div style="margin-top:12px;display:flex;gap:16px;justify-content:center"><a href="https://instagram.com/allnetgames" target="_blank" style="color:var(--tm);font-size:12px;text-decoration:none">Instagram</a><a href="https://tiktok.com/@allnetgames" target="_blank" style="color:var(--tm);font-size:12px;text-decoration:none">TikTok</a></div>
+</footer>
 
 <div class="mo" id="signupModal"><div class="md"><div class="md__h"></div>
 <div id="modalForm"><div class="md__b">Founding Hooper Access</div><div class="md__t">Claim Your Spot</div><div class="md__su">Your verified history starts today. Founding badge is permanent.</div>
@@ -243,13 +280,96 @@ map.on('mouseenter','dots',()=>{map.getCanvas().style.cursor='pointer'});map.on(
 var obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('vis');obs.unobserve(x.target)}})},{threshold:.1});
 document.querySelectorAll('.fu,.rv').forEach(el=>obs.observe(el));
 
-function openModal(){document.getElementById('signupModal').classList.add('active');document.body.style.overflow='hidden'}
+// ── UTM capture: stash params in cookie so they survive OAuth redirect ──
+(function(){
+  var p=new URLSearchParams(location.search);
+  var src=p.get('utm_source')||'';var med=p.get('utm_medium')||'';var camp=p.get('utm_campaign')||'';
+  if(src||med||camp){
+    var utm=JSON.stringify({s:src,m:med,c:camp});
+    document.cookie='allnet_utm='+encodeURIComponent(utm)+';path=/;max-age=86400;SameSite=Lax';
+  }
+})();
+
+function openModal(){
+  document.getElementById('signupModal').classList.add('active');document.body.style.overflow='hidden';
+  // Plausible custom event
+  if(window.plausible)plausible('SignupModalOpen');
+}
 function closeModal(){document.getElementById('signupModal').classList.remove('active');document.body.style.overflow=''}
 document.getElementById('signupModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
-async function signInWithGoogle(){if(!supabase)return;try{var ref=new URLSearchParams(location.search).get('ref');if(ref){document.cookie='allnet_ref='+encodeURIComponent(ref)+';path=/;max-age=3600;SameSite=Lax';localStorage.setItem('allnet_ref',ref)}var u=location.origin+'/allnet-app.html';if(ref)u+='?ref='+encodeURIComponent(ref);await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:u}})}catch(e){}}
-async function signInWithApple(){if(!supabase)return;try{var ref=new URLSearchParams(location.search).get('ref');if(ref){document.cookie='allnet_ref='+encodeURIComponent(ref)+';path=/;max-age=3600;SameSite=Lax';localStorage.setItem('allnet_ref',ref)}var u=location.origin+'/allnet-app.html';if(ref)u+='?ref='+encodeURIComponent(ref);await supabase.auth.signInWithOAuth({provider:'apple',options:{redirectTo:u}})}catch(e){}}
+// ── Helper: build redirect URL with ref + signup_source ──
+function buildRedirectUrl(){
+  var p=new URLSearchParams(location.search);
+  var ref=p.get('ref');
+  var src=p.get('utm_source')||'organic';
+  var u=location.origin+'/allnet-app.html?signup_source='+encodeURIComponent(src);
+  if(ref){
+    u+='&ref='+encodeURIComponent(ref);
+    document.cookie='allnet_ref='+encodeURIComponent(ref)+';path=/;max-age=3600;SameSite=Lax';
+    localStorage.setItem('allnet_ref',ref);
+  }
+  // Also stash signup_source in cookie (survives redirect)
+  document.cookie='allnet_signup_source='+encodeURIComponent(src)+';path=/;max-age=3600;SameSite=Lax';
+  return u;
+}
+
+async function signInWithGoogle(){
+  if(!supabase)return;
+  try{
+    var u=buildRedirectUrl();
+    await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:u}});
+    if(window.plausible)plausible('SignupStart',{props:{method:'google'}});
+  }catch(e){}
+}
+async function signInWithApple(){
+  if(!supabase)return;
+  try{
+    var u=buildRedirectUrl();
+    await supabase.auth.signInWithOAuth({provider:'apple',options:{redirectTo:u}});
+    if(window.plausible)plausible('SignupStart',{props:{method:'apple'}});
+  }catch(e){}
+}
+
+// ── Email waitlist submission ──
+async function submitWaitlist(){
+  var emailEl=document.getElementById('ecEmail');
+  var btn=document.getElementById('ecBtn');
+  var okEl=document.getElementById('ecOk');
+  var errEl=document.getElementById('ecErr');
+  var email=emailEl.value.trim().toLowerCase();
+  errEl.style.display='none';
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    errEl.textContent='Please enter a valid email.';errEl.style.display='block';return;
+  }
+  btn.disabled=true;btn.textContent='Saving...';
+  try{
+    var p=new URLSearchParams(location.search);
+    var{error}=await supabase.from('waitlist').insert({
+      email:email,
+      source:'landing',
+      utm_source:p.get('utm_source')||null,
+      utm_medium:p.get('utm_medium')||null,
+      utm_campaign:p.get('utm_campaign')||null
+    });
+    if(error){
+      if(error.code==='23505'){
+        // Duplicate email — treat as success
+        okEl.textContent='✓ You\'re already on the list!';
+      }
+      // Show success regardless of duplicate
+    }
+    document.getElementById('ecForm').style.display='none';
+    okEl.style.display='block';
+    if(window.plausible)plausible('WaitlistSignup');
+  }catch(e){
+    errEl.textContent='Something went wrong. Try again.';errEl.style.display='block';
+    btn.disabled=false;btn.textContent='Notify Me';
+  }
+}
+// Enter key submits email
+document.getElementById('ecEmail').addEventListener('keydown',function(e){if(e.key==='Enter')submitWaitlist()});
 
 (async()=>{if(!supabase)return;var{data:{user}}=await supabase.auth.getUser();if(user&&location.pathname.includes('landing')){document.getElementById('modalForm').style.display='none';document.getElementById('modalSuccess').classList.add('visible');document.getElementById('signupModal').classList.add('active')}})();
 </script>

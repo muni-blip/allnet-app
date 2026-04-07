@@ -2677,6 +2677,24 @@ async function loadUserProfile(user) {
       localStorage.removeItem('allnet_ref');
     }
 
+    // ── Capture signup source (from cookie or URL param) ──
+    try {
+      if (currentProfile && !currentProfile.signup_source) {
+        function getCookieVal2(name) {
+          var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+          return match ? decodeURIComponent(match[1]) : '';
+        }
+        var signupSrc = getCookieVal2('allnet_signup_source')
+          || new URLSearchParams(window.location.search).get('signup_source')
+          || 'organic';
+        await supabase.from('profiles').update({ signup_source: signupSrc }).eq('id', currentUser.id);
+        console.log('AllNet: Signup source recorded:', signupSrc);
+        document.cookie = 'allnet_signup_source=;path=/;max-age=0';
+      }
+    } catch (srcErr) {
+      console.error('AllNet: Signup source capture failed:', srcErr);
+    }
+
     console.log('AllNet: Profile loaded — ' + currentProfile?.name);
   } catch (err) {
     console.error('AllNet: Failed to load profile', err);

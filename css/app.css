@@ -2601,6 +2601,33 @@ html, body {
 }
 
 /* ── Upload Processing Overlay ── */
+/* ═══ Referral Prompt Modal ═══ */
+.referral-prompt {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center; padding: 24px;
+}
+.referral-prompt.active { display: flex; }
+.referral-prompt__card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 32px 24px; max-width: 360px; width: 100%; text-align: center;
+  animation: referralSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes referralSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.referral-prompt__icon { font-size: 40px; margin-bottom: 12px; }
+.referral-prompt__title {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.referral-prompt__desc {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.55; margin-bottom: 16px;
+}
+.referral-prompt__reward {
+  font-family: var(--font-mono); font-size: 13px; color: var(--orange);
+  padding: 8px 16px; background: rgba(247,69,1,0.08); border: 1px solid rgba(247,69,1,0.15);
+  border-radius: 100px; display: inline-block; margin-bottom: 20px;
+}
+
 .upload-overlay {
   position: fixed;
   inset: 0;

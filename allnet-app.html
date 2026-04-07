@@ -460,6 +460,18 @@
     </div>
   </div>
 
+  <!-- ═══ Post-Signup Referral Prompt ═══ -->
+  <div class="referral-prompt" id="referralPrompt" onclick="if(event.target===this)closeReferralPrompt()">
+    <div class="referral-prompt__card">
+      <div class="referral-prompt__icon">⭐</div>
+      <div class="referral-prompt__title">Invite Friends, Earn Stars</div>
+      <div class="referral-prompt__desc">Share AllNet with 3 friends and earn <strong>1,500 Stars</strong> to unlock covers and sprays for your career card.</div>
+      <div class="referral-prompt__reward">+500 Stars per friend who joins</div>
+      <button class="btn btn--primary" id="referralPromptShareBtn" onclick="referralPromptShare()" style="width:100%;margin-bottom:10px;">Share AllNet</button>
+      <button class="btn btn--secondary" onclick="closeReferralPrompt()" style="width:100%;opacity:0.6;">Maybe later</button>
+    </div>
+  </div>
+
   <!-- ═══ Upload Processing Overlay ═══ -->
   <div class="upload-overlay" id="uploadOverlay">
     <div class="upload-overlay__spinner"></div>

@@ -1899,6 +1899,44 @@ function closeOnboarding() {
       ]);
     }, 1000);
   }
+
+  // Show referral prompt after tour completes (delayed for new users only)
+  setTimeout(function() {
+    showReferralPromptIfNew();
+  }, 30000); // 30s after onboarding — tour will be done by then
+}
+
+/* ══════════════════════════════
+   REFERRAL PROMPT (post-signup)
+   ══════════════════════════════ */
+function showReferralPromptIfNew() {
+  try {
+    if (localStorage.getItem('allnet_referral_prompt_shown')) return;
+    if (!currentProfile || !currentProfile.short_code) return;
+    var el = document.getElementById('referralPrompt');
+    if (!el) return;
+    el.classList.add('active');
+    localStorage.setItem('allnet_referral_prompt_shown', '1');
+  } catch(e) {}
+}
+
+function closeReferralPrompt() {
+  var el = document.getElementById('referralPrompt');
+  if (el) el.classList.remove('active');
+}
+
+function referralPromptShare() {
+  var slug = currentProfile.username || currentProfile.short_code || '';
+  var shareUrl = 'https://allnetgames.com/p/' + slug + '?ref=' + (currentProfile.short_code || '');
+  var shareText = 'I just claimed my basketball career card on AllNet. Join me and get your Founding Hooper badge → ';
+  if (navigator.share) {
+    navigator.share({ title: 'AllNet — Pickup Basketball', text: shareText, url: shareUrl }).catch(function(){});
+  } else {
+    navigator.clipboard.writeText(shareText + shareUrl).then(function() {
+      showToast('✓ Link copied! Share it with your friends.');
+    }).catch(function(){});
+  }
+  closeReferralPrompt();
 }
 
 /* ══════════════════════════════

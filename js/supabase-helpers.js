@@ -114,14 +114,27 @@ async function createGameSession(courtId, format, teamSize, codeA, codeB) {
 
 async function joinGameByCode(code) {
   const { data: gameA } = await supabase.from('game_sessions')
-    .select('*').eq('code_a', code).in('status', ['lobby', 'active']).single();
+    .select('*').eq('code_a', code).in('status', ['lobby', 'active']).maybeSingle();
   const { data: gameB } = await supabase.from('game_sessions')
-    .select('*').eq('code_b', code).in('status', ['lobby', 'active']).single();
+    .select('*').eq('code_b', code).in('status', ['lobby', 'active']).maybeSingle();
   const game = gameA || gameB;
   if (!game) throw new Error('Game not found');
   const team = gameA ? 'a' : 'b';
   const user = await getUser();
-  await supabase.from('game_players').insert({ game_id: game.id, user_id: user.id, team });
+  if (!user) throw new Error('Not logged in');
+
+  // Check if already in this game
+  const { data: existing } = await supabase.from('game_players')
+    .select('id').eq('game_id', game.id).eq('user_id', user.id).maybeSingle();
+  if (existing) throw new Error('You are already in this game');
+
+  // Check team capacity
+  const { data: teamPlayers } = await supabase.from('game_players')
+    .select('id').eq('game_id', game.id).eq('team', team).eq('status', 'active');
+  if (teamPlayers && teamPlayers.length >= game.team_size) throw new Error('This team is full');
+
+  const { error } = await supabase.from('game_players').insert({ game_id: game.id, user_id: user.id, team });
+  if (error) throw error;
   return { game, team };
 }
 

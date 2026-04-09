@@ -798,13 +798,12 @@ function scanQRFrame(video, canvas, ctx, status) {
     if (typeof jsQR !== 'undefined') {
       const qr = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
       if (qr && qr.data) {
-        // Extract 4-digit code from QR data
-        const match = qr.data.match(/\d{4}/);
-        if (match) {
-          status.textContent = 'Code found: ' + match[0];
+        // Extract exactly 4-digit code from QR data
+        var trimmed = qr.data.trim();
+        if (/^\d{4}$/.test(trimmed)) {
+          status.textContent = 'Code found: ' + trimmed;
           closeQRScanner();
-          // Fill in the code and auto-join
-          document.getElementById('joinInput').value = match[0];
+          document.getElementById('joinInput').value = trimmed;
           document.getElementById('joinBtn').disabled = false;
           setTimeout(() => joinGame(), 300);
           return;

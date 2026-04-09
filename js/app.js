@@ -1121,6 +1121,7 @@ async function checkIn(courtId) {
   openSheet(court);
   showToast(court.name, true);
   phTrack('check_in', { court_id: court.id, court_name: court.name, court_status: court.status, players_count: court.players });
+}
 
 function showToast(message, isCheckin) {
   const textEl = document.getElementById('toastText');

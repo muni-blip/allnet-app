@@ -1120,7 +1120,7 @@ async function checkIn(courtId) {
   renderMarkers();
   openSheet(court);
   showToast(court.name, true);
-}
+  phTrack('check_in', { court_id: court.id, court_name: court.name, court_status: court.status, players_count: court.players });
 
 function showToast(message, isCheckin) {
   const textEl = document.getElementById('toastText');
@@ -1201,6 +1201,7 @@ function closeSignUpModal() {
 async function oauthSignIn(provider) {
   if (!supabase) return;
   try {
+    phTrack('sign_in_start', { provider: provider, context: signupContext || 'direct' });
     // Stash referral code before OAuth redirect (URL params are lost during redirect)
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
@@ -1359,6 +1360,7 @@ async function toggleWatch(courtId) {
       renderMarkers();
       if (court) { court._watching = false; openSheet(court); }
       showToast('You will no longer be notified when players check into ' + (court?.name || 'this court'));
+      phTrack('court_unwatch', { court_id: courtId, court_name: court?.name || '' });
     }
   } else {
     const { error } = await supabase.from('court_watches').insert({
@@ -1370,6 +1372,7 @@ async function toggleWatch(courtId) {
       renderMarkers();
       if (court) { court._watching = true; openSheet(court); }
       showToast('You will now be notified when more players check into ' + (court?.name || 'this court'));
+      phTrack('court_watch', { court_id: courtId, court_name: court?.name || '' });
 
       // Request push notification permission on first watch
       if (typeof PushManager_ !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
@@ -1472,6 +1475,7 @@ function performCheckout() {
       });
     }
     renderMarkers();
+    phTrack('check_out', { court_id: courtId, court_name: court?.name || '' });
     activeCheckin = null;
   }
 }
@@ -1885,6 +1889,7 @@ function closeOnboarding() {
   // Fire Meta Pixel conversion event for new signups
   if (typeof fbq === 'function') fbq('track', 'CompleteRegistration');
   if (window.plausible) plausible('Signup');
+  phTrack('onboarding_complete');
 
   // Start Play page tour for new users (after a short delay for page to settle)
   // Clear any stale tour flags from previous accounts on this browser
@@ -2183,6 +2188,7 @@ async function startGame(courtName) {
     document.getElementById('photoPromptModal').classList.add('active');
   } else {
     // All clear — navigate to game creation
+    phTrack('game_start_tap', { court_name: courtName });
     window.location.href = 'allnet-phase2.html?court=' + encodeURIComponent(courtName);
   }
 }
@@ -2607,6 +2613,7 @@ async function loadUserProfile(user) {
     currentProfile = await getUserProfile(user.id);
     console.log('AllNet: getUserProfile returned:', currentProfile ? currentProfile.name : 'null');
     if (currentProfile) {
+      if (typeof posthogIdentify === 'function') posthogIdentify(currentProfile);
       const btn = document.getElementById('profileBtn');
       btn.className = 'nav-bar__avatar';
       btn.innerHTML = buildCompositeAvatar();
@@ -2699,6 +2706,7 @@ async function loadUserProfile(user) {
           console.error('AllNet: Referral RPC error:', refErr);
         } else if (refResult && refResult.success) {
           console.log('AllNet: Referral success! Awarded', refResult.stars_awarded, 'stars');
+          phTrack('referral_completed', { stars_awarded: refResult.stars_awarded });
           currentProfile.stars_balance = (currentProfile.stars_balance || 0) + refResult.stars_awarded;
           const starsCount = document.getElementById('topBarStarsCount');
           if (starsCount) starsCount.textContent = currentProfile.stars_balance.toLocaleString();

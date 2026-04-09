@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Stars</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -720,6 +721,7 @@ async function purchaseCover(itemId, itemName, price) {
     updateBalanceDisplay();
     renderCoversGrid();
     showAlert('Cover Unlocked!', `${data.item} is now yours. Equip it from the Covers tab.`, { icon: '🎉' });
+    phTrack('store_purchase', { item_type: 'cover', item_name: data.item, item_slug: data.slug, price_stars: price, new_balance: data.new_balance });
 
     // Auto-equip
     await equipCover(data.slug);
@@ -835,6 +837,7 @@ async function purchaseSpray(itemId, itemName, price) {
     renderSpraysGrid();
     renderCoversGrid(); // refresh covers too in case balance changed
     showAlert('Spray Unlocked!', `${data.item} is now yours. Use it on any match post!`, { icon: '🎉' });
+    phTrack('store_purchase', { item_type: 'spray', item_name: data.item, price_stars: price, new_balance: data.new_balance });
 
   } catch (err) {
     console.error('Spray purchase error:', err);
@@ -860,6 +863,7 @@ async function initStarsPage() {
     window.location.href = 'allnet-app.html';
     return;
   }
+  if (typeof posthogIdentify === 'function') posthogIdentify(currentProfile);
 
   starsBalance = currentProfile.stars_balance || 0;
   updateBalanceDisplay();

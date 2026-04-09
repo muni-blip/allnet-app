@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Settings</title>
 <link rel="stylesheet" href="css/app.css">
@@ -272,6 +273,7 @@ async function initSettings() {
   }
   currentUser = user;
   currentProfile = await getUserProfile(user.id);
+  if (typeof posthogIdentify === 'function') posthogIdentify(currentProfile);
   initNavBar();
 
   if (currentProfile) {
@@ -301,6 +303,7 @@ async function handleCourtAlertsToggle(enabled) {
   const success = await updatePushPreference('push_court_alerts', enabled);
   if (success) {
     status.textContent = enabled ? 'Court alerts enabled' : 'Court alerts disabled';
+    phTrack('notification_toggle', { type: 'court_alerts', enabled: enabled });
   } else {
     status.textContent = 'Failed to save — try again';
     document.getElementById('toggleCourtAlerts').checked = !enabled;
@@ -315,6 +318,7 @@ async function handleSprayAlertsToggle(enabled) {
   const success = await updatePushPreference('push_spray_alerts', enabled);
   if (success) {
     status.textContent = enabled ? 'Spray notifications enabled' : 'Spray notifications disabled';
+    phTrack('notification_toggle', { type: 'spray_alerts', enabled: enabled });
   } else {
     status.textContent = 'Failed to save — try again';
     document.getElementById('toggleSprayAlerts').checked = !enabled;
@@ -329,6 +333,7 @@ async function handleGameAlertsToggle(enabled) {
   const success = await updatePushPreference('push_game_alerts', enabled);
   if (success) {
     status.textContent = enabled ? 'Game notifications enabled' : 'Game notifications disabled';
+    phTrack('notification_toggle', { type: 'game_alerts', enabled: enabled });
   } else {
     status.textContent = 'Failed to save — try again';
     document.getElementById('toggleGameAlerts').checked = !enabled;
@@ -366,6 +371,7 @@ async function executeDeleteAccount() {
     if (error) throw error;
     if (data && !data.success) throw new Error(data.error || 'Deletion failed');
 
+    phTrack('account_deleted');
     // Sign out client-side and redirect
     try { await supabase.auth.signOut(); } catch(e) {}
     window.location.href = '/allnet-landing.html?toast=account_deleted';

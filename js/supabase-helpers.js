@@ -53,6 +53,7 @@ async function signIn(email, password) {
 }
 
 async function signOut() {
+  if (typeof posthogReset === 'function') posthogReset();
   await supabase.auth.signOut();
 }
 

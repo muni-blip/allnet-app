@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Your Career Card</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet">
@@ -1188,6 +1189,7 @@ async function saveUsername() {
       current.innerHTML = '✅ <a href="https://allnetgames.com/p/' + data.username + '" target="_blank">allnetgames.com/p/' + data.username + '</a>';
       updateShareUrl();
       btn.textContent = 'SAVED ✓';
+      phTrack('username_claimed', { username: data.username });
       setTimeout(function() { btn.textContent = 'SAVE'; }, 2000);
     } else {
       document.getElementById('usernameError').textContent = (data && data.error) || 'Could not save username';
@@ -1217,6 +1219,7 @@ async function shareCardLink() {
   var url = getShareUrl();
   var name = currentProfile.first_name || currentProfile.name || 'A player';
   var text = name + ' is on AllNet — the pickup basketball reputation network. Join with my link and earn 500 Stars!';
+  phTrack('career_card_shared', { method: navigator.share ? 'native_share' : 'clipboard' });
 
   if (navigator.share) {
     try {
@@ -1268,6 +1271,7 @@ function selectExportFormat(el, fmt) {
 }
 
 async function executeExport() {
+  phTrack('career_card_exported', { format: _exportFormat });
   var goBtn = document.getElementById('exportGoBtn');
   var progress = document.getElementById('exportProgress');
   var progressText = document.getElementById('exportProgressText');
@@ -1468,6 +1472,7 @@ async function initCareerPage() {
   if (!sess.data.session) { window.location.href = 'allnet-app.html'; return; }
   currentUser = sess.data.session.user; currentProfile = await getUserProfile(currentUser.id);
   if (!currentProfile) { window.location.href = 'allnet-app.html'; return; }
+  if (typeof posthogIdentify === 'function') posthogIdentify(currentProfile);
   updateNavDrawerUser(); initNavBar(); await loadDivisionStats(); renderCard(); loadMatchHistory();
   initUsernameSection(); updateShareUrl();
 

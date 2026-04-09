@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Activity</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1169,6 +1170,7 @@ async function confirmSpray() {
 
     // Close picker, refresh detail and feed
     closeSprayPicker();
+    phTrack('spray_used', { match_id: activeMatchId, spray_item_id: selectedSprayId, is_update: isUpdate });
     openPostDetail(activeMatchId);
     refreshFeedSprayCounts();
 
@@ -1309,6 +1311,7 @@ async function initActivityPage() {
   if (session) {
     currentUser = session.user;
     currentProfile = await getUserProfile(currentUser.id);
+    if (typeof posthogIdentify === 'function') posthogIdentify(currentProfile);
     updateNavDrawerUser();
   }
   initNavBar();

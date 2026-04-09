@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" href="/img/icon-192.png">
 <!-- Plausible Analytics (privacy-friendly, no cookies) -->
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
 <!-- Meta Pixel -->
 <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','1772975143883614');fbq('track','PageView');
@@ -295,6 +296,7 @@ function openModal(){
   document.getElementById('signupModal').classList.add('active');document.body.style.overflow='hidden';
   // Plausible custom event
   if(window.plausible)plausible('SignupModalOpen');
+  phTrack('signup_modal_open');
 }
 function closeModal(){document.getElementById('signupModal').classList.remove('active');document.body.style.overflow=''}
 document.getElementById('signupModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
@@ -323,6 +325,7 @@ async function signInWithGoogle(){
     if(typeof fbq==='function')fbq('track','Lead',{content_name:'google_signup'});
     await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:u}});
     if(window.plausible)plausible('SignupStart',{props:{method:'google'}});
+    phTrack('sign_in_start', { provider: 'google', source: 'landing' });
   }catch(e){}
 }
 async function signInWithApple(){
@@ -332,6 +335,7 @@ async function signInWithApple(){
     if(typeof fbq==='function')fbq('track','Lead',{content_name:'apple_signup'});
     await supabase.auth.signInWithOAuth({provider:'apple',options:{redirectTo:u}});
     if(window.plausible)plausible('SignupStart',{props:{method:'apple'}});
+    phTrack('sign_in_start', { provider: 'apple', source: 'landing' });
   }catch(e){}
 }
 
@@ -366,6 +370,7 @@ async function submitWaitlist(){
     document.getElementById('ecForm').style.display='none';
     okEl.style.display='block';
     if(window.plausible)plausible('WaitlistSignup');
+    phTrack('waitlist_signup', { email: email });
   }catch(e){
     errEl.textContent='Something went wrong. Try again.';errEl.style.display='block';
     btn.disabled=false;btn.textContent='Notify Me';

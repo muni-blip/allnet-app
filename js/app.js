@@ -2654,6 +2654,18 @@ async function loadUserProfile(user) {
         starsEl.style.display = 'flex';
       }
 
+      // QR referral button — inject before Stars (shared component from supabase-helpers)
+      window._navProfile = currentProfile;
+      if (starsEl && !document.getElementById('navQr')) {
+        const qrBtn = document.createElement('button');
+        qrBtn.className = 'nav-bar__qr';
+        qrBtn.id = 'navQr';
+        qrBtn.setAttribute('aria-label', 'Share QR Code');
+        qrBtn.onclick = function() { openQrOverlay(); };
+        qrBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17" y1="21" x2="17" y2="21.01"/><line x1="21" y1="17" x2="21" y2="17.01"/></svg>';
+        starsEl.parentNode.insertBefore(qrBtn, starsEl);
+      }
+
       // Reveal nav bar right section (was hidden to prevent flash)
       const navRight = document.getElementById('navBarRight');
       if (navRight) navRight.style.opacity = '1';

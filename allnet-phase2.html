@@ -81,7 +81,7 @@ html, body { height:100%; height:100dvh; font-family:var(--font-body); backgroun
 .single-code__hint { font-size:12px; color:var(--text-muted); }
 .qr-wrapper { display:flex; justify-content:center; margin-bottom:16px; }
 .qr-box { width:160px; height:160px; background:white; border-radius:var(--radius-sm); position:relative; overflow:hidden; }
-.qr-box__grid { position:absolute; inset:8px; display:grid; grid-template-columns:repeat(21,1fr); grid-template-rows:repeat(21,1fr); gap:0; }
+.qr-box__grid { position:absolute; inset:4px; display:flex; align-items:center; justify-content:center; }
 .qr-box__cell { background:white; }
 .qr-box__cell--dark { background:#000; }
 .qr-box__logo { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--orange); color:white; font-family:var(--font-display); font-size:9px; font-weight:700; padding:4px 8px; border-radius:4px; letter-spacing:0.05em; z-index:2; white-space:nowrap; }
@@ -534,6 +534,7 @@ html, body { height:100%; height:100dvh; font-family:var(--font-body); backgroun
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
 <script src="js/career-card.js"></script>
@@ -559,32 +560,21 @@ const ALL_PLAYERS=[
   {name:'Dante H',initials:'DH'},{name:'Luis G',initials:'LG'},{name:'Jay K',initials:'JK'},
 ];
 
-function generateQR(containerId,code){
-  const el=document.getElementById(containerId);if(!el)return;
-  const size=21;const cells=[];
-  let seed=0;for(let i=0;i<code.length;i++) seed=((seed<<5)-seed)+code.charCodeAt(i);
-  const rand=()=>{seed=(seed*16807+0)%2147483647;return(seed&0x7fffffff)/2147483647;};
-  const isFinderPattern=(r,c)=>{
-    const corners=[[0,0],[0,size-7],[size-7,0]];
-    for(const[cr,cc] of corners){
-      if(r>=cr&&r<cr+7&&c>=cc&&c<cc+7){
-        if(r===cr||r===cr+6||c===cc||c===cc+6) return true;
-        if(r>=cr+2&&r<=cr+4&&c>=cc+2&&c<=cc+4) return true;
-        return false;
-      }
-    }
-    return null;
-  };
-  for(let r=0;r<size;r++){
-    for(let c=0;c<size;c++){
-      const fp=isFinderPattern(r,c);
-      if(fp!==null) cells.push(fp);
-      else if(r===6||c===6) cells.push((r+c)%2===0);
-      else if(r>8&&r<13&&c>8&&c<13) cells.push(false);
-      else cells.push(rand()>0.5);
-    }
+function generateQR(containerId, code){
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  try {
+    var qr = qrcode(0, 'H'); // type 0 = auto, H = high error correction (30% recovery)
+    qr.addData(code);
+    qr.make();
+    // Render as image filling the container
+    var size = el.parentElement ? el.parentElement.offsetWidth - 16 : 140;
+    var cellSize = Math.max(3, Math.floor(size / qr.getModuleCount()));
+    el.innerHTML = '<img src="' + qr.createDataURL(cellSize, 0) + '" style="width:100%;height:100%;image-rendering:pixelated;border-radius:4px;" alt="QR Code">';
+  } catch(e) {
+    console.error('QR generation error:', e);
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;font-size:12px;">QR unavailable</div>';
   }
-  el.innerHTML=cells.map(dark=>'<div class="qr-box__cell'+(dark?' qr-box__cell--dark':'')+'"></div>').join('');
 }
 
 let G={format:null,codeA:null,codeB:null,teamA:[],teamB:[],teamSize:0,timerInterval:null,timerSeconds:0,joinTimeouts:[],winner:null,reviews:[],currentReviewIdx:0,currentReview:{skill:null,social:null,arrivedLate:null,wouldPlayAgain:null},divisionStats:{'1v1':{wins:0,losses:0,draws:0,skillRating:null,gamesCount:0},'2v2':{wins:0,losses:0,draws:0,skillRating:null,gamesCount:0},'3v3':{wins:0,losses:0,draws:0,skillRating:null,gamesCount:0},'4v4':{wins:0,losses:0,draws:0,skillRating:null,gamesCount:0},'5v5':{wins:0,losses:0,draws:0,skillRating:null,gamesCount:0}},socialRating:null,socialGamesCount:0,activeCardDivision:'1v1'};
@@ -608,13 +598,13 @@ function createGame(){
   // Render code section based on format
   const codesEl=document.getElementById('codesContainer');
   if(G.format==='1v1'){
-    codesEl.innerHTML='<div class="single-code"><div class="single-code__card"><div class="single-code__label">Scan QR or Enter Code</div><div class="qr-wrapper"><div class="qr-box"><div class="qr-box__grid" id="qr1v1"></div><div class="qr-box__logo">ALLNET</div></div></div><div class="single-code__or">— or enter code —</div><div class="single-code__code">'+G.codeA+'</div><div class="single-code__hint">Show this to your opponent</div></div></div>';
+    codesEl.innerHTML='<div class="single-code"><div class="single-code__card"><div class="single-code__label">Scan QR or Enter Code</div><div class="qr-wrapper"><div class="qr-box"><div class="qr-box__grid" id="qr1v1"></div></div></div><div class="single-code__or">— or enter code —</div><div class="single-code__code">'+G.codeA+'</div><div class="single-code__hint">Show this to your opponent</div></div></div>';
     generateQR('qr1v1',G.codeA);
     document.getElementById('lobbySub').textContent='Your opponent scans the QR or enters the code.';
     document.getElementById('teamALabel').textContent='You';
     document.getElementById('teamBLabel').textContent='Opponent';
   } else {
-    codesEl.innerHTML='<div class="team-codes"><div class="team-code-card team-code-card--a"><div class="team-code-card__label">Your Team (A)</div><div class="qr-wrapper"><div class="qr-box" style="width:100px;height:100px;"><div class="qr-box__grid" id="qrA"></div><div class="qr-box__logo" style="font-size:7px;padding:3px 6px;">TEAM A</div></div></div><div class="team-code-card__code">'+G.codeA+'</div><div class="team-code-card__hint">Share with teammates</div></div><div class="team-code-card team-code-card--b"><div class="team-code-card__label">Opponents (B)</div><div class="qr-wrapper"><div class="qr-box" style="width:100px;height:100px;"><div class="qr-box__grid" id="qrB"></div><div class="qr-box__logo" style="font-size:7px;padding:3px 6px;">TEAM B</div></div></div><div class="team-code-card__code">'+G.codeB+'</div><div class="team-code-card__hint">Share with opponents</div></div></div>';
+    codesEl.innerHTML='<div class="team-codes"><div class="team-code-card team-code-card--a"><div class="team-code-card__label">Your Team (A)</div><div class="qr-wrapper"><div class="qr-box" style="width:100px;height:100px;"><div class="qr-box__grid" id="qrA"></div></div></div><div class="team-code-card__code">'+G.codeA+'</div><div class="team-code-card__hint">Share with teammates</div></div><div class="team-code-card team-code-card--b"><div class="team-code-card__label">Opponents (B)</div><div class="qr-wrapper"><div class="qr-box" style="width:100px;height:100px;"><div class="qr-box__grid" id="qrB"></div></div></div><div class="team-code-card__code">'+G.codeB+'</div><div class="team-code-card__hint">Share with opponents</div></div></div>';
     generateQR('qrA',G.codeA);generateQR('qrB',G.codeB);
     document.getElementById('lobbySub').textContent='Two QR codes — one per team. Players scan to join.';
     document.getElementById('teamALabel').textContent='Team A';

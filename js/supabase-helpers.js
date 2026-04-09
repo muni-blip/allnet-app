@@ -354,6 +354,20 @@ async function initNavBar() {
       return;
     }
 
+    // Store profile globally for QR overlay access
+    window._navProfile = profile;
+
+    // QR referral button — inject before Stars
+    if (starsEl && !document.getElementById('navQr')) {
+      var qrBtn = document.createElement('button');
+      qrBtn.className = 'nav-bar__qr';
+      qrBtn.id = 'navQr';
+      qrBtn.setAttribute('aria-label', 'Share QR Code');
+      qrBtn.onclick = function() { openQrOverlay(); };
+      qrBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17" y1="21" x2="17" y2="21.01"/><line x1="21" y1="17" x2="21" y2="17.01"/></svg>';
+      starsEl.parentNode.insertBefore(qrBtn, starsEl);
+    }
+
     // Stars
     if (starsEl && starsCount) {
       starsCount.textContent = (profile.stars_balance || 0).toLocaleString();
@@ -583,6 +597,159 @@ function closeSharedProfile() {
 async function sharedLogOut() {
   await supabase.auth.signOut();
   window.location.href = 'allnet-app.html';
+}
+
+/* ══════════════════════════════
+   QR REFERRAL OVERLAY (shared component)
+   Dynamically loads qrcode.js and renders
+   a full-screen QR overlay on any page.
+   ══════════════════════════════ */
+var _qrLibLoaded = false;
+var _qrLibLoading = false;
+
+function _loadQrLib(cb) {
+  if (_qrLibLoaded) return cb();
+  if (_qrLibLoading) {
+    var check = setInterval(function() { if (_qrLibLoaded) { clearInterval(check); cb(); } }, 50);
+    return;
+  }
+  _qrLibLoading = true;
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  s.onload = function() { _qrLibLoaded = true; _qrLibLoading = false; cb(); };
+  s.onerror = function() { _qrLibLoading = false; console.error('Failed to load qrcode.js'); };
+  document.head.appendChild(s);
+}
+
+function _getQrShareUrl(profile) {
+  var slug = (profile && profile.username) || (profile && profile.short_code) || '';
+  var ref = (profile && profile.short_code) || '';
+  return 'https://allnetgames.com/p/' + slug + (ref ? '?ref=' + ref : '');
+}
+
+function _injectQrOverlay() {
+  if (document.getElementById('qrOverlay')) return;
+  var el = document.createElement('div');
+  el.className = 'qr-overlay';
+  el.id = 'qrOverlay';
+  el.onclick = function(e) { if (e.target === el) closeQrOverlay(); };
+  el.innerHTML =
+    '<button class="qr-overlay__close" onclick="closeQrOverlay()" aria-label="Close">&times;</button>' +
+    '<div class="qr-overlay__card">' +
+      '<div class="qr-overlay__badge" id="qrBadge"></div>' +
+      '<div class="qr-overlay__label">Scan to join AllNet</div>' +
+      '<div class="qr-overlay__qr-wrap" id="qrCodeWrap"></div>' +
+      '<div class="qr-overlay__code" id="qrShortCode"></div>' +
+      '<div class="qr-overlay__name" id="qrName"></div>' +
+      '<div class="qr-overlay__url" id="qrUrl"></div>' +
+      '<div class="qr-overlay__actions">' +
+        '<button class="qr-overlay__btn qr-overlay__btn--share" onclick="_qrShareLink()">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>' +
+          'SHARE' +
+        '</button>' +
+        '<button class="qr-overlay__btn qr-overlay__btn--copy" onclick="_qrCopyLink()">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
+          'COPY LINK' +
+        '</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="qr-overlay__toast" id="qrToast">Link copied!</div>';
+  document.body.appendChild(el);
+}
+
+function openQrOverlay(profileOverride) {
+  var profile = profileOverride || window._navProfile;
+  if (!profile) { console.warn('No profile data for QR overlay'); return; }
+
+  _injectQrOverlay();
+
+  var url = _getQrShareUrl(profile);
+  var name = ((profile.first_name || '') + ' ' + (profile.last_name || '')).trim() || profile.name || '';
+  var code = (profile.short_code || '').toUpperCase();
+  var foundingNum = profile.founding_number;
+
+  // Badge
+  var badgeEl = document.getElementById('qrBadge');
+  if (badgeEl) {
+    badgeEl.textContent = foundingNum ? '■ Founding Hooper #' + foundingNum : '■ Founding Hooper';
+    badgeEl.style.display = profile.is_founding_hooper ? 'inline-block' : 'none';
+  }
+
+  // Text fields
+  var codeEl = document.getElementById('qrShortCode');
+  if (codeEl) codeEl.textContent = code;
+
+  var nameEl = document.getElementById('qrName');
+  if (nameEl) nameEl.textContent = name;
+
+  var urlEl = document.getElementById('qrUrl');
+  if (urlEl) urlEl.textContent = url;
+
+  // Generate QR
+  var wrap = document.getElementById('qrCodeWrap');
+  if (wrap) wrap.innerHTML = ''; // clear previous
+
+  _loadQrLib(function() {
+    var wrap = document.getElementById('qrCodeWrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    try {
+      new QRCode(wrap, {
+        text: url,
+        width: 220,
+        height: 220,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      // Remove the img fallback that qrcode.js creates (keep canvas only)
+      var imgs = wrap.querySelectorAll('img');
+      imgs.forEach(function(img) { img.style.display = 'none'; });
+    } catch (e) {
+      console.error('QR generation error:', e);
+      wrap.innerHTML = '<div style="color:#888;font-size:13px;padding:20px;">Could not generate QR code</div>';
+    }
+  });
+
+  // Open overlay
+  requestAnimationFrame(function() {
+    document.getElementById('qrOverlay').classList.add('open');
+  });
+}
+
+function closeQrOverlay() {
+  var el = document.getElementById('qrOverlay');
+  if (el) el.classList.remove('open');
+}
+
+function _qrShareLink() {
+  var profile = window._navProfile;
+  if (!profile) return;
+  var url = _getQrShareUrl(profile);
+  var name = ((profile.first_name || '') + ' ' + (profile.last_name || '')).trim() || profile.name || '';
+  var text = name + ' is on AllNet — the pickup basketball reputation network. Join with my link and earn 500 Stars!';
+  if (navigator.share) {
+    navigator.share({ title: 'AllNet — ' + name, text: text, url: url }).catch(function() {});
+  } else {
+    _qrCopyLink();
+  }
+}
+
+function _qrCopyLink() {
+  var profile = window._navProfile;
+  if (!profile) return;
+  var url = _getQrShareUrl(profile);
+  navigator.clipboard.writeText(url).then(function() {
+    var t = document.getElementById('qrToast');
+    if (t) { t.classList.add('active'); setTimeout(function() { t.classList.remove('active'); }, 2000); }
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = url; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    var t = document.getElementById('qrToast');
+    if (t) { t.classList.add('active'); setTimeout(function() { t.classList.remove('active'); }, 2000); }
+  });
 }
 
 /* ══════════════════════════════

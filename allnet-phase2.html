@@ -294,6 +294,24 @@ html, body { height:100%; height:100dvh; font-family:var(--font-body); backgroun
 }
 .report-player__note:focus { border-color: var(--orange); }
 .report-player__note::placeholder { color: var(--text-muted); }
+/* ── QR Camera Scanner ── */
+.qr-scan-overlay { position:fixed; inset:0; z-index:600; background:#000; display:none; flex-direction:column; }
+.qr-scan-overlay.active { display:flex; }
+.qr-scan__header { display:flex; align-items:center; padding:14px 20px; gap:12px; flex-shrink:0; }
+.qr-scan__close { background:none; border:none; color:#fff; font-size:20px; cursor:pointer; padding:8px; }
+.qr-scan__title { font-family:var(--font-display); font-size:18px; font-weight:600; color:#fff; }
+.qr-scan__viewport { flex:1; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.qr-scan__viewport video { width:100%; height:100%; object-fit:cover; }
+.qr-scan__frame { position:absolute; width:220px; height:220px; border:2px solid var(--orange); border-radius:16px; box-shadow:0 0 0 9999px rgba(0,0,0,0.5); pointer-events:none; }
+.qr-scan__status { padding:20px; text-align:center; font-family:var(--font-body); font-size:14px; color:var(--text-secondary); flex-shrink:0; }
+
+/* ── Phase2 Alert Modal ── */
+.p2-alert-overlay { position:fixed; inset:0; z-index:700; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; padding:20px; }
+.p2-alert-overlay.active { display:flex; }
+.p2-alert { background:#1a1a1a; border:1px solid var(--border); border-radius:16px; padding:24px; max-width:320px; width:100%; text-align:center; }
+.p2-alert__title { font-family:var(--font-display); font-size:18px; font-weight:700; color:#fff; margin-bottom:8px; }
+.p2-alert__msg { font-size:14px; color:var(--text-secondary); line-height:1.5; margin-bottom:20px; }
+.p2-alert__btn { padding:12px 24px; background:var(--orange); color:#fff; border:none; border-radius:10px; font-family:var(--font-display); font-size:14px; font-weight:600; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -366,7 +384,7 @@ html, body { height:100%; height:100dvh; font-family:var(--font-body); backgroun
     <div class="section-label">// Join a game</div><h1 class="screen-title">Enter Game Code</h1><p class="screen-sub">Get the code from the game creator.</p>
     <input class="join-input" id="joinInput" type="text" maxlength="4" placeholder="0000" oninput="onJoinInput(this)">
     <div class="btn-row" style="margin-top:0;"><button class="btn btn--primary" id="joinBtn" disabled onclick="joinGame()">Join Game →</button></div>
-    <div class="join-or">or</div><button class="scan-btn" onclick="simulateScan()">📷 Scan QR Code</button>
+    <div class="join-or">or</div><button class="scan-btn" onclick="openQRScanner()">📷 Scan QR Code</button>
   </div>
   <div class="screen" id="screenActive">
     <div class="active-game">
@@ -492,6 +510,30 @@ html, body { height:100%; height:100dvh; font-family:var(--font-body); backgroun
   </div>
 </div>
 
+<!-- ═══ Phase2 Alert Modal ═══ -->
+<div class="p2-alert-overlay" id="p2AlertOverlay" onclick="closeP2Alert()">
+  <div class="p2-alert" onclick="event.stopPropagation()">
+    <div class="p2-alert__title" id="p2AlertTitle"></div>
+    <div class="p2-alert__msg" id="p2AlertMsg"></div>
+    <button class="p2-alert__btn" onclick="closeP2Alert()">OK</button>
+  </div>
+</div>
+
+<!-- ═══ QR Camera Scanner Overlay ═══ -->
+<div class="qr-scan-overlay" id="qrScanOverlay">
+  <div class="qr-scan__header">
+    <button class="qr-scan__close" onclick="closeQRScanner()">✕</button>
+    <div class="qr-scan__title">Scan QR Code</div>
+  </div>
+  <div class="qr-scan__viewport">
+    <video id="qrVideo" playsinline muted></video>
+    <div class="qr-scan__frame"></div>
+  </div>
+  <canvas id="qrCanvas" style="display:none;"></canvas>
+  <div class="qr-scan__status" id="qrStatus">Initializing camera...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
 <script src="js/career-card.js"></script>
@@ -560,7 +602,7 @@ function createGame(){
   G.codeA=String(Math.floor(1000+Math.random()*9000));
   G.codeB=String(Math.floor(1000+Math.random()*9000));
   while(G.codeB===G.codeA) G.codeB=String(Math.floor(1000+Math.random()*9000));
-  G.teamA=[{...ME}];G.teamB=[];
+  G.teamA=[{...ME, userId: currentUser?.id || null}];G.teamB=[];
   goTo('screenLobby');
 
   // Render code section based on format
@@ -580,11 +622,7 @@ function createGame(){
   }
 
   renderLobby();
-  // Simulate test players joining the lobby
-  const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);
-  let delay=1500;const needA=G.teamSize-1;const needB=G.teamSize;
-  shuffled.slice(0,needA).forEach(p=>{const t=setTimeout(()=>{G.teamA.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
-  shuffled.slice(needA,needA+needB).forEach(p=>{const t=setTimeout(()=>{G.teamB.push({...p,isYou:false});renderLobby();checkReady();},delay);G.joinTimeouts.push(t);delay+=800+Math.random()*1200;});
+  // No simulated players — real players join via code/QR
 }
 
 function renderLobby(){
@@ -614,33 +652,190 @@ function persistTeamData() {
 function checkReady(){if(G.teamA.length>=G.teamSize&&G.teamB.length>=G.teamSize){document.getElementById('readyBtn').disabled=false;document.getElementById('waitingIndicator').style.display='none';document.getElementById('lobbyTitle').textContent=G.format==='1v1'?"Your opponent is here!":"Everyone's here!";}}
 
 function onJoinInput(inp){inp.value=inp.value.replace(/\D/g,'');document.getElementById('joinBtn').disabled=inp.value.length!==4;}
-function joinGame(){
-  const code=document.getElementById('joinInput').value;const isTeamA=Math.random()>0.5;
-  const fmts=['1v1','2v2','3v3','4v4','5v5'];G.format=fmts[Math.floor(Math.random()*fmts.length)];G.teamSize=FORMAT_SIZES[G.format];
-  G.codeA=isTeamA?code:String(Math.floor(1000+Math.random()*9000));G.codeB=isTeamA?String(Math.floor(1000+Math.random()*9000)):code;
-  if(isTeamA){G.teamA=[{...ME}];G.teamB=[];}else{G.teamA=[];G.teamB=[{...ME}];}
-  goTo('screenLobby');
-  const codesEl=document.getElementById('codesContainer');
-  if(G.format==='1v1'){
-    codesEl.innerHTML='<div class="single-code"><div class="single-code__card"><div class="single-code__label">Game Code</div><div class="qr-wrapper"><div class="qr-box" style="opacity:0.5;"><div class="qr-box__grid" id="qrJoin"></div><div class="qr-box__logo">ALLNET</div></div></div><div class="single-code__code">'+code+'</div><div class="single-code__hint">You joined this game</div></div></div>';
-    generateQR('qrJoin',code);
-    document.getElementById('lobbySub').textContent='Waiting for all players.';
-    document.getElementById('teamALabel').textContent='Player 1';
-    document.getElementById('teamBLabel').textContent='Player 2';
-  } else {
-    codesEl.innerHTML='<div class="team-codes"><div class="team-code-card team-code-card--a"><div class="team-code-card__label">Team A</div><div class="team-code-card__code">'+G.codeA+'</div><div class="team-code-card__hint">'+(isTeamA?'Your team':'Opponents')+'</div></div><div class="team-code-card team-code-card--b"><div class="team-code-card__label">Team B</div><div class="team-code-card__code">'+G.codeB+'</div><div class="team-code-card__hint">'+(isTeamA?'Opponents':'Your team')+'</div></div></div>';
-    document.getElementById('lobbySub').textContent='Waiting for all players.';
-    document.getElementById('teamALabel').textContent='Team A';
-    document.getElementById('teamBLabel').textContent='Team B';
+
+async function joinGame(){
+  const code=document.getElementById('joinInput').value;
+  const btn=document.getElementById('joinBtn');
+  btn.disabled=true;btn.textContent='Joining...';
+
+  if (!currentUser) {
+    showP2Alert('Not Logged In', 'You need to sign in before joining a game.');
+    btn.disabled=false;btn.textContent='Join Game →';
+    return;
   }
-  renderLobby();
-  // Simulate test players joining the lobby
-  const shuffled=[...ALL_PLAYERS].sort(()=>Math.random()-0.5);let idx=0,delay=1000;
-  const fillA=G.teamSize-G.teamA.length,fillB=G.teamSize-G.teamB.length;
-  for(let i=0;i<fillA;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamA.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
-  for(let i=0;i<fillB;i++){((pp,d)=>{const t=setTimeout(()=>{G.teamB.push({...pp,isYou:false});renderLobby();checkReady();},d);G.joinTimeouts.push(t);})(shuffled[idx],delay);idx++;delay+=800+Math.random()*1200;}
+
+  try {
+    const result = await joinGameByCode(code);
+    const game = result.game;
+    const myTeam = result.team; // 'a' or 'b'
+
+    G.format = game.format;
+    G.teamSize = FORMAT_SIZES[G.format];
+    G.codeA = game.code_a;
+    G.codeB = game.code_b;
+    dbGameId = game.id;
+    dbCourtId = game.court_id;
+
+    // Load all current players from DB
+    const { data: players } = await supabase.from('game_players')
+      .select('*, profiles(name, initials, avatar_cutout_url, avatar_url, selected_cover)')
+      .eq('game_id', game.id).eq('status', 'active');
+
+    G.teamA = [];
+    G.teamB = [];
+    if (players) {
+      players.forEach(p => {
+        const entry = {
+          name: p.profiles?.name || 'Unknown',
+          initials: p.profiles?.initials || '??',
+          isYou: p.user_id === currentUser.id,
+          userId: p.user_id,
+          avatar_cutout_url: p.profiles?.avatar_cutout_url || null,
+          avatar_url: p.profiles?.avatar_url || null,
+          selected_cover: p.profiles?.selected_cover || null
+        };
+        if (p.team === 'a') G.teamA.push(entry);
+        else G.teamB.push(entry);
+      });
+    }
+
+    // Get court name for display
+    let courtLabel = 'Court';
+    if (game.court_id) {
+      const { data: court } = await supabase.from('courts').select('name').eq('id', game.court_id).single();
+      if (court) courtLabel = court.name;
+    }
+    document.querySelector('.court-context__name').textContent = courtLabel + ' · Joined';
+
+    goTo('screenLobby');
+    const codesEl=document.getElementById('codesContainer');
+    if(G.format==='1v1'){
+      codesEl.innerHTML='<div class="single-code"><div class="single-code__card"><div class="single-code__label">Game Code</div><div class="single-code__code">'+code+'</div><div class="single-code__hint">You joined this game</div></div></div>';
+      document.getElementById('lobbySub').textContent='Waiting for all players.';
+      document.getElementById('teamALabel').textContent='Player 1';
+      document.getElementById('teamBLabel').textContent='Player 2';
+    } else {
+      codesEl.innerHTML='<div class="team-codes"><div class="team-code-card team-code-card--a"><div class="team-code-card__label">Team A</div><div class="team-code-card__code">'+G.codeA+'</div><div class="team-code-card__hint">'+(myTeam==='a'?'Your team':'Opponents')+'</div></div><div class="team-code-card team-code-card--b"><div class="team-code-card__label">Team B</div><div class="team-code-card__code">'+G.codeB+'</div><div class="team-code-card__hint">'+(myTeam==='b'?'Your team':'Opponents')+'</div></div></div>';
+      document.getElementById('lobbySub').textContent='Waiting for all players.';
+      document.getElementById('teamALabel').textContent='Team A';
+      document.getElementById('teamBLabel').textContent='Team B';
+    }
+
+    renderLobby();
+    checkReady();
+
+    // Subscribe to realtime for new player joins
+    subscribeToGamePlayers(game.id, handleRealtimePlayerJoin);
+
+    console.log('Joined game:', game.id, 'team:', myTeam, 'format:', G.format);
+  } catch (err) {
+    console.error('Join game error:', err);
+    showP2Alert('Could Not Join', err.message === 'Game not found' ? 'No active game found with that code. Check the code and try again.' : 'Failed to join game: ' + err.message);
+  }
+  btn.disabled=false;btn.textContent='Join Game →';
 }
-function simulateScan(){document.getElementById('joinInput').value='4829';document.getElementById('joinBtn').disabled=false;}
+
+// ── Realtime handler for player joins ──
+async function handleRealtimePlayerJoin(payload) {
+  const newRow = payload.new;
+  if (!newRow || !newRow.user_id) return;
+  // Don't re-add self
+  if (currentUser && newRow.user_id === currentUser.id) return;
+  // Don't add duplicates
+  const allIds = [...G.teamA, ...G.teamB].map(p => p.userId).filter(Boolean);
+  if (allIds.includes(newRow.user_id)) return;
+
+  // Fetch profile for the new player
+  try {
+    const { data: profile } = await supabase.from('profiles')
+      .select('name, initials, avatar_cutout_url, avatar_url, selected_cover')
+      .eq('id', newRow.user_id).single();
+
+    const entry = {
+      name: profile?.name || 'Player',
+      initials: profile?.initials || '??',
+      isYou: false,
+      userId: newRow.user_id,
+      avatar_cutout_url: profile?.avatar_cutout_url || null,
+      avatar_url: profile?.avatar_url || null,
+      selected_cover: profile?.selected_cover || null
+    };
+
+    if (newRow.team === 'a') G.teamA.push(entry);
+    else G.teamB.push(entry);
+
+    renderLobby();
+    checkReady();
+    console.log('Realtime: player joined', entry.name, 'team', newRow.team);
+  } catch (err) { console.error('Realtime player fetch error:', err); }
+}
+
+// ── QR Camera Scanner ──
+let _qrStream = null;
+let _qrAnimFrame = null;
+
+function openQRScanner() {
+  const overlay = document.getElementById('qrScanOverlay');
+  overlay.classList.add('active');
+  const video = document.getElementById('qrVideo');
+  const canvas = document.getElementById('qrCanvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const status = document.getElementById('qrStatus');
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      _qrStream = stream;
+      video.srcObject = stream;
+      video.play();
+      status.textContent = 'Point at a QR code...';
+      scanQRFrame(video, canvas, ctx, status);
+    })
+    .catch(err => {
+      console.error('Camera error:', err);
+      status.textContent = 'Camera access denied. Enter code manually.';
+      setTimeout(() => closeQRScanner(), 2000);
+    });
+}
+
+function scanQRFrame(video, canvas, ctx, status) {
+  if (!_qrStream) return;
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    if (typeof jsQR !== 'undefined') {
+      const qr = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+      if (qr && qr.data) {
+        // Extract 4-digit code from QR data
+        const match = qr.data.match(/\d{4}/);
+        if (match) {
+          status.textContent = 'Code found: ' + match[0];
+          closeQRScanner();
+          // Fill in the code and auto-join
+          document.getElementById('joinInput').value = match[0];
+          document.getElementById('joinBtn').disabled = false;
+          setTimeout(() => joinGame(), 300);
+          return;
+        }
+      }
+    }
+  }
+  _qrAnimFrame = requestAnimationFrame(() => scanQRFrame(video, canvas, ctx, status));
+}
+
+function closeQRScanner() {
+  if (_qrStream) {
+    _qrStream.getTracks().forEach(t => t.stop());
+    _qrStream = null;
+  }
+  if (_qrAnimFrame) {
+    cancelAnimationFrame(_qrAnimFrame);
+    _qrAnimFrame = null;
+  }
+  document.getElementById('qrScanOverlay').classList.remove('active');
+}
 
 function startGame(){
   goTo('screenActive');document.getElementById('activeFormat').textContent=G.format;
@@ -1296,6 +1491,7 @@ async function initPhase2() {
     if (currentProfile) {
       ME.name = currentProfile.name || ME.name;
       ME.initials = currentProfile.initials || ME.initials;
+      ME.userId = currentUser.id;
       ME.avatar_cutout_url = currentProfile.avatar_cutout_url || null;
       ME.avatar_url = currentProfile.avatar_url || null;
       ME.selected_cover = currentProfile.selected_cover || null;
@@ -1602,19 +1798,27 @@ async function resumeActiveGame(gameId) {
   dismissP2Splash();
 }
 
+// ── Phase2 Alert (replaces native alert) ──
+function showP2Alert(title, msg) {
+  document.getElementById('p2AlertTitle').textContent = title;
+  document.getElementById('p2AlertMsg').textContent = msg;
+  document.getElementById('p2AlertOverlay').classList.add('active');
+}
+function closeP2Alert() {
+  document.getElementById('p2AlertOverlay').classList.remove('active');
+}
+
 // Override createGame to persist to Supabase
 const _origCreateGame = createGame;
 createGame = async function() {
-  _origCreateGame(); // Run original (sets up UI, mock players, etc)
+  _origCreateGame(); // Run original (sets up UI)
   if (currentUser && dbCourtId) {
     try {
       const data = await createGameSession(dbCourtId, G.format, G.teamSize, G.codeA, G.codeB);
       dbGameId = data.id;
       console.log('Game created in DB:', dbGameId);
-      // Subscribe to real player joins
-      subscribeToGamePlayers(dbGameId, (payload) => {
-        console.log('Real player joined:', payload);
-      });
+      // Subscribe to real player joins — updates lobby in realtime
+      subscribeToGamePlayers(dbGameId, handleRealtimePlayerJoin);
     } catch (err) { console.error('Failed to create game in DB:', err); }
   }
 };

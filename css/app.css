@@ -78,7 +78,7 @@ html, body {
   background: #000;
   border: 0.667px solid #222;
   cursor: pointer;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   transition: var(--transition);

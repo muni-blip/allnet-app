@@ -397,6 +397,10 @@ async function initNavBar() {
     profileBtn.onclick = function() { openSharedProfile(); };
     profileBtn.innerHTML = buildCompositeAvatarHtml(profile);
 
+    // Show menu button (hidden by default for non-auth users)
+    var menuBtn = document.querySelector('.nav-bar__menu');
+    if (menuBtn) menuBtn.style.display = 'flex';
+
     // Reveal nav bar right section with correct content
     if (navRight) navRight.style.opacity = '1';
   } catch (err) {

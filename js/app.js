@@ -2666,6 +2666,10 @@ async function loadUserProfile(user) {
         starsEl.parentNode.insertBefore(qrBtn, starsEl);
       }
 
+      // Show menu button (hidden by default for non-auth users)
+      const menuBtn = document.querySelector('.nav-bar__menu');
+      if (menuBtn) menuBtn.style.display = 'flex';
+
       // Reveal nav bar right section (was hidden to prevent flash)
       const navRight = document.getElementById('navBarRight');
       if (navRight) navRight.style.opacity = '1';

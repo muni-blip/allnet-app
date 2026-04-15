@@ -14,7 +14,8 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; overscroll-behavior-x: none; overflow-y: auto; }
 
-.org-page { max-width: 480px; margin: 0 auto; min-height: 100vh; border-left: 1px solid var(--border); border-right: 1px solid var(--border); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px); }
+.org-page { max-width: 680px; margin: 0 auto; min-height: 100vh; border-left: 1px solid var(--border); border-right: 1px solid var(--border); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px); }
+@media (max-width: 680px) { .org-page { max-width: 100%; border-left: none; border-right: none; } }
 
 .org-topbar { position: sticky; top: 0; z-index: 10; padding: 14px 16px; background: rgba(10,10,10,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
 .org-topbar__back { width: 32px; height: 32px; border-radius: 50%; background: transparent; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
@@ -103,7 +104,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
 .player-sheet-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; }
 .player-sheet-overlay.active { display: flex; }
-.player-sheet { width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; background: var(--bg-elevated); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px 16px 40px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.player-sheet { width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; background: var(--bg-elevated); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px 16px 40px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 .player-sheet-overlay.active .player-sheet { transform: translateY(0); }
 .player-sheet__handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border-light); margin: 0 auto 16px; }
 .player-sheet__name { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; text-align: center; }
@@ -242,8 +243,8 @@ async function initOrg() {
 }
 
 async function loadSessions() {
-  const { data, error } = await supabase.from('run_sessions').select('*, session_registrations(status)').eq('org_id', currentOrg.org_id).order('date', { ascending: true });
-  if (error) { console.error('loadSessions:', error); return; }
+  const { data, error } = await supabase.rpc('get_org_sessions', { p_org_id: currentOrg.org_id });
+  if (error) { console.error('loadSessions:', error); document.getElementById('upcomingSessions').innerHTML = '<div class="org-empty"><div class="org-empty__text">Failed to load sessions.</div></div>'; return; }
   currentSessions = data || [];
   const today = new Date().toISOString().split('T')[0];
   const upcoming = currentSessions.filter(s => s.date >= today && s.status !== 'cancelled');
@@ -260,10 +261,9 @@ async function loadSessions() {
 }
 
 function renderSessionCard(session) {
-  const regs = session.session_registrations || [];
-  const confirmed = regs.filter(r => r.status === 'confirmed').length;
-  const pending = regs.filter(r => r.status === 'pending').length;
-  const waitlisted = regs.filter(r => r.status === 'waitlisted').length;
+  const confirmed = Number(session.confirmed_count) || 0;
+  const pending = Number(session.pending_count) || 0;
+  const waitlisted = Number(session.waitlisted_count) || 0;
   const pct = Math.min((confirmed / session.max_players) * 100, 100);
   const fillClass = pct >= 100 ? 'session-card__fill-inner--full' : pct >= 75 ? 'session-card__fill-inner--orange' : 'session-card__fill-inner--green';
   const dateStr = new Date(session.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });

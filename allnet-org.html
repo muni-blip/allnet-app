@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Organization</title>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/career-card.css">
 <link rel="stylesheet" href="css/tour.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
@@ -201,7 +202,6 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
   <div class="create-form" id="createForm">
     <div class="form-group"><label class="form-label">Session Title</label><input class="form-input" id="formTitle" type="text" placeholder="e.g. Friday Competitive"></div>
-    <div class="form-group"><label class="form-label">Session Type</label><select class="form-select" id="formType"><option value="competitive">Competitive</option><option value="intro">Intro</option><option value="open">Open</option></select></div>
     <div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" id="formDate" type="date"></div><div class="form-group"><label class="form-label">Max Players</label><input class="form-input" id="formMaxPlayers" type="number" value="22" min="2" max="50"></div></div>
     <div class="form-row"><div class="form-group"><label class="form-label">Start Time</label><input class="form-input" id="formStartTime" type="time" value="19:00"></div><div class="form-group"><label class="form-label">End Time</label><input class="form-input" id="formEndTime" type="time" value="21:00"></div></div>
     <div class="form-group"><label class="form-label">Venue</label><div class="venue-wrapper"><input class="form-input" id="formVenue" type="text" placeholder="Search or type venue name..." autocomplete="off" oninput="onVenueInput(this.value)"><div class="venue-suggestions" id="venueSuggestions"></div></div></div>
@@ -233,6 +233,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
+<script src="js/career-card.js"></script>
 <script src="js/tour.js"></script>
 <script>
 let currentUser = null, currentProfile = null, currentOrg = null;
@@ -292,10 +293,10 @@ function renderSessionCard(session) {
   const timeStr = formatTime(session.start_time) + (session.end_time ? ' – ' + formatTime(session.end_time) : '');
 
   return '<div class="session-card" onclick="openSessionDetail(\'' + session.id + '\')">' +
-    '<div class="session-card__top"><span class="session-card__title">' + escHtml(session.title) + '</span><span class="session-card__type session-card__type--' + session.session_type + '">' + session.session_type + '</span></div>' +
+    '<div class="session-card__top"><span class="session-card__title">' + escHtml(session.title) + '</span><span class="session-card__count">' + confirmed + '/' + session.max_players + '</span></div>' +
     '<div class="session-card__details">' + dateStr + ' · ' + timeStr + ' · ' + escHtml(session.venue_name) + '</div>' +
-    '<div class="session-card__roster-bar"><div class="session-card__fill"><div class="session-card__fill-inner ' + fillClass + '" style="width:' + pct + '%"></div></div><span class="session-card__count">' + confirmed + '/' + session.max_players + '</span></div>' +
-    (pending > 0 ? '<div class="session-card__pending">' + pending + ' pending · ' + waitlisted + ' waitlisted</div>' : '') +
+    '<div class="session-card__roster-bar"><div class="session-card__fill"><div class="session-card__fill-inner ' + fillClass + '" style="width:' + pct + '%"></div></div></div>' +
+    (pending > 0 ? '<div class="session-card__pending">' + pending + ' pending' + (waitlisted > 0 ? ' · ' + waitlisted + ' waitlisted' : '') + '</div>' : '') +
   '</div>';
 }
 
@@ -416,21 +417,48 @@ function copyShareLink(url) { navigator.clipboard.writeText('https://' + url).th
 function openPlayerSheet(userId) {
   var p = currentRoster.find(function(r) { return r.user_id === userId; });
   if (!p) return;
-  var rc = function(v) { return v >= 4.0 ? 'color:var(--green-live)' : v >= 3.0 ? 'color:var(--orange)' : 'color:var(--red)'; };
-  var record = p.wins + 'W - ' + p.losses + 'L' + (p.draws > 0 ? ' - ' + p.draws + 'D' : '');
-  var actions = '';
-  if (p.status === 'pending') actions = '<div class="player-sheet__actions"><button class="player-sheet__action-btn player-sheet__action-btn--approve" onclick="adminAction(\'' + p.registration_id + '\',\'confirmed\');closePlayerSheetDirect();">Approve</button><button class="player-sheet__action-btn player-sheet__action-btn--decline" onclick="adminAction(\'' + p.registration_id + '\',\'declined\');closePlayerSheetDirect();">Decline</button></div>';
-  else if (p.status === 'waitlisted') actions = '<div class="player-sheet__actions"><button class="player-sheet__action-btn player-sheet__action-btn--promote" onclick="promotePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Promote to Roster</button></div>';
-  else if (p.status === 'confirmed') actions = '<div class="player-sheet__actions"><button class="player-sheet__action-btn player-sheet__action-btn--remove" onclick="removePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Remove from Roster</button></div>';
 
-  document.getElementById('playerSheetContent').innerHTML =
-    '<div class="player-sheet__name">' + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div>' +
-    (p.is_founding_hooper ? '<div class="player-sheet__badge">🏅 FOUNDING HOOPER #' + p.founding_number + '</div>' : '') +
-    '<div class="player-sheet__stats-grid">' +
-      '<div class="player-sheet__stat-box"><div class="player-sheet__stat-val" style="' + rc(Number(p.skill_rating)) + '">' + Number(p.skill_rating).toFixed(1) + '</div><div class="player-sheet__stat-label">Skill</div></div>' +
-      '<div class="player-sheet__stat-box"><div class="player-sheet__stat-val" style="' + rc(Number(p.social_rating)) + '">' + Number(p.social_rating).toFixed(1) + '</div><div class="player-sheet__stat-label">Social</div></div>' +
-      '<div class="player-sheet__stat-box"><div class="player-sheet__stat-val">' + (p.wins + p.losses + p.draws) + '</div><div class="player-sheet__stat-label">Games</div></div>' +
-    '</div><div class="player-sheet__record">' + record + '</div>' + actions;
+  // Build career card HTML using the shared component
+  var cardHtml = CareerCard.render({
+    cardId: 'psc',
+    firstName: p.first_name || '',
+    lastName: p.last_name || '',
+    cutoutUrl: p.avatar_cutout_url || null,
+    coverSlug: p.selected_cover || 'crossover',
+    wins: p.wins || 0,
+    losses: p.losses || 0,
+    draws: p.draws || 0,
+    skillRating: Number(p.skill_rating).toFixed(1),
+    socialRating: Number(p.social_rating).toFixed(1),
+    divisionLabel: 'ALL',
+    showTabs: false,
+    showDeltas: false
+  });
+
+  // Build action buttons based on status
+  var actions = '';
+  if (p.status === 'pending') {
+    actions = '<div class="player-sheet__actions">' +
+      '<button class="player-sheet__action-btn player-sheet__action-btn--approve" onclick="adminAction(\'' + p.registration_id + '\',\'confirmed\');closePlayerSheetDirect();">Approve</button>' +
+      '<button class="player-sheet__action-btn player-sheet__action-btn--decline" onclick="adminAction(\'' + p.registration_id + '\',\'declined\');closePlayerSheetDirect();">Decline</button></div>';
+  } else if (p.status === 'waitlisted') {
+    actions = '<div class="player-sheet__actions">' +
+      '<button class="player-sheet__action-btn player-sheet__action-btn--promote" onclick="promotePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Promote to Roster</button></div>';
+  } else if (p.status === 'confirmed') {
+    actions = '<div class="player-sheet__actions">' +
+      '<button class="player-sheet__action-btn player-sheet__action-btn--remove" onclick="removePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Remove from Roster</button></div>';
+  }
+
+  // Badge
+  var badge = p.is_founding_hooper
+    ? '<div class="player-sheet__badge">🏅 FOUNDING HOOPER #' + p.founding_number + '</div>'
+    : '';
+
+  document.getElementById('playerSheetContent').innerHTML = badge + '<div style="margin:12px auto 0;max-width:340px;">' + cardHtml + '</div>' + actions;
+
+  // Fit names after render
+  setTimeout(function() { CareerCard.fitNames('psc'); }, 50);
+
   document.getElementById('playerSheetOverlay').classList.add('active');
 }
 function closePlayerSheet(e) { if (e && e.target !== document.getElementById('playerSheetOverlay')) return; document.getElementById('playerSheetOverlay').classList.remove('active'); }
@@ -473,7 +501,6 @@ function showCreateForm() {
 async function submitCreateSession() {
   var btn = document.getElementById('formSubmit');
   var title = document.getElementById('formTitle').value.trim();
-  var type = document.getElementById('formType').value;
   var date = document.getElementById('formDate').value;
   var startTime = document.getElementById('formStartTime').value;
   var endTime = document.getElementById('formEndTime').value;
@@ -483,7 +510,7 @@ async function submitCreateSession() {
   if (!title || !date || !startTime || !venue) { showToast('Please fill in all required fields'); return; }
   btn.disabled = true; btn.textContent = 'Creating...';
   try {
-    var { data, error } = await supabase.rpc('create_run_session', { p_org_id: currentOrg.org_id, p_title: title, p_session_type: type, p_date: date, p_start_time: startTime, p_end_time: endTime || null, p_venue_name: venue, p_max_players: maxPlayers, p_description: desc || null, p_auto_promote: false });
+    var { data, error } = await supabase.rpc('create_run_session', { p_org_id: currentOrg.org_id, p_title: title, p_session_type: 'open', p_date: date, p_start_time: startTime, p_end_time: endTime || null, p_venue_name: venue, p_max_players: maxPlayers, p_description: desc || null, p_auto_promote: false });
     if (error) throw error;
     showToast('Session created');
     goBack();

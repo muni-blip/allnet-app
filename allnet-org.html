@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Organization</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/tour.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; overscroll-behavior-x: none; overflow-y: auto; }
+
+.org-page { max-width: 480px; margin: 0 auto; min-height: 100vh; border-left: 1px solid var(--border); border-right: 1px solid var(--border); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px); }
+
+.org-topbar { position: sticky; top: 0; z-index: 10; padding: 14px 16px; background: rgba(10,10,10,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+.org-topbar__back { width: 32px; height: 32px; border-radius: 50%; background: transparent; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
+.org-topbar__title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; text-transform: uppercase; flex: 1; }
+.org-topbar__action { background: var(--orange); color: #fff; border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; }
+
+.org-loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.org-empty { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+.org-empty__icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.org-empty__text { font-size: 14px; line-height: 1.5; }
+
+.org-header { padding: 20px 16px; border-bottom: 1px solid var(--border); }
+.org-header__name { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: #fff; text-transform: uppercase; }
+.org-header__meta { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+.org-section-label { font-family: var(--font-mono); font-size: 11px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.12em; padding: 20px 16px 8px; }
+
+.session-card { margin: 0 16px 12px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: border-color 0.2s; }
+.session-card:active { border-color: var(--orange); }
+.session-card__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.session-card__title { font-family: var(--font-display); font-size: 17px; font-weight: 600; color: #fff; }
+.session-card__type { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.session-card__type--competitive { background: rgba(239,68,68,0.15); color: #EF4444; }
+.session-card__type--intro { background: rgba(34,197,94,0.15); color: #22C55E; }
+.session-card__type--open { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.session-card__details { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
+.session-card__roster-bar { display: flex; align-items: center; gap: 10px; }
+.session-card__fill { flex: 1; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.session-card__fill-inner { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.session-card__fill-inner--green { background: var(--green-live); }
+.session-card__fill-inner--orange { background: var(--orange); }
+.session-card__fill-inner--full { background: var(--red); }
+.session-card__count { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.session-card__pending { font-family: var(--font-mono); font-size: 11px; color: var(--orange); margin-top: 8px; }
+
+.session-detail { display: none; }
+.session-detail.active { display: block; }
+.session-list.hidden { display: none; }
+
+.detail-header { padding: 16px; border-bottom: 1px solid var(--border); }
+.detail-header__title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; }
+.detail-header__meta { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.detail-header__stats { display: flex; gap: 8px; margin-top: 12px; }
+.detail-stat { display: flex; flex-direction: column; align-items: center; padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); flex: 1; }
+.detail-stat__num { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: #fff; }
+.detail-stat__label { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+.detail-stat__num--green { color: var(--green-live); }
+.detail-stat__num--orange { color: var(--orange); }
+.detail-stat__num--blue { color: var(--blue-quiet); }
+
+.detail-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 16px; }
+.detail-tab { flex: 1; padding: 12px 0; text-align: center; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+.detail-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+.player-list { padding: 8px 0; }
+.player-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+.player-row:active { background: rgba(255,255,255,0.03); }
+.player-row__avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 14px; color: var(--text-secondary); overflow: hidden; flex-shrink: 0; }
+.player-row__info { flex: 1; min-width: 0; }
+.player-row__name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-row__stats { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.player-row__rating-val--high { color: var(--green-live); }
+.player-row__rating-val--mid { color: var(--orange); }
+.player-row__rating-val--low { color: var(--red); }
+.player-row__pos { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); background: var(--border); padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+.player-row__actions { display: flex; gap: 8px; flex-shrink: 0; }
+.player-row__btn { padding: 6px 12px; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+.player-row__btn--approve { background: var(--green-live); color: #fff; }
+.player-row__btn--decline { background: rgba(239,68,68,0.15); color: var(--red); }
+.player-row__btn--promote { background: rgba(59,130,246,0.15); color: var(--blue-quiet); }
+.player-row__btn--remove { background: rgba(239,68,68,0.1); color: var(--red); font-size: 11px; padding: 4px 10px; }
+
+.share-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+.share-bar__url { flex: 1; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.share-bar__btn { background: var(--orange); color: #fff; border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-family: var(--font-body); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+.auto-promote-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.auto-promote-bar__label { font-size: 13px; color: var(--text-secondary); }
+.auto-promote-bar__label strong { color: #fff; }
+.toggle-switch { position: relative; width: 44px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-switch__slider { position: absolute; inset: 0; border-radius: 12px; background: var(--border); cursor: pointer; transition: 0.2s; }
+.toggle-switch__slider::before { content: ''; position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: 0.2s; }
+.toggle-switch input:checked + .toggle-switch__slider { background: var(--orange); }
+.toggle-switch input:checked + .toggle-switch__slider::before { transform: translateX(20px); }
+
+.player-sheet-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; }
+.player-sheet-overlay.active { display: flex; }
+.player-sheet { width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; background: var(--bg-elevated); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px 16px 40px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.player-sheet-overlay.active .player-sheet { transform: translateY(0); }
+.player-sheet__handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border-light); margin: 0 auto 16px; }
+.player-sheet__name { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; text-align: center; }
+.player-sheet__badge { text-align: center; margin-top: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--orange); }
+.player-sheet__stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.player-sheet__stat-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; }
+.player-sheet__stat-val { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; }
+.player-sheet__stat-label { font-family: var(--font-mono); font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+.player-sheet__record { text-align: center; margin-top: 12px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); }
+.player-sheet__actions { display: flex; gap: 8px; margin-top: 20px; }
+.player-sheet__action-btn { flex: 1; padding: 12px; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; font-weight: 600; border: none; cursor: pointer; text-align: center; }
+.player-sheet__action-btn--approve { background: var(--green-live); color: #fff; }
+.player-sheet__action-btn--decline { background: rgba(239,68,68,0.15); color: var(--red); }
+.player-sheet__action-btn--promote { background: var(--blue-quiet); color: #fff; }
+.player-sheet__action-btn--remove { background: rgba(239,68,68,0.15); color: var(--red); }
+
+.create-form { display: none; padding: 16px; }
+.create-form.active { display: block; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--orange); }
+.form-select { appearance: none; cursor: pointer; }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: flex; gap: 12px; }
+.form-row > .form-group { flex: 1; }
+.form-submit { width: 100%; padding: 14px; background: var(--orange); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font-display); font-size: 16px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+.form-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.org-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 20px; font-size: 13px; color: #fff; z-index: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.org-toast.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer__header"><span class="nav-drawer__header-label">Menu</span></div>
+  <nav class="nav-drawer__links">
+    <a href="allnet-app.html" class="nav-drawer__link" data-nav="play"><span class="nav-drawer__link-label">Play</span></a>
+    <a href="allnet-upcoming.html" class="nav-drawer__link" data-nav="upcoming"><span class="nav-drawer__link-label">Upcoming</span></a>
+    <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity"><span class="nav-drawer__link-label">Activity</span></a>
+    <a href="allnet-career.html" class="nav-drawer__link" data-nav="career"><span class="nav-drawer__link-label">Career</span></a>
+    <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars"><span class="nav-drawer__link-label">Stars</span></a>
+    <a href="allnet-org.html" class="nav-drawer__link nav-drawer__link--active" data-nav="organization"><span class="nav-drawer__link-label">Organization</span><img src="img/basketball-selector.svg" class="nav-drawer__link-selector" alt=""></a>
+    <a href="allnet-settings.html" class="nav-drawer__link" data-nav="settings"><span class="nav-drawer__link-label">Settings</span></a>
+  </nav>
+  <div class="nav-drawer__footer"><button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button></div>
+</div>
+
+<div class="org-page">
+  <div class="org-topbar" id="orgTopbar">
+    <button class="org-topbar__back" id="topbarBack" onclick="goBack()">←</button>
+    <span class="org-topbar__title" id="topbarTitle">Organization</span>
+    <button class="org-topbar__action" id="topbarAction" style="display:none;" onclick="showCreateForm()">+ Session</button>
+  </div>
+
+  <div class="session-list" id="sessionList">
+    <div class="org-header" id="orgHeader"></div>
+    <div class="org-section-label">Upcoming Sessions</div>
+    <div id="upcomingSessions"><div class="org-loading">Loading sessions...</div></div>
+    <div class="org-section-label" id="pastLabel" style="display:none;">Past Sessions</div>
+    <div id="pastSessions"></div>
+  </div>
+
+  <div class="session-detail" id="sessionDetail">
+    <div class="detail-header" id="detailHeader"></div>
+    <div class="share-bar" id="shareBar"></div>
+    <div class="auto-promote-bar" id="autoPromoteBar"></div>
+    <div class="detail-tabs" id="detailTabs"></div>
+    <div class="player-list" id="playerList"></div>
+  </div>
+
+  <div class="create-form" id="createForm">
+    <div class="form-group"><label class="form-label">Session Title</label><input class="form-input" id="formTitle" type="text" placeholder="e.g. Friday Competitive"></div>
+    <div class="form-group"><label class="form-label">Session Type</label><select class="form-select" id="formType"><option value="competitive">Competitive</option><option value="intro">Intro</option><option value="open">Open</option></select></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" id="formDate" type="date"></div><div class="form-group"><label class="form-label">Max Players</label><input class="form-input" id="formMaxPlayers" type="number" value="22" min="2" max="50"></div></div>
+    <div class="form-row"><div class="form-group"><label class="form-label">Start Time</label><input class="form-input" id="formStartTime" type="time" value="19:00"></div><div class="form-group"><label class="form-label">End Time</label><input class="form-input" id="formEndTime" type="time" value="21:00"></div></div>
+    <div class="form-group"><label class="form-label">Venue</label><input class="form-input" id="formVenue" type="text" placeholder="e.g. Park Avenue Community Center"></div>
+    <div class="form-group"><label class="form-label">Description (optional)</label><textarea class="form-textarea" id="formDesc" placeholder="What should players know about this session?"></textarea></div>
+    <button class="form-submit" id="formSubmit" onclick="submitCreateSession()">Create Session</button>
+  </div>
+</div>
+
+<div class="player-sheet-overlay" id="playerSheetOverlay" onclick="closePlayerSheet(event)">
+  <div class="player-sheet" id="playerSheet">
+    <div class="player-sheet__handle"></div>
+    <div id="playerSheetContent"></div>
+  </div>
+</div>
+
+<div class="org-toast" id="orgToast"></div>
+
+<div class="nav-bar" id="navBar">
+  <button class="nav-bar__menu" onclick="openNavDrawer()" aria-label="Menu" style="display:none;"><img src="img/menu-icon.svg" alt="" style="width:18px;height:18px;opacity:0.9"></button>
+  <span class="nav-bar__logo"><a href="allnet-app.html"><svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a></span>
+  <div class="nav-bar__spacer"></div>
+  <div class="nav-bar__right" id="navBarRight" style="opacity:0;transition:opacity 0.2s">
+    <a href="allnet-stars.html" class="nav-bar__stars" id="topBarStars" style="display:none;"><span id="topBarStarsCount">0</span> <img src="https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/star-icon.png" alt="⭐" style="width:14px;height:14px;" onerror="this.replaceWith(document.createTextNode('⭐'))"></a>
+    <button class="nav-bar__bell" id="navBell" onclick="openNotifications()" style="display:none;" aria-label="Notifications"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="nav-bar__bell-badge" id="navBellBadge" style="display:none;">0</span></button>
+    <button class="nav-bar__cta" id="profileBtn" onclick="handleProfileClick()">Get Started</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-helpers.js"></script>
+<script src="js/tour.js"></script>
+<script>
+let currentUser = null, currentProfile = null, currentOrg = null;
+let currentSessions = [], currentSessionId = null, currentRoster = [], currentTab = 'confirmed';
+
+function openNavDrawer() { document.getElementById('navOverlay').classList.add('open'); document.getElementById('navDrawer').classList.add('open'); }
+function closeNavDrawer() { document.getElementById('navOverlay').classList.remove('open'); document.getElementById('navDrawer').classList.remove('open'); }
+function showToast(msg) { const t = document.getElementById('orgToast'); t.textContent = msg; t.classList.add('visible'); setTimeout(() => t.classList.remove('visible'), 2500); }
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function formatTime(t) { if (!t) return ''; const [h, m] = t.split(':'); const hr = parseInt(h); return (hr > 12 ? hr - 12 : hr || 12) + ':' + m + (hr >= 12 ? ' PM' : ' AM'); }
+
+async function initOrg() {
+  const user = await getUser();
+  if (!user) { window.location.href = 'allnet-app.html'; return; }
+  currentUser = user;
+  currentProfile = await getUserProfile(user.id);
+  if (typeof posthogIdentify === 'function') posthogIdentify(currentProfile);
+  initNavBar();
+
+  const { data: orgs, error } = await supabase.rpc('get_user_orgs');
+  if (error || !orgs || orgs.length === 0) {
+    document.getElementById('upcomingSessions').innerHTML = '<div class="org-empty"><div class="org-empty__icon">🏀</div><div class="org-empty__text">You don\'t have an organization yet.<br>Contact AllNet to set one up.</div></div>';
+    document.getElementById('orgHeader').innerHTML = '<div class="org-header__name">No Organization</div>';
+    return;
+  }
+  currentOrg = orgs[0];
+  document.getElementById('orgHeader').innerHTML = '<div class="org-header__name">' + escHtml(currentOrg.org_name) + '</div><div class="org-header__meta">' + (currentOrg.role === 'owner' ? 'Owner' : 'Admin') + '</div>';
+  document.getElementById('topbarAction').style.display = '';
+  await loadSessions();
+}
+
+async function loadSessions() {
+  const { data, error } = await supabase.from('run_sessions').select('*, session_registrations(status)').eq('org_id', currentOrg.org_id).order('date', { ascending: true });
+  if (error) { console.error('loadSessions:', error); return; }
+  currentSessions = data || [];
+  const today = new Date().toISOString().split('T')[0];
+  const upcoming = currentSessions.filter(s => s.date >= today && s.status !== 'cancelled');
+  const past = currentSessions.filter(s => s.date < today || s.status === 'completed');
+
+  document.getElementById('upcomingSessions').innerHTML = upcoming.length === 0
+    ? '<div class="org-empty"><div class="org-empty__text">No upcoming sessions. Create one to get started.</div></div>'
+    : upcoming.map(renderSessionCard).join('');
+
+  if (past.length > 0) {
+    document.getElementById('pastLabel').style.display = '';
+    document.getElementById('pastSessions').innerHTML = past.map(renderSessionCard).join('');
+  }
+}
+
+function renderSessionCard(session) {
+  const regs = session.session_registrations || [];
+  const confirmed = regs.filter(r => r.status === 'confirmed').length;
+  const pending = regs.filter(r => r.status === 'pending').length;
+  const waitlisted = regs.filter(r => r.status === 'waitlisted').length;
+  const pct = Math.min((confirmed / session.max_players) * 100, 100);
+  const fillClass = pct >= 100 ? 'session-card__fill-inner--full' : pct >= 75 ? 'session-card__fill-inner--orange' : 'session-card__fill-inner--green';
+  const dateStr = new Date(session.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const timeStr = formatTime(session.start_time) + (session.end_time ? ' – ' + formatTime(session.end_time) : '');
+
+  return '<div class="session-card" onclick="openSessionDetail(\'' + session.id + '\')">' +
+    '<div class="session-card__top"><span class="session-card__title">' + escHtml(session.title) + '</span><span class="session-card__type session-card__type--' + session.session_type + '">' + session.session_type + '</span></div>' +
+    '<div class="session-card__details">' + dateStr + ' · ' + timeStr + ' · ' + escHtml(session.venue_name) + '</div>' +
+    '<div class="session-card__roster-bar"><div class="session-card__fill"><div class="session-card__fill-inner ' + fillClass + '" style="width:' + pct + '%"></div></div><span class="session-card__count">' + confirmed + '/' + session.max_players + '</span></div>' +
+    (pending > 0 ? '<div class="session-card__pending">' + pending + ' pending · ' + waitlisted + ' waitlisted</div>' : '') +
+  '</div>';
+}
+
+async function openSessionDetail(sessionId) {
+  currentSessionId = sessionId;
+  document.getElementById('sessionList').classList.add('hidden');
+  document.getElementById('createForm').classList.remove('active');
+  document.getElementById('sessionDetail').classList.add('active');
+  document.getElementById('topbarBack').style.display = 'flex';
+  document.getElementById('topbarTitle').textContent = 'Session';
+  document.getElementById('topbarAction').style.display = 'none';
+  await loadRoster();
+}
+
+async function loadRoster() {
+  const session = currentSessions.find(s => s.id === currentSessionId);
+  if (!session) return;
+  const { data, error } = await supabase.rpc('get_session_roster', { p_session_id: currentSessionId });
+  if (error) { console.error('loadRoster:', error); return; }
+  currentRoster = data || [];
+
+  const confirmed = currentRoster.filter(r => r.status === 'confirmed');
+  const pending = currentRoster.filter(r => r.status === 'pending');
+  const waitlisted = currentRoster.filter(r => r.status === 'waitlisted');
+  const dateStr = new Date(session.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const timeStr = formatTime(session.start_time) + (session.end_time ? ' – ' + formatTime(session.end_time) : '');
+
+  document.getElementById('detailHeader').innerHTML =
+    '<div class="detail-header__title">' + escHtml(session.title) + '</div>' +
+    '<div class="detail-header__meta">' + dateStr + ' · ' + timeStr + '</div>' +
+    '<div class="detail-header__stats">' +
+      '<div class="detail-stat"><span class="detail-stat__num detail-stat__num--green">' + confirmed.length + '</span><span class="detail-stat__label">Confirmed</span></div>' +
+      '<div class="detail-stat"><span class="detail-stat__num detail-stat__num--orange">' + pending.length + '</span><span class="detail-stat__label">Pending</span></div>' +
+      '<div class="detail-stat"><span class="detail-stat__num detail-stat__num--blue">' + waitlisted.length + '</span><span class="detail-stat__label">Waitlist</span></div>' +
+    '</div>';
+
+  const shareUrl = 'allnetgames.com/r/' + currentOrg.org_slug + '/' + session.short_code;
+  document.getElementById('shareBar').innerHTML = '<span class="share-bar__url">' + shareUrl + '</span><button class="share-bar__btn" onclick="copyShareLink(\'' + shareUrl + '\')">Copy Link</button>';
+  document.getElementById('autoPromoteBar').innerHTML = '<div class="auto-promote-bar__label"><strong>Auto-fill from waitlist</strong><br>Automatically promote when a spot opens</div><label class="toggle-switch"><input type="checkbox" ' + (session.auto_promote ? 'checked' : '') + ' onchange="toggleAutoPromote(this.checked)"><span class="toggle-switch__slider"></span></label>';
+  document.getElementById('detailTabs').innerHTML =
+    '<button class="detail-tab' + (currentTab === 'confirmed' ? ' active' : '') + '" onclick="switchTab(\'confirmed\')">Roster (' + confirmed.length + ')</button>' +
+    '<button class="detail-tab' + (currentTab === 'pending' ? ' active' : '') + '" onclick="switchTab(\'pending\')">Pending (' + pending.length + ')</button>' +
+    '<button class="detail-tab' + (currentTab === 'waitlisted' ? ' active' : '') + '" onclick="switchTab(\'waitlisted\')">Waitlist (' + waitlisted.length + ')</button>';
+  renderPlayerList();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.detail-tab[onclick*="' + tab + '"]').classList.add('active');
+  renderPlayerList();
+}
+
+function renderPlayerList() {
+  const players = currentRoster.filter(r => r.status === currentTab);
+  const container = document.getElementById('playerList');
+  if (players.length === 0) { container.innerHTML = '<div class="org-empty"><div class="org-empty__text">No players in this category.</div></div>'; return; }
+
+  container.innerHTML = players.map(function(p) {
+    var ratingColor = p.skill_rating >= 4.0 ? 'high' : p.skill_rating >= 3.0 ? 'mid' : 'low';
+    var initials = ((p.first_name || '?')[0] + (p.last_name || '?')[0]).toUpperCase();
+    var avatarHtml = buildCompositeAvatarHtml(p) || initials;
+    var record = p.wins + 'W-' + p.losses + 'L' + (p.draws > 0 ? '-' + p.draws + 'D' : '');
+    var actions = '';
+    if (currentTab === 'pending') {
+      actions = '<div class="player-row__actions"><button class="player-row__btn player-row__btn--approve" onclick="event.stopPropagation();adminAction(\'' + p.registration_id + '\',\'confirmed\')">Approve</button><button class="player-row__btn player-row__btn--decline" onclick="event.stopPropagation();adminAction(\'' + p.registration_id + '\',\'declined\')">Decline</button></div>';
+    } else if (currentTab === 'waitlisted') {
+      actions = '<div class="player-row__actions"><span class="player-row__pos">#' + p.waitlist_position + '</span><button class="player-row__btn player-row__btn--promote" onclick="event.stopPropagation();promotePlayer(\'' + p.registration_id + '\')">Promote</button></div>';
+    } else if (currentTab === 'confirmed') {
+      actions = '<div class="player-row__actions"><button class="player-row__btn player-row__btn--remove" onclick="event.stopPropagation();removePlayer(\'' + p.registration_id + '\')">Remove</button></div>';
+    }
+    return '<div class="player-row" onclick="openPlayerSheet(\'' + p.user_id + '\')">' +
+      '<div class="player-row__avatar">' + avatarHtml + '</div>' +
+      '<div class="player-row__info"><div class="player-row__name">' + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div><div class="player-row__stats">' + record + ' · Skill <span class="player-row__rating-val--' + ratingColor + '">' + Number(p.skill_rating).toFixed(1) + '</span> · Social ' + Number(p.social_rating).toFixed(1) + '</div></div>' + actions + '</div>';
+  }).join('');
+}
+
+async function adminAction(regId, newStatus) {
+  var { data, error } = await supabase.rpc('update_registration_status', { p_registration_id: regId, p_new_status: newStatus });
+  if (error || (data && data.error)) { showToast((data && data.error) || error.message || 'Action failed'); return; }
+  showToast(newStatus === 'confirmed' ? 'Player approved' : 'Player declined');
+  await loadRoster();
+}
+async function promotePlayer(regId) {
+  var { data, error } = await supabase.rpc('promote_from_waitlist', { p_registration_id: regId });
+  if (error || (data && data.error)) { showToast((data && data.error) || error.message || 'Promote failed'); return; }
+  showToast('Player promoted from waitlist');
+  await loadRoster();
+}
+async function removePlayer(regId) {
+  var { data, error } = await supabase.rpc('admin_remove_player', { p_registration_id: regId });
+  if (error || (data && data.error)) { showToast((data && data.error) || error.message || 'Remove failed'); return; }
+  showToast('Player removed');
+  await loadRoster();
+}
+async function toggleAutoPromote(enabled) {
+  var { error } = await supabase.from('run_sessions').update({ auto_promote: enabled }).eq('id', currentSessionId);
+  if (error) { showToast('Failed to update'); return; }
+  var s = currentSessions.find(function(s) { return s.id === currentSessionId; });
+  if (s) s.auto_promote = enabled;
+  showToast(enabled ? 'Auto-fill enabled' : 'Auto-fill disabled');
+}
+function copyShareLink(url) { navigator.clipboard.writeText('https://' + url).then(function() { showToast('Link copied'); }); }
+
+function openPlayerSheet(userId) {
+  var p = currentRoster.find(function(r) { return r.user_id === userId; });
+  if (!p) return;
+  var rc = function(v) { return v >= 4.0 ? 'color:var(--green-live)' : v >= 3.0 ? 'color:var(--orange)' : 'color:var(--red)'; };
+  var record = p.wins + 'W - ' + p.losses + 'L' + (p.draws > 0 ? ' - ' + p.draws + 'D' : '');
+  var actions = '';
+  if (p.status === 'pending') actions = '<div class="player-sheet__actions"><button class="player-sheet__action-btn player-sheet__action-btn--approve" onclick="adminAction(\'' + p.registration_id + '\',\'confirmed\');closePlayerSheetDirect();">Approve</button><button class="player-sheet__action-btn player-sheet__action-btn--decline" onclick="adminAction(\'' + p.registration_id + '\',\'declined\');closePlayerSheetDirect();">Decline</button></div>';
+  else if (p.status === 'waitlisted') actions = '<div class="player-sheet__actions"><button class="player-sheet__action-btn player-sheet__action-btn--promote" onclick="promotePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Promote to Roster</button></div>';
+  else if (p.status === 'confirmed') actions = '<div class="player-sheet__actions"><button class="player-sheet__action-btn player-sheet__action-btn--remove" onclick="removePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Remove from Roster</button></div>';
+
+  document.getElementById('playerSheetContent').innerHTML =
+    '<div class="player-sheet__name">' + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div>' +
+    (p.is_founding_hooper ? '<div class="player-sheet__badge">🏅 FOUNDING HOOPER #' + p.founding_number + '</div>' : '') +
+    '<div class="player-sheet__stats-grid">' +
+      '<div class="player-sheet__stat-box"><div class="player-sheet__stat-val" style="' + rc(Number(p.skill_rating)) + '">' + Number(p.skill_rating).toFixed(1) + '</div><div class="player-sheet__stat-label">Skill</div></div>' +
+      '<div class="player-sheet__stat-box"><div class="player-sheet__stat-val" style="' + rc(Number(p.social_rating)) + '">' + Number(p.social_rating).toFixed(1) + '</div><div class="player-sheet__stat-label">Social</div></div>' +
+      '<div class="player-sheet__stat-box"><div class="player-sheet__stat-val">' + (p.wins + p.losses + p.draws) + '</div><div class="player-sheet__stat-label">Games</div></div>' +
+    '</div><div class="player-sheet__record">' + record + '</div>' + actions;
+  document.getElementById('playerSheetOverlay').classList.add('active');
+}
+function closePlayerSheet(e) { if (e && e.target !== document.getElementById('playerSheetOverlay')) return; document.getElementById('playerSheetOverlay').classList.remove('active'); }
+function closePlayerSheetDirect() { document.getElementById('playerSheetOverlay').classList.remove('active'); }
+
+function goBack() {
+  if (document.getElementById('createForm').classList.contains('active')) {
+    document.getElementById('createForm').classList.remove('active');
+    document.getElementById('sessionList').classList.remove('hidden');
+    document.getElementById('topbarBack').style.display = 'none';
+    document.getElementById('topbarTitle').textContent = 'Organization';
+    document.getElementById('topbarAction').style.display = '';
+    return;
+  }
+  if (document.getElementById('sessionDetail').classList.contains('active')) {
+    document.getElementById('sessionDetail').classList.remove('active');
+    document.getElementById('sessionList').classList.remove('hidden');
+    document.getElementById('topbarBack').style.display = 'none';
+    document.getElementById('topbarTitle').textContent = 'Organization';
+    document.getElementById('topbarAction').style.display = '';
+    currentTab = 'confirmed';
+    loadSessions();
+    return;
+  }
+}
+
+function showCreateForm() {
+  document.getElementById('sessionList').classList.add('hidden');
+  document.getElementById('sessionDetail').classList.remove('active');
+  document.getElementById('createForm').classList.add('active');
+  document.getElementById('topbarBack').style.display = 'flex';
+  document.getElementById('topbarTitle').textContent = 'New Session';
+  document.getElementById('topbarAction').style.display = 'none';
+  var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('formDate').value = tomorrow.toISOString().split('T')[0];
+  document.getElementById('formVenue').value = 'Park Avenue Community Center';
+}
+
+async function submitCreateSession() {
+  var btn = document.getElementById('formSubmit');
+  var title = document.getElementById('formTitle').value.trim();
+  var type = document.getElementById('formType').value;
+  var date = document.getElementById('formDate').value;
+  var startTime = document.getElementById('formStartTime').value;
+  var endTime = document.getElementById('formEndTime').value;
+  var venue = document.getElementById('formVenue').value.trim();
+  var maxPlayers = parseInt(document.getElementById('formMaxPlayers').value) || 22;
+  var desc = document.getElementById('formDesc').value.trim();
+  if (!title || !date || !startTime || !venue) { showToast('Please fill in all required fields'); return; }
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    var { data, error } = await supabase.rpc('create_run_session', { p_org_id: currentOrg.org_id, p_title: title, p_session_type: type, p_date: date, p_start_time: startTime, p_end_time: endTime || null, p_venue_name: venue, p_max_players: maxPlayers, p_description: desc || null, p_auto_promote: false });
+    if (error) throw error;
+    showToast('Session created');
+    goBack();
+  } catch (err) { console.error('Create session error:', err); showToast('Failed to create session'); }
+  finally { btn.disabled = false; btn.textContent = 'Create Session'; }
+}
+
+document.addEventListener('touchstart', function(e) {
+  if (e.touches[0].clientX < 30 || e.touches[0].clientX > window.innerWidth - 30) {
+    var startX = e.touches[0].clientX, startY = e.touches[0].clientY;
+    function onMove(ev) { var dx = Math.abs(ev.touches[0].clientX - startX), dy = Math.abs(ev.touches[0].clientY - startY); if (dx > dy && dx > 10) ev.preventDefault(); }
+    function onEnd() { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); }
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+  }
+}, { passive: true });
+
+initOrg();
+</script>
+</body>
+</html>

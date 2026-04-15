@@ -83,7 +83,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .player-row__pos { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); background: var(--border); padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
 .player-row__actions { display: flex; gap: 8px; flex-shrink: 0; }
 .player-row__btn { padding: 6px 12px; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
-.player-row__btn--approve { background: var(--green-live); color: #fff; }
+.player-row__btn--approve { background: var(--green-live); color: #052e16; }
 .player-row__btn--decline { background: rgba(239,68,68,0.15); color: var(--red); }
 .player-row__btn--promote { background: rgba(59,130,246,0.15); color: var(--blue-quiet); }
 .player-row__btn--remove { background: rgba(239,68,68,0.1); color: var(--red); font-size: 11px; padding: 4px 10px; }
@@ -116,7 +116,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .player-sheet__record { text-align: center; margin-top: 12px; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); }
 .player-sheet__actions { display: flex; gap: 8px; margin-top: 20px; }
 .player-sheet__action-btn { flex: 1; padding: 12px; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; font-weight: 600; border: none; cursor: pointer; text-align: center; }
-.player-sheet__action-btn--approve { background: var(--green-live); color: #fff; }
+.player-sheet__action-btn--approve { background: var(--green-live); color: #052e16; }
 .player-sheet__action-btn--decline { background: rgba(239,68,68,0.15); color: var(--red); }
 .player-sheet__action-btn--promote { background: var(--blue-quiet); color: #fff; }
 .player-sheet__action-btn--remove { background: rgba(239,68,68,0.15); color: var(--red); }
@@ -127,12 +127,23 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .form-label { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
 .form-input, .form-select, .form-textarea { width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
 .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--orange); }
+.form-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+.form-input[type="date"]::-webkit-inner-spin-button { display: none; }
 .form-select { appearance: none; cursor: pointer; }
 .form-textarea { resize: vertical; min-height: 80px; }
 .form-row { display: flex; gap: 12px; }
 .form-row > .form-group { flex: 1; }
 .form-submit { width: 100%; padding: 14px; background: var(--orange); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font-display); font-size: 16px; font-weight: 700; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
 .form-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.venue-wrapper { position: relative; }
+.venue-suggestions { position: absolute; top: 100%; left: 0; right: 0; z-index: 20; background: var(--bg-card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm); max-height: 200px; overflow-y: auto; display: none; }
+.venue-suggestions.active { display: block; }
+.venue-suggestion { padding: 10px 12px; font-size: 13px; color: var(--text-primary); cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.venue-suggestion:last-child { border-bottom: none; }
+.venue-suggestion:hover, .venue-suggestion:active { background: rgba(255,255,255,0.05); }
+.venue-suggestion__main { color: #fff; font-weight: 500; }
+.venue-suggestion__secondary { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
 
 .org-action-loading { position: fixed; inset: 0; z-index: 450; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.15s, visibility 0.15s; }
 .org-action-loading.active { opacity: 1; visibility: visible; pointer-events: all; }
@@ -188,7 +199,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
     <div class="form-group"><label class="form-label">Session Type</label><select class="form-select" id="formType"><option value="competitive">Competitive</option><option value="intro">Intro</option><option value="open">Open</option></select></div>
     <div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" id="formDate" type="date"></div><div class="form-group"><label class="form-label">Max Players</label><input class="form-input" id="formMaxPlayers" type="number" value="22" min="2" max="50"></div></div>
     <div class="form-row"><div class="form-group"><label class="form-label">Start Time</label><input class="form-input" id="formStartTime" type="time" value="19:00"></div><div class="form-group"><label class="form-label">End Time</label><input class="form-input" id="formEndTime" type="time" value="21:00"></div></div>
-    <div class="form-group"><label class="form-label">Venue</label><input class="form-input" id="formVenue" type="text" placeholder="e.g. Park Avenue Community Center"></div>
+    <div class="form-group"><label class="form-label">Venue</label><div class="venue-wrapper"><input class="form-input" id="formVenue" type="text" placeholder="Search or type venue name..." autocomplete="off" oninput="onVenueInput(this.value)"><div class="venue-suggestions" id="venueSuggestions"></div></div></div>
     <div class="form-group"><label class="form-label">Description (optional)</label><textarea class="form-textarea" id="formDesc" placeholder="What should players know about this session?"></textarea></div>
     <button class="form-submit" id="formSubmit" onclick="submitCreateSession()">Create Session</button>
   </div>
@@ -483,6 +494,64 @@ document.addEventListener('touchstart', function(e) {
     document.addEventListener('touchend', onEnd);
   }
 }, { passive: true });
+
+// ── Venue Autocomplete (Google Places API) ──
+var _venueTimeout = null;
+var _selectedPlaceId = null;
+var GPLACES_KEY = 'AIzaSyBXl8c0EB3N3PPTMrRijwnVexwMYqfnwMk';
+
+function onVenueInput(val) {
+  _selectedPlaceId = null; // reset if user edits after selecting
+  clearTimeout(_venueTimeout);
+  if (!val || val.length < 3) { document.getElementById('venueSuggestions').classList.remove('active'); return; }
+  _venueTimeout = setTimeout(function() { fetchVenueSuggestions(val); }, 300);
+}
+
+async function fetchVenueSuggestions(input) {
+  try {
+    var resp = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GPLACES_KEY },
+      body: JSON.stringify({
+        input: input,
+        locationBias: { circle: { center: { latitude: 33.68, longitude: -117.82 }, radius: 80000 } },
+        includedPrimaryTypes: ['establishment', 'gymnasium', 'park', 'stadium', 'community_center', 'sports_complex']
+      })
+    });
+    var data = await resp.json();
+    var suggestions = (data.suggestions || []).filter(function(s) { return s.placePrediction; });
+    renderVenueSuggestions(suggestions);
+  } catch(e) { console.error('Venue autocomplete error:', e); }
+}
+
+function renderVenueSuggestions(suggestions) {
+  var container = document.getElementById('venueSuggestions');
+  if (suggestions.length === 0) { container.classList.remove('active'); return; }
+  container.innerHTML = suggestions.map(function(s) {
+    var p = s.placePrediction;
+    var main = p.structuredFormat ? p.structuredFormat.mainText.text : p.text.text;
+    var secondary = p.structuredFormat ? (p.structuredFormat.secondaryText ? p.structuredFormat.secondaryText.text : '') : '';
+    var placeId = p.placeId || '';
+    return '<div class="venue-suggestion" onclick="selectVenue(\'' + escHtml(main.replace(/'/g, "\\'")) + '\',\'' + escHtml(secondary.replace(/'/g, "\\'")) + '\',\'' + placeId + '\')">' +
+      '<div class="venue-suggestion__main">' + escHtml(main) + '</div>' +
+      (secondary ? '<div class="venue-suggestion__secondary">' + escHtml(secondary) + '</div>' : '') +
+    '</div>';
+  }).join('');
+  container.classList.add('active');
+}
+
+function selectVenue(name, address, placeId) {
+  document.getElementById('formVenue').value = name;
+  _selectedPlaceId = placeId;
+  document.getElementById('venueSuggestions').classList.remove('active');
+}
+
+// Close suggestions on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.venue-wrapper')) {
+    document.getElementById('venueSuggestions').classList.remove('active');
+  }
+});
 
 initOrg();
 </script>

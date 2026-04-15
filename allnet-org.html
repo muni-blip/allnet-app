@@ -110,7 +110,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
 .player-sheet-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0); display: flex; align-items: flex-end; justify-content: center; visibility: hidden; pointer-events: none; transition: background 0.3s, visibility 0.3s; }
 .player-sheet-overlay.active { background: rgba(0,0,0,0.7); visibility: visible; pointer-events: all; }
-.player-sheet { width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto; background: var(--bg-elevated); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px 16px 40px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.player-sheet { width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--bg-elevated); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px 16px 40px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 .player-sheet-overlay.active .player-sheet { transform: translateY(0); }
 .player-sheet__handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border-light); margin: 0 auto 16px; }
 .player-sheet__name { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; text-align: center; }
@@ -454,7 +454,15 @@ function openPlayerSheet(userId) {
     ? '<div class="player-sheet__badge">🏅 FOUNDING HOOPER #' + p.founding_number + '</div>'
     : '';
 
-  document.getElementById('playerSheetContent').innerHTML = badge + '<div style="margin:12px auto 0;max-width:340px;">' + cardHtml + '</div>' + actions;
+  // Career card wrapper — scale(0.78) fits in sheet, negative margin collapses unused space
+  var s = 0.78;
+  var cardH = 597;
+  var negMargin = Math.round(cardH * (1 - s));
+  var cardWrapper = '<div style="display:flex;justify-content:center;margin:12px 0 0;">' +
+    '<div style="transform:scale(' + s + ');transform-origin:top center;margin-bottom:-' + negMargin + 'px;">' +
+    cardHtml + '</div></div>';
+
+  document.getElementById('playerSheetContent').innerHTML = badge + cardWrapper + actions;
 
   // Fit names after render
   setTimeout(function() { CareerCard.fitNames('psc'); }, 50);

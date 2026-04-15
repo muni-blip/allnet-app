@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/r/:org/:code",
+      "destination": "/api/session?org=:org&code=:code"
+    },
+    {
       "source": "/p/:slug",
       "destination": "/api/player?slug=:slug"
     },

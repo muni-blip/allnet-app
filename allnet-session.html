@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Session</title>
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AllNet">
+<meta property="og:title" content="AllNet — Join this run">
+<meta property="og:description" content="Request your spot for this basketball session on AllNet.">
+<meta property="og:image" content="https://allnetgames.com/img/icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --orange: #F74501; --bg: #0A0A0A; --bg-card: #141414; --border: #222; --text-primary: #fff; --text-secondary: #999; --text-muted: #666; --green: #22C55E; --red: #EF4444; --blue: #3B82F6; --radius: 12px; --radius-sm: 8px; }
+html, body { min-height: 100vh; background: var(--bg); color: var(--text-primary); font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+
+.sp-topbar { position: sticky; top: 0; z-index: 100; padding: 14px 16px; background: rgba(10,10,10,0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.sp-topbar__logo svg { display: block; }
+.sp-topbar__cta { padding: 8px 20px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 13px; color: #fff; background: var(--orange); border: none; border-radius: var(--radius-sm); cursor: pointer; text-decoration: none; display: none; }
+
+.sp-page { max-width: 480px; margin: 0 auto; padding: 24px 16px 120px; }
+
+.sp-org { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+
+.sp-title { font-family: 'Oswald', sans-serif; font-size: 32px; font-weight: 700; color: #fff; text-transform: uppercase; line-height: 1.1; }
+
+.sp-details { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.sp-detail { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-secondary); }
+.sp-detail__icon { width: 18px; text-align: center; flex-shrink: 0; opacity: 0.7; }
+
+.sp-description { margin-top: 16px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; padding: 12px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+
+.sp-spots { margin-top: 24px; }
+.sp-spots__header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.sp-spots__label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.sp-spots__count { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+.sp-spots__bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.sp-spots__fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }
+.sp-spots__fill--green { background: var(--green); }
+.sp-spots__fill--orange { background: var(--orange); }
+.sp-spots__fill--full { background: var(--red); }
+
+.sp-roster { margin-top: 24px; }
+.sp-roster__label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+.sp-roster__grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.sp-roster__player { display: flex; align-items: center; gap: 6px; padding: 6px 12px 6px 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; font-size: 13px; color: var(--text-secondary); }
+.sp-roster__avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); overflow: hidden; flex-shrink: 0; }
+.sp-roster__avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.sp-cta { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--bg) 30%); z-index: 50; }
+.sp-cta__btn { display: block; width: 100%; max-width: 480px; margin: 0 auto; padding: 16px; font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #fff; background: var(--orange); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: opacity 0.2s; text-align: center; }
+.sp-cta__btn:hover { opacity: 0.9; }
+.sp-cta__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sp-cta__btn--secondary { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 600; text-transform: none; letter-spacing: 0; }
+
+.sp-status { margin-top: 24px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); text-align: center; }
+.sp-status__badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; }
+.sp-status__badge--pending { background: rgba(247,69,1,0.15); color: var(--orange); border: 1px solid rgba(247,69,1,0.3); }
+.sp-status__badge--confirmed { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+.sp-status__badge--waitlisted { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+.sp-status__text { font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+
+.sp-loading { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+.sp-error { text-align: center; padding: 80px 20px; }
+.sp-error__icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+.sp-error__text { font-size: 16px; color: var(--text-secondary); }
+
+.sp-closed { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-sm); padding: 12px; text-align: center; margin-top: 24px; font-size: 13px; color: var(--red); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* Sign-up modal */
+.sp-auth-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; }
+.sp-auth-overlay.active { display: flex; }
+.sp-auth-sheet { width: 100%; max-width: 420px; background: #111; border-radius: 20px 20px 0 0; padding: 24px 20px 40px; animation: sheetUp .3s ease-out; }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sp-auth__handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 20px; }
+.sp-auth__title { font-family: 'Oswald', sans-serif; font-size: 22px; font-weight: 700; color: #fff; text-transform: uppercase; text-align: center; margin-bottom: 6px; }
+.sp-auth__sub { font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 24px; }
+.sp-auth__btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px; border: 1px solid var(--border); background: var(--bg-card); color: #fff; transition: border-color 0.2s; }
+.sp-auth__btn:hover { border-color: #444; }
+.sp-auth__btn svg { flex-shrink: 0; }
+.sp-auth__founding { margin-top: 16px; text-align: center; font-size: 12px; color: var(--orange); font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+
+<div class="sp-topbar">
+  <a href="/allnet-landing.html" class="sp-topbar__logo">
+    <svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
+  </a>
+  <a href="/allnet-landing.html" class="sp-topbar__cta" id="topCta">Join AllNet</a>
+</div>
+
+<div class="sp-page" id="sessionPage">
+  <div class="sp-loading" id="sessionLoading">Loading session...</div>
+</div>
+
+<div class="sp-cta" id="ctaBar" style="display:none;">
+  <button class="sp-cta__btn" id="ctaBtn" onclick="handleCta()">Request Spot</button>
+</div>
+
+<!-- Auth modal -->
+<div class="sp-auth-overlay" id="authOverlay" onclick="closeAuth(event)">
+  <div class="sp-auth-sheet" onclick="event.stopPropagation()">
+    <div class="sp-auth__handle"></div>
+    <div class="sp-auth__title">Join this run</div>
+    <div class="sp-auth__sub">Create an AllNet account to request your spot</div>
+    <button class="sp-auth__btn" onclick="signInGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <button class="sp-auth__btn" onclick="signInApple()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.32 2.32-2.17 4.41-3.74 4.25z"/></svg>
+      Continue with Apple
+    </button>
+    <div class="sp-auth__founding">🏅 Sign up now and become a Founding Hooper</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let sessionData = null;
+let currentUser = null;
+
+// Parse URL: /r/{org}/{code} or ?org=...&code=...
+function getParams() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('org') && params.get('code')) return { org: params.get('org'), code: params.get('code') };
+  var parts = window.location.pathname.split('/').filter(Boolean);
+  if (parts[0] === 'r' && parts[1] && parts[2]) return { org: parts[1], code: parts[2] };
+  return null;
+}
+
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function formatDate(dateStr) {
+  var d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+function formatTime(t) {
+  if (!t) return '';
+  var parts = t.split(':');
+  var hr = parseInt(parts[0]);
+  return (hr > 12 ? hr - 12 : hr || 12) + ':' + parts[1] + (hr >= 12 ? ' PM' : ' AM');
+}
+
+async function init() {
+  var params = getParams();
+  if (!params) { showError('Invalid session link'); return; }
+
+  // Check auth
+  var { data: { user } } = await supabase.auth.getUser();
+  currentUser = user;
+  if (!currentUser) document.getElementById('topCta').style.display = '';
+
+  // Fetch session data
+  var { data, error } = await supabase.rpc('get_public_session_info', {
+    p_org_slug: params.org, p_session_code: params.code
+  });
+
+  if (error || !data || data.error) {
+    showError(data?.error || 'Session not found');
+    return;
+  }
+
+  sessionData = data;
+  renderSession();
+
+  // Handle post-auth redirect (user just signed up)
+  if (currentUser && sessionStorage.getItem('pendingSessionReg')) {
+    sessionStorage.removeItem('pendingSessionReg');
+    await registerForSession();
+  }
+}
+
+function showError(msg) {
+  document.getElementById('sessionLoading').innerHTML =
+    '<div class="sp-error"><div class="sp-error__icon">🏀</div><div class="sp-error__text">' + escHtml(msg) + '</div></div>';
+}
+
+function renderSession() {
+  var s = sessionData.session;
+  var org = sessionData.org;
+  var confirmed = sessionData.confirmed_count || 0;
+  var roster = sessionData.roster || [];
+  var pct = Math.min((confirmed / s.max_players) * 100, 100);
+  var fillClass = pct >= 100 ? 'sp-spots__fill--full' : pct >= 75 ? 'sp-spots__fill--orange' : 'sp-spots__fill--green';
+  var timeStr = formatTime(s.start_time) + (s.end_time ? ' — ' + formatTime(s.end_time) : '');
+
+  var html = '';
+  html += '<div class="sp-org">' + escHtml(org.name) + '</div>';
+  html += '<div class="sp-title">' + escHtml(s.title) + '</div>';
+
+  html += '<div class="sp-details">';
+  html += '<div class="sp-detail"><span class="sp-detail__icon">📅</span>' + formatDate(s.date) + '</div>';
+  html += '<div class="sp-detail"><span class="sp-detail__icon">🕐</span>' + timeStr + '</div>';
+  html += '<div class="sp-detail"><span class="sp-detail__icon">📍</span>' + escHtml(s.venue_name) + '</div>';
+  html += '</div>';
+
+  if (s.description) {
+    html += '<div class="sp-description">' + escHtml(s.description) + '</div>';
+  }
+
+  // Spots bar
+  html += '<div class="sp-spots">';
+  html += '<div class="sp-spots__header"><span class="sp-spots__label">Spots</span><span class="sp-spots__count">' + confirmed + ' / ' + s.max_players + '</span></div>';
+  html += '<div class="sp-spots__bar"><div class="sp-spots__fill ' + fillClass + '" style="width:' + pct + '%"></div></div>';
+  html += '</div>';
+
+  // Roster preview
+  if (roster.length > 0) {
+    html += '<div class="sp-roster"><div class="sp-roster__label">Confirmed Players</div><div class="sp-roster__grid">';
+    roster.forEach(function(p) {
+      var avatarInner = '';
+      if (p.avatar_url) {
+        avatarInner = '<img src="' + escHtml(p.avatar_url) + '" alt="" onerror="this.style.display=\'none\'">';
+      } else {
+        avatarInner = (p.first_name || '?')[0].toUpperCase();
+      }
+      html += '<div class="sp-roster__player"><div class="sp-roster__avatar">' + avatarInner + '</div>' + escHtml(p.first_name) + '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Registration status (if user is registered)
+  if (sessionData.user_registration) {
+    var reg = sessionData.user_registration;
+    html += '<div class="sp-status">';
+    if (reg.status === 'confirmed') {
+      html += '<div class="sp-status__badge sp-status__badge--confirmed">Confirmed</div>';
+      html += '<div class="sp-status__text">You\'re in! See you on the court.</div>';
+    } else if (reg.status === 'pending') {
+      html += '<div class="sp-status__badge sp-status__badge--pending">Pending</div>';
+      html += '<div class="sp-status__text">Your spot request is pending review by the organizer.</div>';
+    } else if (reg.status === 'waitlisted') {
+      html += '<div class="sp-status__badge sp-status__badge--waitlisted">Waitlisted #' + reg.waitlist_position + '</div>';
+      html += '<div class="sp-status__text">Session is full. You\'ll be notified if a spot opens.</div>';
+    }
+    html += '</div>';
+  }
+
+  // Session closed
+  if (s.status === 'cancelled') {
+    html += '<div class="sp-closed">This session has been cancelled</div>';
+  } else if (s.status === 'completed') {
+    html += '<div class="sp-closed">This session has ended</div>';
+  }
+
+  document.getElementById('sessionPage').innerHTML = html;
+
+  // Show CTA if session is open and user hasn't registered
+  if (s.status === 'open' && !sessionData.user_registration) {
+    var ctaBar = document.getElementById('ctaBar');
+    var ctaBtn = document.getElementById('ctaBtn');
+    ctaBar.style.display = '';
+    if (currentUser) {
+      ctaBtn.textContent = 'Request Spot';
+    } else {
+      ctaBtn.textContent = 'Sign Up & Request Spot';
+    }
+  }
+}
+
+async function handleCta() {
+  if (!currentUser) {
+    // Store intent, show auth modal
+    sessionStorage.setItem('pendingSessionReg', '1');
+    document.getElementById('authOverlay').classList.add('active');
+    return;
+  }
+  await registerForSession();
+}
+
+async function registerForSession() {
+  var btn = document.getElementById('ctaBtn');
+  btn.disabled = true;
+  btn.textContent = 'Requesting...';
+
+  try {
+    var { data, error } = await supabase.rpc('register_for_session', {
+      p_session_id: sessionData.session.id
+    });
+
+    if (error) throw error;
+    if (data && data.error) { alert(data.error); btn.disabled = false; btn.textContent = 'Request Spot'; return; }
+
+    // Update local data and re-render
+    sessionData.user_registration = data;
+    document.getElementById('ctaBar').style.display = 'none';
+    renderSession();
+  } catch (err) {
+    console.error('Registration error:', err);
+    btn.disabled = false;
+    btn.textContent = 'Request Spot';
+  }
+}
+
+function closeAuth(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('authOverlay').classList.remove('active');
+}
+
+async function signInGoogle() {
+  var redirectUrl = window.location.href;
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: redirectUrl }
+  });
+}
+
+async function signInApple() {
+  var redirectUrl = window.location.href;
+  await supabase.auth.signInWithOAuth({
+    provider: 'apple',
+    options: { redirectTo: redirectUrl }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Organization</title>
 <link rel="stylesheet" href="css/app.css">
-<link rel="stylesheet" href="css/career-card.css">
 <link rel="stylesheet" href="css/tour.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
@@ -112,9 +111,19 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .player-sheet-overlay.active{display:flex;}
 .player-sheet{position:relative;isolation:isolate;width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:12px 16px 32px;max-height:90vh;overflow-y:auto;overflow-x:hidden;animation:sheetUp .3s ease-out;}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.player-sheet #playerSheetCard{width:100%;overflow:hidden;contain:content;}
-.player-sheet #playerSheetCard .cc-border{max-width:100%;margin:0 auto;}
-.player-sheet #playerSheetCard .cc{overflow:hidden;}
+.player-sheet #playerSheetCard{width:100%;}
+.admin-profile{text-align:center;padding:0 8px;}
+.admin-profile__avatar{width:120px;height:120px;border-radius:50%;margin:0 auto 16px;overflow:hidden;border:3px solid var(--orange);position:relative;}
+.admin-profile__avatar-inner{width:100%;height:100%;position:relative;}
+.admin-profile__name{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.02em;}
+.admin-profile__stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+.admin-profile__stat{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;}
+.admin-profile__stat-val{font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;}
+.admin-profile__stat-val--green{color:var(--green-live);}
+.admin-profile__stat-val--orange{color:var(--orange);}
+.admin-profile__stat-val--white{color:#fff;}
+.admin-profile__stat-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+.admin-profile__record{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-secondary);margin-top:12px;}
 .player-sheet__handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 16px;}
 .player-sheet__actions{display:flex;gap:10px;margin-top:16px;max-width:380px;margin-left:auto;margin-right:auto;}
 .player-sheet__action-btn{flex:1;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:transparent;border:1px solid #333;border-radius:8px;padding:12px 0;cursor:pointer;transition:all .2s;}
@@ -233,7 +242,6 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
-<script src="js/career-card.js"></script>
 <script src="js/tour.js"></script>
 <script>
 let currentUser = null, currentProfile = null, currentOrg = null;
@@ -424,24 +432,25 @@ function openPlayerSheet(userId) {
     ? '<div style="display:inline-block;padding:6px 16px;background:rgba(247,69,1,0.15);border:1px solid var(--orange);border-radius:20px;font-family:var(--font-mono);font-size:11px;color:var(--orange);">🏅 Founding Hooper #' + p.founding_number + '</div>'
     : '';
 
-  // Career card
+  // Admin profile card (purpose-built for vetting context)
+  var avatarHtml = buildCompositeAvatarHtml(p);
+  var skillColor = p.skill_rating >= 4.0 ? 'green' : p.skill_rating >= 3.0 ? 'orange' : 'orange';
+  var socialColor = p.social_rating >= 4.0 ? 'green' : p.social_rating >= 3.0 ? 'orange' : 'orange';
+  var totalGames = (p.wins || 0) + (p.losses || 0) + (p.draws || 0);
+  var record = p.wins + 'W - ' + p.losses + 'L' + (p.draws > 0 ? ' - ' + p.draws + 'D' : '');
+
   var cardEl = document.getElementById('playerSheetCard');
-  cardEl.innerHTML = CareerCard.render({
-    cardId: 'psc',
-    firstName: p.first_name || '',
-    lastName: p.last_name || '',
-    cutoutUrl: p.avatar_cutout_url || null,
-    coverSlug: p.selected_cover || 'crossover',
-    wins: p.wins || 0,
-    losses: p.losses || 0,
-    draws: p.draws || 0,
-    skillRating: Number(p.skill_rating).toFixed(1),
-    socialRating: Number(p.social_rating).toFixed(1),
-    divisionLabel: 'ALL',
-    showTabs: false,
-    showDeltas: false
-  });
-  requestAnimationFrame(function() { CareerCard.fitNames('psc'); });
+  cardEl.innerHTML =
+    '<div class="admin-profile">' +
+      '<div class="admin-profile__avatar"><div class="admin-profile__avatar-inner">' + avatarHtml + '</div></div>' +
+      '<div class="admin-profile__name">' + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div>' +
+      '<div class="admin-profile__stats">' +
+        '<div class="admin-profile__stat"><div class="admin-profile__stat-val admin-profile__stat-val--' + skillColor + '">' + Number(p.skill_rating).toFixed(1) + '</div><div class="admin-profile__stat-label">Skill</div></div>' +
+        '<div class="admin-profile__stat"><div class="admin-profile__stat-val admin-profile__stat-val--' + socialColor + '">' + Number(p.social_rating).toFixed(1) + '</div><div class="admin-profile__stat-label">Social</div></div>' +
+        '<div class="admin-profile__stat"><div class="admin-profile__stat-val admin-profile__stat-val--white">' + totalGames + '</div><div class="admin-profile__stat-label">Games</div></div>' +
+      '</div>' +
+      '<div class="admin-profile__record">' + record + '</div>' +
+    '</div>';
 
   // Action buttons
   var actionsEl = document.getElementById('playerSheetActions');

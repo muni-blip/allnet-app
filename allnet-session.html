@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
-<script src="js/posthog.js"></script>
+<script src="/js/posthog.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Session</title>
 
@@ -127,10 +127,10 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--text-primary
 <script>
 const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let sessionData = null;
-let currentUser = null;
+var sessionData = null;
+var currentUser = null;
 
 // Parse URL: /r/{org}/{code} or ?org=...&code=...
 function getParams() {

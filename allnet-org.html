@@ -279,6 +279,7 @@ function renderSessionCard(session) {
 
 async function openSessionDetail(sessionId) {
   currentSessionId = sessionId;
+  currentTab = 'confirmed';
   document.getElementById('sessionList').classList.add('hidden');
   document.getElementById('createForm').classList.remove('active');
   document.getElementById('sessionDetail').classList.add('active');

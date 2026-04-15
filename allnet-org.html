@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AllNet — Organization</title>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/career-card.css">
 <link rel="stylesheet" href="css/tour.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="manifest" href="/manifest.json">
@@ -109,30 +110,22 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
 .player-sheet-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;justify-content:center;}
 .player-sheet-overlay.active{display:flex;}
-.player-sheet{position:relative;isolation:isolate;width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:12px 16px 32px;max-height:90vh;overflow-y:auto;overflow-x:hidden;animation:sheetUp .3s ease-out;}
+.player-sheet{width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:12px 16px 32px;max-height:90vh;overflow-y:auto;animation:sheetUp .3s ease-out;}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.player-sheet #playerSheetCard{width:100%;}
-.admin-profile{text-align:center;padding:0 8px;}
-.admin-profile__avatar{width:120px;height:120px;border-radius:50%;margin:0 auto 16px;overflow:hidden;border:3px solid var(--orange);position:relative;}
-.admin-profile__avatar-inner{width:100%;height:100%;position:relative;}
-.admin-profile__name{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.02em;}
-.admin-profile__stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
-.admin-profile__stat{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;}
-.admin-profile__stat-val{font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;}
-.admin-profile__stat-val--green{color:var(--green-live);}
-.admin-profile__stat-val--orange{color:var(--orange);}
-.admin-profile__stat-val--white{color:#fff;}
-.admin-profile__stat-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
-.admin-profile__record{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-secondary);margin-top:12px;}
 .player-sheet__handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 16px;}
 .player-sheet__actions{display:flex;gap:10px;margin-top:16px;max-width:380px;margin-left:auto;margin-right:auto;}
 .player-sheet__action-btn{flex:1;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:transparent;border:1px solid #333;border-radius:8px;padding:12px 0;cursor:pointer;transition:all .2s;}
+.player-sheet__action-btn:hover{border-color:#fff;}
 .player-sheet__action-btn--approve{background:var(--green-live);color:#052e16;border-color:var(--green-live);}
 .player-sheet__action-btn--decline{background:rgba(239,68,68,0.15);color:var(--red);border-color:rgba(239,68,68,0.3);}
 .player-sheet__action-btn--promote{background:rgba(59,130,246,0.15);color:var(--blue-quiet);border-color:rgba(59,130,246,0.3);}
 .player-sheet__action-btn--remove{background:rgba(239,68,68,0.15);color:var(--red);border-color:rgba(239,68,68,0.3);}
 .player-sheet__close{display:flex;justify-content:center;margin-top:16px;}
-.player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.player-sheet__close-btn:hover{background:rgba(255,255,255,0.15);}
+.player-sheet__loader{display:flex;align-items:center;justify-content:center;height:100%;}
+.player-sheet__spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.1);border-top-color:#FF5A1F;border-radius:50%;animation:psSpin .7s linear infinite;}
+@keyframes psSpin{to{transform:rotate(360deg);}}
 .create-form { display: none; padding: 24px 16px; max-width: 600px; }
 .create-form.active { display: block; }
 .form-group { margin-bottom: 20px; }
@@ -220,9 +213,11 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
   <div class="player-sheet" onclick="event.stopPropagation()">
     <div class="player-sheet__handle"></div>
     <div class="player-sheet__badge" id="playerSheetBadge"></div>
-    <div id="playerSheetCard"></div>
+    <div class="cc-border"><div class="cc" id="playerSheetCard"></div></div>
     <div class="player-sheet__actions" id="playerSheetActions"></div>
-    <div class="player-sheet__close"><button class="player-sheet__close-btn" onclick="closePlayerSheet()">✕</button></div>
+    <div class="player-sheet__close">
+      <button class="player-sheet__close-btn" onclick="closePlayerSheet()">✕</button>
+    </div>
   </div>
 </div>
 
@@ -242,6 +237,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-helpers.js"></script>
+<script src="js/career-card.js"></script>
 <script src="js/tour.js"></script>
 <script>
 let currentUser = null, currentProfile = null, currentOrg = null;
@@ -423,53 +419,120 @@ async function toggleAutoPromote(enabled) {
 function copyShareLink(url) { navigator.clipboard.writeText('https://' + url).then(function() { showToast('Link copied'); }); }
 
 function openPlayerSheet(userId) {
-  var p = currentRoster.find(function(r) { return r.user_id === userId; });
-  if (!p) return;
-
-  // Badge
-  var badgeEl = document.getElementById('playerSheetBadge');
-  badgeEl.innerHTML = p.is_founding_hooper
-    ? '<div style="display:inline-block;padding:6px 16px;background:rgba(247,69,1,0.15);border:1px solid var(--orange);border-radius:20px;font-family:var(--font-mono);font-size:11px;color:var(--orange);">🏅 Founding Hooper #' + p.founding_number + '</div>'
-    : '';
-
-  // Admin profile card (purpose-built for vetting context)
-  var avatarHtml = buildCompositeAvatarHtml(p);
-  var skillColor = p.skill_rating >= 4.0 ? 'green' : p.skill_rating >= 3.0 ? 'orange' : 'orange';
-  var socialColor = p.social_rating >= 4.0 ? 'green' : p.social_rating >= 3.0 ? 'orange' : 'orange';
-  var totalGames = (p.wins || 0) + (p.losses || 0) + (p.draws || 0);
-  var record = p.wins + 'W - ' + p.losses + 'L' + (p.draws > 0 ? ' - ' + p.draws + 'D' : '');
-
-  var cardEl = document.getElementById('playerSheetCard');
-  cardEl.innerHTML =
-    '<div class="admin-profile">' +
-      '<div class="admin-profile__avatar"><div class="admin-profile__avatar-inner">' + avatarHtml + '</div></div>' +
-      '<div class="admin-profile__name">' + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div>' +
-      '<div class="admin-profile__stats">' +
-        '<div class="admin-profile__stat"><div class="admin-profile__stat-val admin-profile__stat-val--' + skillColor + '">' + Number(p.skill_rating).toFixed(1) + '</div><div class="admin-profile__stat-label">Skill</div></div>' +
-        '<div class="admin-profile__stat"><div class="admin-profile__stat-val admin-profile__stat-val--' + socialColor + '">' + Number(p.social_rating).toFixed(1) + '</div><div class="admin-profile__stat-label">Social</div></div>' +
-        '<div class="admin-profile__stat"><div class="admin-profile__stat-val admin-profile__stat-val--white">' + totalGames + '</div><div class="admin-profile__stat-label">Games</div></div>' +
-      '</div>' +
-      '<div class="admin-profile__record">' + record + '</div>' +
-    '</div>';
-
-  // Action buttons
-  var actionsEl = document.getElementById('playerSheetActions');
-  if (p.status === 'pending') {
-    actionsEl.innerHTML =
-      '<button class="player-sheet__action-btn player-sheet__action-btn--approve" onclick="adminAction(\'' + p.registration_id + '\',\'confirmed\');closePlayerSheetDirect();">Approve</button>' +
-      '<button class="player-sheet__action-btn player-sheet__action-btn--decline" onclick="adminAction(\'' + p.registration_id + '\',\'declined\');closePlayerSheetDirect();">Decline</button>';
-  } else if (p.status === 'waitlisted') {
-    actionsEl.innerHTML =
-      '<button class="player-sheet__action-btn player-sheet__action-btn--promote" onclick="promotePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Promote to Roster</button>';
-  } else if (p.status === 'confirmed') {
-    actionsEl.innerHTML =
-      '<button class="player-sheet__action-btn player-sheet__action-btn--remove" onclick="removePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Remove from Roster</button>';
-  } else {
-    actionsEl.innerHTML = '';
-  }
-
-  document.getElementById('playerSheetOverlay').classList.add('active');
+  showPlayerCard(userId);
 }
+
+async function showPlayerCard(userId) {
+  if (!userId) return;
+  var overlay = document.getElementById('playerSheetOverlay');
+  var cardEl = document.getElementById('playerSheetCard');
+  var badgeEl = document.getElementById('playerSheetBadge');
+  if (!overlay || !cardEl) return;
+
+  // Show overlay immediately with spinner
+  cardEl.innerHTML = '<div class="player-sheet__loader"><div class="player-sheet__spinner"></div></div>';
+  if (badgeEl) badgeEl.innerHTML = '';
+  document.getElementById('playerSheetActions').innerHTML = '';
+  overlay.classList.add('active');
+
+  try {
+    var results = await Promise.all([
+      supabase.from('profiles')
+        .select('id, first_name, last_name, name, avatar_url, avatar_cutout_url, selected_cover, social_rating, skill_rating, is_founding_hooper, founding_number')
+        .eq('id', userId).single(),
+      supabase.from('player_division_stats')
+        .select('*').eq('user_id', userId),
+      supabase.from('checkins')
+        .select('court_id, courts(name)')
+        .eq('user_id', userId)
+    ]);
+    var player = results[0].data;
+    var stats = results[1].data;
+    var topCourt = results[2].data;
+
+    if (!overlay.classList.contains('active')) return;
+    if (!player) { overlay.classList.remove('active'); return; }
+
+    // Populate badge area
+    if (badgeEl) {
+      var badgeHtml = '';
+      if (player.is_founding_hooper) {
+        badgeHtml += '<div class="badge-pill">🏅 Founding Hooper #' + (player.founding_number || '') + '</div>';
+      }
+      if (topCourt && topCourt.length > 0) {
+        var courtCounts = {};
+        topCourt.forEach(function(c) { var n = c.courts && c.courts.name; if (n) courtCounts[n] = (courtCounts[n] || 0) + 1; });
+        var entries = Object.entries(courtCounts).sort(function(a, b) { return b[1] - a[1]; });
+        if (entries.length > 0) badgeHtml += '<div class="badge-court">📍 Most played: ' + entries[0][0] + '</div>';
+      }
+      badgeEl.innerHTML = badgeHtml;
+    }
+
+    var divStats = {};
+    var bestDiv = '1v1', bestGames = 0;
+    if (stats) stats.forEach(function(s) {
+      divStats[s.division] = s;
+      if (s.games_count > bestGames) { bestGames = s.games_count; bestDiv = s.division; }
+    });
+
+    overlay._playerData = { player: player, divStats: divStats, activeDivision: bestGames > 0 ? bestDiv : '1v1' };
+    renderPlayerSheetCard();
+
+    // Admin action buttons based on roster status
+    var p = currentRoster.find(function(r) { return r.user_id === userId; });
+    var actionsEl = document.getElementById('playerSheetActions');
+    if (p && p.status === 'pending') {
+      actionsEl.innerHTML =
+        '<button class="player-sheet__action-btn player-sheet__action-btn--approve" onclick="adminAction(\'' + p.registration_id + '\',\'confirmed\');closePlayerSheetDirect();">Approve</button>' +
+        '<button class="player-sheet__action-btn player-sheet__action-btn--decline" onclick="adminAction(\'' + p.registration_id + '\',\'declined\');closePlayerSheetDirect();">Decline</button>';
+    } else if (p && p.status === 'waitlisted') {
+      actionsEl.innerHTML =
+        '<button class="player-sheet__action-btn player-sheet__action-btn--promote" onclick="promotePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Promote to Roster</button>';
+    } else if (p && p.status === 'confirmed') {
+      actionsEl.innerHTML =
+        '<button class="player-sheet__action-btn player-sheet__action-btn--remove" onclick="removePlayer(\'' + p.registration_id + '\');closePlayerSheetDirect();">Remove from Roster</button>';
+    }
+  } catch (err) {
+    console.error('showPlayerCard error:', err);
+    if (overlay.classList.contains('active')) overlay.classList.remove('active');
+  }
+}
+
+function renderPlayerSheetCard() {
+  var overlay = document.getElementById('playerSheetOverlay');
+  var cardEl = document.getElementById('playerSheetCard');
+  if (!overlay._playerData || !cardEl) return;
+  var player = overlay._playerData.player;
+  var divStats = overlay._playerData.divStats;
+  var activeDivision = overlay._playerData.activeDivision;
+  var ds = divStats[activeDivision];
+
+  cardEl.innerHTML = CareerCard.render({
+    cardId: 'psc',
+    firstName: player.first_name || (player.name ? player.name.split(' ')[0] : ''),
+    lastName: player.last_name || (player.name ? player.name.split(' ').slice(1).join(' ') : ''),
+    cutoutUrl: player.avatar_cutout_url,
+    avatarUrl: player.avatar_url,
+    coverSlug: player.selected_cover || 'crossover',
+    wins: ds ? ds.wins : 0, losses: ds ? ds.losses : 0, draws: ds ? ds.draws : 0,
+    skillRating: ds && ds.skill_rating ? Number(ds.skill_rating).toFixed(1) : '—',
+    socialRating: player.social_rating ? Number(player.social_rating).toFixed(1) : '—',
+    divisionLabel: activeDivision.toUpperCase(),
+    activeDivision: activeDivision,
+    showTabs: true,
+    onTabClick: 'switchPlayerSheetDiv',
+    showDeltas: false
+  });
+  requestAnimationFrame(function() { CareerCard.fitNames('psc'); });
+}
+
+function switchPlayerSheetDiv(div) {
+  var overlay = document.getElementById('playerSheetOverlay');
+  if (!overlay._playerData) return;
+  overlay._playerData.activeDivision = div;
+  renderPlayerSheetCard();
+}
+
 function closePlayerSheet(event) {
   if (event && event.target !== event.currentTarget) return;
   document.getElementById('playerSheetOverlay').classList.remove('active');

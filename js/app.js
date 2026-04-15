@@ -93,7 +93,8 @@ function renderPlayerSheetCard() {
     activeDivision: activeDivision,
     showTabs: true,
     onTabClick: 'switchPlayerSheetDiv',
-    showDeltas: false
+    showDeltas: false,
+    hidePlaceholder: true
   });
   requestAnimationFrame(() => CareerCard.fitNames('psc'));
 }

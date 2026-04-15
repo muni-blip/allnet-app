@@ -58,13 +58,15 @@ var CareerCard = (function() {
     var tabFn    = opts.onTabClick || 'switchDivision';
     var active   = opts.activeDivision || '1v1';
     var showD    = opts.showDeltas === true;
+    var hidePH   = opts.hidePlaceholder === true;
     var skD      = opts.skillDelta;
     var soD      = opts.socialDelta;
     var wD       = opts.winsDelta;
 
-    // Player image: show cutout or placeholder prompt (never raw avatar — defeats cover purpose)
+    // Player image: show cutout, or nothing if hidePlaceholder, or upload prompt
     var playerFrameHtml = cut
       ? '<div class="cc__player-frame"><img src="' + cut + '" alt="' + fn + ' ' + ln + '" onerror="this.style.display=\'none\'"></div>'
+      : hidePH ? ''
       : '<div class="cc__placeholder">' +
           '<div class="cc__placeholder-icon">📷</div>' +
           '<div class="cc__placeholder-text">Upload a photo to generate your career card</div>' +

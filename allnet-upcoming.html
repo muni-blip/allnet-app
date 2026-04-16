@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AllNet — Upcoming</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/tour.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; overscroll-behavior-x: none; overflow-y: auto; }
+
+.up-page { max-width: 600px; margin: 0 auto; min-height: 100vh; padding: 64px 16px calc(76px + env(safe-area-inset-bottom, 0px) + 12px) 16px; }
+
+.up-section { margin-top: 24px; }
+.up-section__label { font-family: var(--font-mono); font-size: 11px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+
+.up-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; cursor: pointer; transition: border-color 0.2s; }
+.up-card:active { border-color: var(--orange); }
+
+.up-card__badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.up-card__badge--confirmed { background: rgba(34,197,94,0.15); color: var(--green-live); border: 1px solid rgba(34,197,94,0.25); }
+.up-card__badge--pending { background: rgba(247,69,1,0.15); color: var(--orange); border: 1px solid rgba(247,69,1,0.25); }
+.up-card__badge--waitlisted { background: rgba(59,130,246,0.15); color: var(--blue-quiet); border: 1px solid rgba(59,130,246,0.25); }
+
+.up-card__title { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: #fff; }
+.up-card__meta { font-size: 13px; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
+.up-card__org { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 8px; }
+
+.up-card__spots { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.up-card__spots-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.up-card__spots-fill { height: 100%; border-radius: 3px; }
+.up-card__spots-fill--green { background: var(--green-live); }
+.up-card__spots-fill--orange { background: var(--orange); }
+.up-card__spots-fill--full { background: var(--red); }
+.up-card__spots-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+.up-card__action { margin-top: 12px; }
+.up-card__btn { width: 100%; padding: 11px; font-family: var(--font-display); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #fff; background: var(--orange); border: none; border-radius: var(--radius-sm); cursor: pointer; transition: opacity 0.2s; }
+.up-card__btn:hover { opacity: 0.9; }
+.up-card__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.up-empty { text-align: center; padding: 40px 20px; }
+.up-empty__icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.up-empty__text { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+.up-empty__notif { margin-top: 16px; font-size: 12px; color: var(--text-muted); }
+.up-empty__notif a { color: var(--orange); text-decoration: none; }
+
+.up-loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+
+.up-photo-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; }
+.up-photo-overlay.active { display: flex; }
+.up-photo-sheet { width: 100%; max-width: 420px; background: #111; border-radius: 20px 20px 0 0; padding: 24px 20px 40px; animation: upSheetUp .3s ease-out; }
+@keyframes upSheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.up-photo__handle { width: 36px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 20px; }
+.up-photo__icon { text-align: center; font-size: 48px; margin-bottom: 12px; }
+.up-photo__title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 8px; }
+.up-photo__desc { font-size: 13px; color: var(--text-secondary); text-align: center; line-height: 1.5; margin-bottom: 20px; }
+.up-photo__btn { display: block; width: 100%; padding: 14px; font-family: var(--font-display); font-size: 16px; font-weight: 700; text-transform: uppercase; color: #fff; background: var(--orange); border: none; border-radius: var(--radius-sm); cursor: pointer; text-align: center; text-decoration: none; margin-bottom: 8px; }
+.up-photo__cancel { display: block; width: 100%; padding: 12px; font-family: var(--font-body); font-size: 14px; color: var(--text-muted); background: none; border: none; cursor: pointer; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer__header"><span class="nav-drawer__header-label">Menu</span></div>
+  <nav class="nav-drawer__links">
+    <a href="allnet-app.html" class="nav-drawer__link" data-nav="play"><span class="nav-drawer__link-label">Play</span></a>
+    <a href="allnet-upcoming.html" class="nav-drawer__link nav-drawer__link--active" data-nav="upcoming"><span class="nav-drawer__link-label">Upcoming</span><img src="img/basketball-selector.svg" class="nav-drawer__link-selector" alt=""></a>
+    <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity"><span class="nav-drawer__link-label">Activity</span></a>
+    <a href="allnet-career.html" class="nav-drawer__link" data-nav="career"><span class="nav-drawer__link-label">Career</span></a>
+    <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars"><span class="nav-drawer__link-label">Stars</span></a>
+    <a href="allnet-org.html" class="nav-drawer__link" data-nav="organization" id="orgNavLink" style="display:none;"><span class="nav-drawer__link-label">Organization</span></a>
+    <a href="allnet-settings.html" class="nav-drawer__link" data-nav="settings"><span class="nav-drawer__link-label">Settings</span></a>
+  </nav>
+  <div class="nav-drawer__footer"><button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button></div>
+</div>
+
+<div class="up-page">
+  <div class="up-loading" id="upLoading">Loading runs...</div>
+  <div id="upContent" style="display:none;"></div>
+</div>
+
+<div class="up-photo-overlay" id="photoOverlay" onclick="closePhotoModal(event)">
+  <div class="up-photo-sheet" onclick="event.stopPropagation()">
+    <div class="up-photo__handle"></div>
+    <div class="up-photo__icon">📸</div>
+    <div class="up-photo__title">Photo Required</div>
+    <div class="up-photo__desc">Run organizers require a profile photo so they can identify players. Add one to your profile to request a spot.</div>
+    <a href="allnet-career.html" class="up-photo__btn">Go to Profile</a>
+    <button class="up-photo__cancel" onclick="closePhotoModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="nav-bar" id="navBar">
+  <button class="nav-bar__menu" onclick="openNavDrawer()" aria-label="Menu" style="display:none;"><img src="img/menu-icon.svg" alt="" style="width:18px;height:18px;opacity:0.9"></button>
+  <span class="nav-bar__logo"><a href="allnet-app.html"><svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a></span>
+  <div class="nav-bar__spacer"></div>
+  <div class="nav-bar__right" id="navBarRight" style="opacity:0;transition:opacity 0.2s">
+    <a href="allnet-stars.html" class="nav-bar__stars" id="topBarStars" style="display:none;"><span id="topBarStarsCount">0</span> <img src="https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/star-icon.png" alt="⭐" style="width:14px;height:14px;" onerror="this.replaceWith(document.createTextNode('⭐'))"></a>
+    <button class="nav-bar__bell" id="navBell" onclick="openNotifications()" style="display:none;" aria-label="Notifications"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="nav-bar__bell-badge" id="navBellBadge" style="display:none;">0</span></button>
+    <button class="nav-bar__cta" id="profileBtn" onclick="handleProfileClick()">Get Started</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-helpers.js"></script>
+<script src="js/tour.js"></script>
+<script>
+var currentUser = null, currentProfile = null;
+
+function openNavDrawer() { document.getElementById('navOverlay').classList.add('open'); document.getElementById('navDrawer').classList.add('open'); }
+function closeNavDrawer() { document.getElementById('navOverlay').classList.remove('open'); document.getElementById('navDrawer').classList.remove('open'); }
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function formatDate(dateStr) { return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+function formatTime(t) { if (!t) return ''; var parts = t.split(':'); var hr = parseInt(parts[0]); return (hr > 12 ? hr - 12 : hr || 12) + ':' + parts[1] + (hr >= 12 ? ' PM' : ' AM'); }
+
+async function init() {
+  var user = await getUser();
+  if (!user) { window.location.href = 'allnet-app.html'; return; }
+  currentUser = user;
+  currentProfile = await getUserProfile(user.id);
+  if (typeof posthogIdentify === 'function') posthogIdentify(currentProfile);
+  initNavBar();
+
+  try {
+    var { data: orgs } = await supabase.rpc('get_user_orgs');
+    if (orgs && orgs.length > 0) {
+      var orgLink = document.getElementById('orgNavLink');
+      if (orgLink) orgLink.style.display = '';
+    }
+  } catch(e) {}
+
+  await loadUpcoming();
+}
+
+async function loadUpcoming() {
+  var { data, error } = await supabase.rpc('get_upcoming_for_user');
+  if (error) { console.error('loadUpcoming:', error); document.getElementById('upLoading').textContent = 'Failed to load runs.'; return; }
+
+  var myRuns = data.my_runs || [];
+  var available = data.available || [];
+  var html = '';
+
+  html += '<div class="up-section">';
+  html += '<div class="up-section__label">Your Runs</div>';
+  if (myRuns.length === 0) {
+    html += '<div class="up-empty"><div class="up-empty__icon">🏀</div><div class="up-empty__text">No upcoming runs at the moment — check back soon.</div>';
+    html += '<div class="up-empty__notif">🔔 <a href="allnet-settings.html">Turn on run notifications</a> to know when spots open up.</div></div>';
+  } else {
+    myRuns.forEach(function(r) {
+      var badgeClass = 'up-card__badge--' + r.status;
+      var badgeText = r.status === 'confirmed' ? 'Confirmed' : r.status === 'pending' ? 'Pending Review' : 'Waitlisted #' + r.waitlist_position;
+      var timeStr = formatTime(r.start_time) + (r.end_time ? ' — ' + formatTime(r.end_time) : '');
+      html += '<div class="up-card" onclick="window.location.href=\'/r/' + escHtml(r.org_slug) + '/' + escHtml(r.short_code) + '\'">';
+      html += '<div class="up-card__badge ' + badgeClass + '">' + badgeText + '</div>';
+      html += '<div class="up-card__title">' + escHtml(r.title) + '</div>';
+      html += '<div class="up-card__meta">' + formatDate(r.date) + ' · ' + timeStr + '<br>' + escHtml(r.venue_name) + '</div>';
+      html += '<div class="up-card__org">' + escHtml(r.org_name) + '</div>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  html += '<div class="up-section">';
+  html += '<div class="up-section__label">Available Runs</div>';
+  if (available.length === 0) {
+    html += '<div class="up-empty"><div class="up-empty__text">No open runs right now.</div>';
+    html += '<div class="up-empty__notif">🔔 <a href="allnet-settings.html">Turn on run notifications</a> to get alerted.</div></div>';
+  } else {
+    available.forEach(function(s) {
+      var confirmed = s.confirmed_count || 0;
+      var pct = Math.min((confirmed / s.max_players) * 100, 100);
+      var fillClass = pct >= 100 ? 'up-card__spots-fill--full' : pct >= 75 ? 'up-card__spots-fill--orange' : 'up-card__spots-fill--green';
+      var timeStr = formatTime(s.start_time) + (s.end_time ? ' — ' + formatTime(s.end_time) : '');
+      html += '<div class="up-card">';
+      html += '<div class="up-card__title">' + escHtml(s.title) + '</div>';
+      html += '<div class="up-card__meta">' + formatDate(s.date) + ' · ' + timeStr + '<br>' + escHtml(s.venue_name) + '</div>';
+      html += '<div class="up-card__org">' + escHtml(s.org_name) + '</div>';
+      html += '<div class="up-card__spots"><div class="up-card__spots-bar"><div class="up-card__spots-fill ' + fillClass + '" style="width:' + pct + '%"></div></div><span class="up-card__spots-count">' + confirmed + '/' + s.max_players + '</span></div>';
+      html += '<div class="up-card__action"><button class="up-card__btn" onclick="event.stopPropagation();requestSpot(\'' + s.session_id + '\',this)">Request Spot</button></div>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  document.getElementById('upLoading').style.display = 'none';
+  var content = document.getElementById('upContent');
+  content.innerHTML = html;
+  content.style.display = '';
+}
+
+async function requestSpot(sessionId, btnEl) {
+  if (!currentProfile || !currentProfile.avatar_cutout_url) {
+    document.getElementById('photoOverlay').classList.add('active');
+    return;
+  }
+  btnEl.disabled = true;
+  btnEl.textContent = 'Requesting...';
+  try {
+    var { data, error } = await supabase.rpc('register_for_session', { p_session_id: sessionId });
+    if (error) throw error;
+    if (data && data.error) {
+      if (data.error.indexOf('photo') !== -1) {
+        document.getElementById('photoOverlay').classList.add('active');
+      } else {
+        showToast(data.error);
+      }
+      btnEl.disabled = false;
+      btnEl.textContent = 'Request Spot';
+      return;
+    }
+    showToast(data.status === 'pending' ? 'Spot requested — pending review' : 'Added to waitlist');
+    await loadUpcoming();
+  } catch(err) {
+    console.error('requestSpot error:', err);
+    btnEl.disabled = false;
+    btnEl.textContent = 'Request Spot';
+  }
+}
+
+function closePhotoModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('photoOverlay').classList.remove('active');
+}
+
+function showToast(msg) {
+  var t = document.getElementById('upToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'upToast';
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;color:#fff;z-index:600;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(function() { t.style.opacity = '0'; }, 2500);
+}
+
+document.addEventListener('touchstart', function(e) {
+  if (e.touches[0].clientX < 30 || e.touches[0].clientX > window.innerWidth - 30) {
+    var startX = e.touches[0].clientX, startY = e.touches[0].clientY;
+    function onMove(ev) { var dx = Math.abs(ev.touches[0].clientX - startX), dy = Math.abs(ev.touches[0].clientY - startY); if (dx > dy && dx > 10) ev.preventDefault(); }
+    function onEnd() { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); }
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+  }
+}, { passive: true });
+
+init();
+</script>
+</body>
+</html>

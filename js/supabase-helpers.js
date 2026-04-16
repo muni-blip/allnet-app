@@ -401,10 +401,7 @@ async function initNavBar() {
     var menuBtn = document.querySelector('.nav-bar__menu');
     if (menuBtn) menuBtn.style.display = 'flex';
 
-    // Reveal nav bar right section with correct content
-    if (navRight) navRight.style.opacity = '1';
-
-    // Check if user has org role — show Organization nav link
+    // Check if user has org role — show Organization nav link (before revealing nav)
     try {
       var { data: _orgs } = await supabase.rpc('get_user_orgs');
       if (_orgs && _orgs.length > 0) {
@@ -412,6 +409,9 @@ async function initNavBar() {
         if (_orgLink) _orgLink.style.display = '';
       }
     } catch(_e) {}
+
+    // Reveal nav bar right section with correct content
+    if (navRight) navRight.style.opacity = '1';
   } catch (err) {
     console.error('initNavBar error:', err);
     if (navRight) navRight.style.opacity = '1';

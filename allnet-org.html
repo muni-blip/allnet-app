@@ -15,10 +15,10 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; overscroll-behavior-x: none; overflow-y: auto; }
 
-.org-page { max-width: 960px; margin: 0 auto; min-height: 100vh; padding: 64px 24px calc(76px + env(safe-area-inset-bottom, 0px) + 12px) 24px; }
-@media (max-width: 640px) { .org-page { padding: 64px 0 calc(76px + env(safe-area-inset-bottom, 0px) + 12px) 0; } }
+.org-page { max-width: 960px; margin: 0 auto; min-height: 100vh; padding: 0 24px calc(76px + env(safe-area-inset-bottom, 0px) + 12px) 24px; }
+@media (max-width: 640px) { .org-page { padding: 0 0 calc(76px + env(safe-area-inset-bottom, 0px) + 12px) 0; } }
 
-.org-topbar { position: sticky; top: 64px; z-index: 10; padding: 16px 16px; background: rgba(10,10,10,0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.org-topbar { position: sticky; top: 0; z-index: 10; padding: 16px 16px; background: rgba(10,10,10,0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
 .org-topbar__back { width: 32px; height: 32px; border-radius: 50%; background: transparent; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
 .org-topbar__title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; text-transform: uppercase; flex: 1; }
 .org-topbar__action { background: var(--orange); color: #fff; border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; }

@@ -105,6 +105,18 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--text-primary
   <button class="sp-cta__btn" id="ctaBtn" onclick="handleCta()">Request Spot</button>
 </div>
 
+<!-- Photo required modal -->
+<div id="photoModal" style="position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;justify-content:center;" onclick="this.style.display='none'">
+  <div style="width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:24px 20px 40px;animation:sheetUp .3s ease-out;" onclick="event.stopPropagation()">
+    <div style="width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 20px;"></div>
+    <div style="text-align:center;font-size:48px;margin-bottom:12px;">📸</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:8px;">Photo Required</div>
+    <div style="font-size:13px;color:#999;text-align:center;line-height:1.5;margin-bottom:20px;">Run organizers require a profile photo so they can identify players. Add one to your profile to request a spot.</div>
+    <a href="/allnet-career.html" style="display:block;width:100%;padding:14px;font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:#fff;background:#F74501;border:none;border-radius:8px;cursor:pointer;text-align:center;text-decoration:none;">Go to Profile</a>
+    <button onclick="document.getElementById('photoModal').style.display='none'" style="display:block;width:100%;padding:12px;font-size:14px;color:#666;background:none;border:none;cursor:pointer;text-align:center;margin-top:8px;">Cancel</button>
+  </div>
+</div>
+
 <!-- Auth modal -->
 <div class="sp-auth-overlay" id="authOverlay" onclick="closeAuth(event)">
   <div class="sp-auth-sheet" onclick="event.stopPropagation()">
@@ -288,12 +300,26 @@ async function registerForSession() {
   btn.textContent = 'Requesting...';
 
   try {
+    // Check if user has a profile photo
+    var { data: profile } = await supabase.from('profiles')
+      .select('avatar_cutout_url').eq('id', currentUser.id).single();
+    if (!profile || !profile.avatar_cutout_url) {
+      btn.disabled = false;
+      btn.textContent = 'Request Spot';
+      showPhotoRequired();
+      return;
+    }
+
     var { data, error } = await supabase.rpc('register_for_session', {
       p_session_id: sessionData.session.id
     });
 
     if (error) throw error;
-    if (data && data.error) { alert(data.error); btn.disabled = false; btn.textContent = 'Request Spot'; return; }
+    if (data && data.error) {
+      if (data.error.indexOf('photo') !== -1) { showPhotoRequired(); }
+      else { alert(data.error); }
+      btn.disabled = false; btn.textContent = 'Request Spot'; return;
+    }
 
     // Update local data and re-render
     sessionData.user_registration = data;
@@ -325,6 +351,10 @@ async function signInApple() {
     provider: 'apple',
     options: { redirectTo: redirectUrl }
   });
+}
+
+function showPhotoRequired() {
+  document.getElementById('photoModal').style.display = 'flex';
 }
 
 init();

@@ -403,6 +403,15 @@ async function initNavBar() {
 
     // Reveal nav bar right section with correct content
     if (navRight) navRight.style.opacity = '1';
+
+    // Check if user has org role — show Organization nav link
+    try {
+      var { data: _orgs } = await supabase.rpc('get_user_orgs');
+      if (_orgs && _orgs.length > 0) {
+        var _orgLink = document.getElementById('orgNavLink');
+        if (_orgLink) _orgLink.style.display = '';
+      }
+    } catch(_e) {}
   } catch (err) {
     console.error('initNavBar error:', err);
     if (navRight) navRight.style.opacity = '1';

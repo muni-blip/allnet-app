@@ -51,6 +51,8 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .up-empty__notif a { color: var(--orange); text-decoration: none; }
 
 .up-loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.up-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: upSpin 0.6s linear infinite; margin: 0 auto 12px; }
+@keyframes upSpin { to { transform: rotate(360deg); } }
 
 .up-photo-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; }
 .up-photo-overlay.active { display: flex; }
@@ -82,7 +84,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 </div>
 
 <div class="up-page">
-  <div class="up-loading" id="upLoading">Loading runs...</div>
+  <div class="up-loading" id="upLoading"><div class="up-spinner"></div>Loading runs...</div>
   <div id="upContent" style="display:none;"></div>
 </div>
 
@@ -178,7 +180,7 @@ async function loadUpcoming() {
       var pct = Math.min((confirmed / s.max_players) * 100, 100);
       var fillClass = pct >= 100 ? 'up-card__spots-fill--full' : pct >= 75 ? 'up-card__spots-fill--orange' : 'up-card__spots-fill--green';
       var timeStr = formatTime(s.start_time) + (s.end_time ? ' — ' + formatTime(s.end_time) : '');
-      html += '<div class="up-card">';
+      html += '<div class="up-card" onclick="window.location.href=\'/r/' + escHtml(s.org_slug) + '/' + escHtml(s.short_code) + '\'">';
       html += '<div class="up-card__title">' + escHtml(s.title) + '</div>';
       html += '<div class="up-card__meta">' + formatDate(s.date) + ' · ' + timeStr + '<br>' + escHtml(s.venue_name) + '</div>';
       html += '<div class="up-card__org">' + escHtml(s.org_name) + '</div>';

@@ -2671,6 +2671,15 @@ async function loadUserProfile(user) {
       const menuBtn = document.querySelector('.nav-bar__menu');
       if (menuBtn) menuBtn.style.display = 'flex';
 
+      // Check if user has org role — show Organization nav link
+      try {
+        const { data: _orgs } = await supabase.rpc('get_user_orgs');
+        if (_orgs && _orgs.length > 0) {
+          const _orgLink = document.getElementById('orgNavLink');
+          if (_orgLink) _orgLink.style.display = '';
+        }
+      } catch(_e) {}
+
       // Reveal nav bar right section (was hidden to prevent flash)
       const navRight = document.getElementById('navBarRight');
       if (navRight) navRight.style.opacity = '1';

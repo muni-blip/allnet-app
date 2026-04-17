@@ -2,10 +2,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bash build-native.sh",
-    "cap:sync": "npm run build && npx cap sync",
-    "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
-    "cap:android": "npm run build && npx cap sync android && npx cap open android"
+    "build:native": "bash build-native.sh",
+    "cap:sync": "npm run build:native && npx cap sync",
+    "cap:ios": "npm run build:native && npx cap sync ios && npx cap open ios",
+    "cap:android": "npm run build:native && npx cap sync android && npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",

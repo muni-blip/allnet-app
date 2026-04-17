@@ -1206,9 +1206,16 @@ async function oauthSignIn(provider) {
     // Stash referral code before OAuth redirect (URL params are lost during redirect)
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
+
+    // Native app: redirect to live site so OAuth callback works
+    // Web: use current page URL as redirect target
+    var redirectUrl = window.Capacitor
+      ? 'https://allnetgames.com/allnet-app.html'
+      : window.location.href.split('?')[0];
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: provider,
-      options: { redirectTo: window.location.href.split('?')[0] }
+      options: { redirectTo: redirectUrl }
     });
     if (error) {
       showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
@@ -2830,8 +2837,8 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// Step 2: Register service worker for push notifications
-if (typeof PushManager_ !== 'undefined') {
+// Step 2: Register service worker for push notifications (web only — native uses Capacitor Push plugin)
+if (typeof PushManager_ !== 'undefined' && !window.Capacitor) {
   PushManager_.init();
 }
 

@@ -1253,7 +1253,11 @@ async function oauthSignIn(provider) {
       var callbackUrl = 'https://allnet-app-git-capacitor-setup-all-net.vercel.app/auth-callback';
       var { error } = await supabase.auth.signInWithOAuth({
         provider: provider,
-        options: { redirectTo: callbackUrl }
+        options: {
+          redirectTo: callbackUrl,
+          queryParams: { prompt: 'select_account' },
+          skipBrowserRedirect: false,
+        }
       });
       if (error) showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
       return;

@@ -4,11 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.allnetgames.app',
   appName: 'AllNet',
   webDir: 'www',
-  server: {
-    // Testing: load from branch preview. Change to https://allnetgames.com when merged to main.
-    url: 'https://allnet-app-git-capacitor-setup-all-net.vercel.app',
-    cleartext: false,
-  },
   plugins: {
     SplashScreen: {
       launchAutoHide: true,

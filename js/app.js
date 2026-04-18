@@ -1201,6 +1201,14 @@ function closeSignUpModal() {
 
 async function oauthSignIn(provider) {
   if (!supabase) return;
+
+  // TEMP: diagnostic — shows Capacitor status at click time
+  var capStatus = 'Cap:' + typeof window.Capacitor;
+  if (window.Capacitor) capStatus += ' regPlugin:' + typeof Capacitor.registerPlugin;
+  capStatus += ' prov:' + provider;
+  document.title = capStatus;
+  console.log('AllNet AUTH DEBUG: ' + capStatus);
+
   try {
     phTrack('sign_in_start', { provider: provider, context: signupContext || 'direct' });
     // Stash referral code before OAuth redirect (URL params are lost during redirect)

@@ -65,6 +65,7 @@ cp robots.txt www/
 # Copy privacy and terms
 cp privacy.html www/
 cp terms.html www/
+cp auth-callback.html www/
 
 echo "✅ Build complete — www/ ready for cap sync"
 echo ""

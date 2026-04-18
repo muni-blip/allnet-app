@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllNet — Signing in...</title>
+<style>
+  body { background: #0A0A0A; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+  .msg { text-align: center; }
+  .msg p { color: #999; margin-top: 8px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="msg">
+  <p>Signing you in...</p>
+</div>
+<script>
+  // This page catches the OAuth redirect from Supabase.
+  // If opened inside the native app's browser, bounce to allnet:// scheme.
+  // If opened in a regular browser, redirect to the main app page.
+  var hash = window.location.hash;
+  var query = window.location.search;
+
+  // Try to open the native app via custom URL scheme
+  var nativeUrl = 'allnet://auth-callback' + (hash || '') + (query || '');
+  window.location.href = nativeUrl;
+
+  // Fallback: if we're still here after 2 seconds, redirect to web app
+  setTimeout(function() {
+    window.location.href = '/allnet-app.html' + (hash || '');
+  }, 2000);
+</script>
+</body>
+</html>

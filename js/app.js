@@ -1207,18 +1207,26 @@ async function oauthSignIn(provider) {
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
 
-    // Native app: redirect to live site so OAuth callback works
-    // Web: use current page URL as redirect target
-    var redirectUrl = window.Capacitor
-      ? 'https://allnetgames.com/allnet-app.html'
-      : window.location.href.split('?')[0];
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: provider,
-      options: { redirectTo: redirectUrl }
-    });
-    if (error) {
-      showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
+    if (window.Capacitor) {
+      // ── Native app: open OAuth in native browser, redirect back via allnet:// scheme ──
+      var { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: 'allnet://auth-callback',
+          skipBrowserRedirect: true
+        }
+      });
+      if (error) return showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
+      if (data?.url) {
+        await Capacitor.Plugins.Browser.open({ url: data.url, presentationStyle: 'popover' });
+      }
+    } else {
+      // ── Web: standard redirect flow ──
+      var { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: window.location.href.split('?')[0] }
+      });
+      if (error) showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
     }
   } catch (err) {
     showAlert('Sign-In Error', err.message, { icon: '⚠️' });
@@ -2790,9 +2798,38 @@ async function logOut() {
 
 // ═══════════════════════════════════════════════
 // BOOT SEQUENCE — order matters
+// 0. (Native only) Listen for deep links from OAuth callback
 // 1. Register auth listener FIRST (before any async work)
 // 2. Then run initApp to load courts + proactive session check
 // ═══════════════════════════════════════════════
+
+// Step 0: (Capacitor only) Listen for OAuth redirect via allnet:// deep link
+if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
+  Capacitor.Plugins.App.addListener('appUrlOpen', async function(event) {
+    console.log('AllNet: Deep link received:', event.url);
+    if (event.url && event.url.indexOf('auth-callback') !== -1) {
+      // Extract tokens from the URL fragment (#access_token=...&refresh_token=...)
+      var hashPart = event.url.split('#')[1];
+      if (hashPart) {
+        var params = new URLSearchParams(hashPart);
+        var accessToken = params.get('access_token');
+        var refreshToken = params.get('refresh_token');
+        if (accessToken && refreshToken) {
+          console.log('AllNet: Setting session from deep link');
+          await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+        }
+      }
+      // Close the in-app browser
+      if (Capacitor.Plugins.Browser) {
+        Capacitor.Plugins.Browser.close();
+      }
+    }
+  });
+  console.log('AllNet: Deep link listener registered');
+}
 
 // Step 1: Auth listener — catches OAuth redirects (SIGNED_IN / INITIAL_SESSION) and sign-outs.
 // Registered BEFORE initApp so no events are missed.

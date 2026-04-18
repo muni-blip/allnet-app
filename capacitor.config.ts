@@ -8,7 +8,8 @@ const config: CapacitorConfig = {
   // server: { url: 'https://allnet-app-git-capacitor-setup.vercel.app', cleartext: true },
   plugins: {
     SplashScreen: {
-      launchAutoHide: false,
+      launchAutoHide: true,
+      launchShowDuration: 2000,
       backgroundColor: '#0A0A0A',
       showSpinner: false,
     },

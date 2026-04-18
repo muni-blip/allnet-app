@@ -1201,61 +1201,61 @@ function closeSignUpModal() {
 
 async function oauthSignIn(provider) {
   if (!supabase) return;
-
-  // TEMP: diagnostic — shows Capacitor status at click time
-  var capStatus = 'Cap:' + typeof window.Capacitor;
-  if (window.Capacitor) capStatus += ' regPlugin:' + typeof Capacitor.registerPlugin;
-  capStatus += ' prov:' + provider;
-  document.title = capStatus;
-  console.log('AllNet AUTH DEBUG: ' + capStatus);
-
   try {
     phTrack('sign_in_start', { provider: provider, context: signupContext || 'direct' });
-    // Stash referral code before OAuth redirect (URL params are lost during redirect)
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
 
-    // ── Native app: use native Google sign-in via lazy-registered SocialLogin plugin ──
-    // Register at click time (not page load) to avoid bridge timing issues.
-    if (window.Capacitor && provider === 'google') {
-      try {
-        if (!window._allnetSL) {
-          window._allnetSL = Capacitor.registerPlugin('SocialLogin');
-          console.log('AllNet: SocialLogin registered:', typeof window._allnetSL);
-        }
-        await window._allnetSL.initialize({
-          google: {
-            iOSClientId: '671608790356-209bv5d65us6opfkecud1ud2qu23i7et.apps.googleusercontent.com',
+    // ── Native app: OAuth via Safari sheet → auth-callback deep link ──
+    if (window.Capacitor) {
+      // Set up listener to capture tokens when app reopens via deep link
+      if (!window._authListenerAdded) {
+        window._authListenerAdded = true;
+        var AppPlugin = Capacitor.registerPlugin('App');
+        AppPlugin.addListener('appUrlOpen', async function(data) {
+          console.log('AllNet: Deep link received:', data.url ? data.url.substring(0, 80) : 'none');
+          if (data.url && data.url.indexOf('allnet://') === 0) {
+            // Extract tokens from the URL fragment
+            var hashStr = '';
+            var hashIdx = data.url.indexOf('#');
+            if (hashIdx !== -1) hashStr = data.url.substring(hashIdx + 1);
+            if (!hashStr) return;
+
+            var params = {};
+            hashStr.split('&').forEach(function(part) {
+              var kv = part.split('=');
+              if (kv.length === 2) params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
+            });
+
+            if (params.access_token && params.refresh_token) {
+              console.log('AllNet: Setting session from deep link tokens');
+              var { error } = await supabase.auth.setSession({
+                access_token: params.access_token,
+                refresh_token: params.refresh_token
+              });
+              if (error) {
+                console.log('AllNet: setSession error:', error.message);
+              } else {
+                console.log('AllNet: Session set successfully from deep link');
+                // Close the Safari sheet if it's still open
+                try {
+                  var BrowserPlugin = Capacitor.registerPlugin('Browser');
+                  await BrowserPlugin.close();
+                } catch(e) {}
+              }
+            }
           }
         });
-        console.log('AllNet: SocialLogin initialized, calling login...');
-
-        var loginResult = await window._allnetSL.login({
-          provider: 'google',
-          options: { scopes: ['profile', 'email'] }
-        });
-        console.log('AllNet: Google login result:', JSON.stringify(loginResult).substring(0, 200));
-
-        if (loginResult && loginResult.result && loginResult.result.idToken) {
-          var { data, error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: loginResult.result.idToken,
-          });
-          if (error) {
-            showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
-          } else {
-            console.log('AllNet: Supabase session set via native Google sign-in');
-          }
-        } else {
-          console.log('AllNet: No idToken in result');
-          showAlert('Sign-In Failed', 'Could not get authentication token from Google.', { icon: '⚠️' });
-        }
-      } catch (gErr) {
-        console.log('AllNet: SocialLogin error:', gErr.message || gErr);
-        if (gErr.message && gErr.message.toLowerCase().indexOf('cancel') === -1) {
-          showAlert('Sign-In Error', gErr.message || 'Google sign-in failed', { icon: '⚠️' });
-        }
+        console.log('AllNet: appUrlOpen listener added');
       }
+
+      // Redirect to auth-callback on our web server (not capacitor://localhost)
+      var callbackUrl = 'https://allnet-app-git-capacitor-setup-all-net.vercel.app/auth-callback';
+      var { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: callbackUrl }
+      });
+      if (error) showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
       return;
     }
 

@@ -2804,62 +2804,53 @@ async function logOut() {
 // ═══════════════════════════════════════════════
 
 // Step 0: (Capacitor only) Listen for OAuth redirect via allnet:// deep link
-if (window.Capacitor || location.protocol === 'capacitor:') {
-  // Close browser helper — try immediately and with delay as fallback
-  function closeBrowser() {
-    try {
-      if (Capacitor && Capacitor.Plugins && Capacitor.Plugins.Browser) {
-        Capacitor.Plugins.Browser.close().catch(function(e) { console.log('AllNet: Browser.close error:', e); });
-        // Fallback: try again after a short delay
-        setTimeout(function() {
-          try { Capacitor.Plugins.Browser.close(); } catch(e) {}
-        }, 500);
-      }
-    } catch(e) { console.log('AllNet: closeBrowser error:', e); }
-  }
+console.log('AllNet: Capacitor check:', 'window.Capacitor=', typeof window.Capacitor, 'protocol=', location.protocol);
+if (window.Capacitor) {
+  console.log('AllNet: Capacitor object keys:', Object.keys(window.Capacitor));
+  console.log('AllNet: Capacitor.Plugins:', typeof Capacitor.Plugins, Capacitor.Plugins ? Object.keys(Capacitor.Plugins) : 'null');
+  
+  // Register deep link listener
+  try {
+    var CapApp = Capacitor.Plugins.App;
+    var CapBrowser = Capacitor.Plugins.Browser;
+    console.log('AllNet: CapApp=', typeof CapApp, 'CapBrowser=', typeof CapBrowser);
 
-  if (Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
-    Capacitor.Plugins.App.addListener('appUrlOpen', function(event) {
-      console.log('AllNet: Deep link received:', event.url);
-      
-      // Close the browser immediately — don't wait for token parsing
-      closeBrowser();
+    if (CapApp && CapApp.addListener) {
+      CapApp.addListener('appUrlOpen', function(event) {
+        console.log('AllNet: Deep link received:', event.url);
+        
+        // Close browser immediately
+        try { if (CapBrowser) CapBrowser.close(); } catch(e) {}
+        setTimeout(function() { try { if (CapBrowser) CapBrowser.close(); } catch(e) {} }, 500);
 
-      if (event.url && event.url.indexOf('auth-callback') !== -1) {
-        // Extract tokens from the URL fragment (#access_token=...&refresh_token=...)
-        var hashPart = event.url.split('#')[1];
-        if (hashPart) {
-          var params = new URLSearchParams(hashPart);
-          var accessToken = params.get('access_token');
-          var refreshToken = params.get('refresh_token');
-          if (accessToken && refreshToken) {
-            console.log('AllNet: Setting session from deep link tokens');
-            supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            }).then(function(result) {
-              console.log('AllNet: Session set result:', result.error ? result.error.message : 'success');
-            }).catch(function(e) {
-              console.log('AllNet: setSession error:', e);
-            });
+        if (event.url && event.url.indexOf('auth-callback') !== -1) {
+          var hashPart = event.url.split('#')[1];
+          if (hashPart) {
+            var params = new URLSearchParams(hashPart);
+            var accessToken = params.get('access_token');
+            var refreshToken = params.get('refresh_token');
+            if (accessToken && refreshToken) {
+              console.log('AllNet: Setting session from deep link tokens');
+              supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+              }).then(function(r) {
+                console.log('AllNet: Session set:', r.error ? r.error.message : 'success');
+              });
+            } else {
+              console.log('AllNet: No tokens in hash. Params:', hashPart.substring(0, 100));
+            }
           } else {
-            console.log('AllNet: No tokens found in deep link hash');
+            console.log('AllNet: No hash fragment in URL');
           }
-        } else {
-          console.log('AllNet: No hash fragment in deep link URL');
         }
-      }
-    });
-    console.log('AllNet: Deep link listener registered');
-  } else {
-    console.log('AllNet: Capacitor.Plugins.App not available — deep links won\'t work');
-  }
-
-  // Fallback: if user manually closes the browser, check if there's a pending session
-  if (Capacitor && Capacitor.Plugins && Capacitor.Plugins.Browser) {
-    Capacitor.Plugins.Browser.addListener('browserFinished', function() {
-      console.log('AllNet: Browser closed by user');
-    });
+      });
+      console.log('AllNet: Deep link listener registered OK');
+    } else {
+      console.log('AllNet: CapApp.addListener not available');
+    }
+  } catch(e) {
+    console.log('AllNet: Deep link setup error:', e.message);
   }
 }
 

@@ -5,30 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AllNet — Signing in...</title>
 <style>
-  body { background: #0A0A0A; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-  .msg { text-align: center; }
-  .msg p { color: #999; margin-top: 8px; font-size: 14px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0A0A0A; color: #fff; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; padding: 24px; }
+  .card { text-align: center; width: 100%; max-width: 320px; }
+  .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .card p { color: #999; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+  .btn { display: block; width: 100%; padding: 16px; background: #FF5A1F; color: #fff; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; text-align: center; }
+  .btn:active { background: #E5500F; }
+  .skip { display: block; margin-top: 16px; color: #666; font-size: 13px; text-decoration: none; }
 </style>
 </head>
 <body>
-<div class="msg">
-  <p>Signing you in...</p>
+<div class="card">
+  <h2>You're signed in!</h2>
+  <p>Tap below to return to the app.</p>
+  <a id="returnBtn" class="btn" href="allnet://auth-callback">Open AllNet</a>
+  <a class="skip" href="/allnet-app.html">Continue in browser instead</a>
 </div>
 <script>
-  // This page catches the OAuth redirect from Supabase.
-  // If opened inside the native app's browser, bounce to allnet:// scheme.
-  // If opened in a regular browser, redirect to the main app page.
-  var hash = window.location.hash;
-  var query = window.location.search;
+  // Append the auth tokens (hash fragment) to the deep link
+  var hash = window.location.hash || '';
+  var btn = document.getElementById('returnBtn');
+  if (hash) {
+    btn.href = 'allnet://auth-callback' + hash;
+  }
 
-  // Try to open the native app via custom URL scheme
-  var nativeUrl = 'allnet://auth-callback' + (hash || '') + (query || '');
-  window.location.href = nativeUrl;
-
-  // Fallback: if we're still here after 2 seconds, redirect to web app
-  setTimeout(function() {
-    window.location.href = '/allnet-app.html' + (hash || '');
-  }, 2000);
+  // Also try auto-redirect via a programmatic click (works on some iOS versions)
+  try {
+    setTimeout(function() { btn.click(); }, 300);
+  } catch(e) {}
 </script>
 </body>
 </html>

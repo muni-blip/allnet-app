@@ -24,6 +24,7 @@ const config: CapacitorConfig = {
   ios: {
     scheme: 'AllNet',
     contentInset: 'always',
+    backgroundColor: '#0A0A0A',
   },
   android: {
     allowMixedContent: true,

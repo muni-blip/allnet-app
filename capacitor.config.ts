@@ -8,15 +8,6 @@ const config: CapacitorConfig = {
     // Testing: load from branch preview. Change to https://allnetgames.com when merged to main.
     url: 'https://allnet-app-git-capacitor-setup-all-net.vercel.app',
     cleartext: false,
-    // Keep OAuth flow inside the WebView — don't open external browser
-    allowNavigation: [
-      'accounts.google.com',
-      'appleid.apple.com',
-      '*.google.com',
-      '*.supabase.co',
-      'allnetgames.com',
-      '*.vercel.app',
-    ],
   },
   plugins: {
     SplashScreen: {
@@ -31,6 +22,14 @@ const config: CapacitorConfig = {
     },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert'],
+    },
+    SocialLogin: {
+      providers: {
+        google: true,
+        apple: true,
+        facebook: false,
+        twitter: false,
+      },
     },
   },
   ios: {

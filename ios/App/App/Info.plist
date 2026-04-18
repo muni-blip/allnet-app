@@ -54,6 +54,14 @@
 			<key>CFBundleURLName</key>
 			<string>com.allnetgames.app</string>
 		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.671608790356-209bv5d65us6opfkecud1ud2qu23i7et</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>google-sign-in</string>
+		</dict>
 	</array>
 </dict>
 </plist>

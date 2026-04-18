@@ -1206,6 +1206,48 @@ async function oauthSignIn(provider) {
     // Stash referral code before OAuth redirect (URL params are lost during redirect)
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
+
+    // ── Native app: use native Google sign-in via SocialLogin plugin ──
+    if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SocialLogin && provider === 'google') {
+      try {
+        // Initialize if not already done
+        await Capacitor.Plugins.SocialLogin.initialize({
+          google: {
+            iOSClientId: '671608790356-209bv5d65us6opfkecud1ud2qu23i7et.apps.googleusercontent.com',
+          }
+        });
+        console.log('AllNet: SocialLogin initialized, calling login...');
+
+        var loginResult = await Capacitor.Plugins.SocialLogin.login({
+          provider: 'google',
+          options: { scopes: ['profile', 'email'] }
+        });
+        console.log('AllNet: Google login result:', loginResult ? 'OK' : 'null');
+
+        if (loginResult && loginResult.result && loginResult.result.idToken) {
+          var { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: loginResult.result.idToken,
+          });
+          if (error) {
+            showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
+          } else {
+            console.log('AllNet: Supabase session set via native Google sign-in');
+          }
+        } else {
+          console.log('AllNet: No idToken from Google login result:', JSON.stringify(loginResult));
+          showAlert('Sign-In Failed', 'Could not get authentication token from Google.', { icon: '⚠️' });
+        }
+      } catch (gErr) {
+        console.log('AllNet: SocialLogin error:', gErr.message || gErr);
+        if (gErr.message && gErr.message.toLowerCase().indexOf('cancel') === -1) {
+          showAlert('Sign-In Error', gErr.message || 'Google sign-in failed', { icon: '⚠️' });
+        }
+      }
+      return;
+    }
+
+    // ── Web: standard OAuth redirect flow ──
     const { error } = await supabase.auth.signInWithOAuth({
       provider: provider,
       options: { redirectTo: window.location.href.split('?')[0] }

@@ -18,6 +18,7 @@
     "@capacitor/push-notifications": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
+    "@capgo/capacitor-social-login": "^8.3.14",
     "@supabase/supabase-js": "^2.39.0",
     "@vercel/og": "^0.6.0"
   }

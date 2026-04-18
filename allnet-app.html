@@ -18,7 +18,7 @@ window.addEventListener('DOMContentLoaded', function() {
   var info = [];
   info.push('Cap: ' + typeof window.Capacitor);
   info.push('Proto: ' + location.protocol);
-  info.push('SL: ' + typeof window.AllNetSocialLogin);
+  if (window.Capacitor) { info.push('regPlugin: ' + typeof Capacitor.registerPlugin); }
   if (window.Capacitor) {
     info.push('Plugins: ' + (Capacitor.Plugins ? Object.keys(Capacitor.Plugins).join(', ') : 'none'));
   }

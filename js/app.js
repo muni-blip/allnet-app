@@ -1207,17 +1207,22 @@ async function oauthSignIn(provider) {
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
 
-    // ── Native app: use native Google sign-in via SocialLogin plugin ──
-    if (window.Capacitor && window.AllNetSocialLogin && provider === 'google') {
+    // ── Native app: use native Google sign-in via lazy-registered SocialLogin plugin ──
+    // Register at click time (not page load) to avoid bridge timing issues.
+    if (window.Capacitor && provider === 'google') {
       try {
-        await window.AllNetSocialLogin.initialize({
+        if (!window._allnetSL) {
+          window._allnetSL = Capacitor.registerPlugin('SocialLogin');
+          console.log('AllNet: SocialLogin registered:', typeof window._allnetSL);
+        }
+        await window._allnetSL.initialize({
           google: {
             iOSClientId: '671608790356-209bv5d65us6opfkecud1ud2qu23i7et.apps.googleusercontent.com',
           }
         });
         console.log('AllNet: SocialLogin initialized, calling login...');
 
-        var loginResult = await window.AllNetSocialLogin.login({
+        var loginResult = await window._allnetSL.login({
           provider: 'google',
           options: { scopes: ['profile', 'email'] }
         });

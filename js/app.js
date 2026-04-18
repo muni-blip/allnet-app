@@ -1212,7 +1212,7 @@ async function oauthSignIn(provider) {
       var { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: 'https://allnetgames.com/auth-callback',
+          redirectTo: 'https://allnet-app-git-capacitor-setup-all-net.vercel.app/auth-callback',
           skipBrowserRedirect: true
         }
       });

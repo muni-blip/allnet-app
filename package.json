@@ -21,5 +21,8 @@
     "@capgo/capacitor-social-login": "^8.3.14",
     "@supabase/supabase-js": "^2.39.0",
     "@vercel/og": "^0.6.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
   }
 }

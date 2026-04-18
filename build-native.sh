@@ -8,6 +8,12 @@ set -e
 
 echo "🏀 AllNet — Building for Capacitor..."
 
+# Bundle Capacitor plugin imports (ES modules → vanilla JS)
+# CRITICAL: --alias redirects @capacitor/core to a shim that uses the native bridge.
+# Without this, esbuild bundles its own Capacitor instance and overwrites the native one.
+echo "  Bundling Capacitor plugins..."
+npx esbuild src/capacitor-plugins.js --bundle --alias:@capacitor/core=./src/capacitor-core-shim.js --outfile=js/capacitor-plugins.bundle.js --format=iife --global-name=AllNetPlugins 2>&1
+
 # Clean previous build
 rm -rf www
 mkdir -p www/css www/js www/img www/fonts
@@ -50,6 +56,7 @@ cp js/supabase-helpers.js www/js/
 cp js/push-notifications.js www/js/
 cp js/tour.js www/js/
 cp js/posthog.js www/js/
+cp js/capacitor-plugins.bundle.js www/js/
 
 # Copy images
 cp -r img/* www/img/

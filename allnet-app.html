@@ -18,7 +18,7 @@ window.addEventListener('DOMContentLoaded', function() {
   var info = [];
   info.push('Cap: ' + typeof window.Capacitor);
   info.push('Proto: ' + location.protocol);
-  info.push('Host: ' + location.host);
+  info.push('SL: ' + typeof window.AllNetSocialLogin);
   if (window.Capacitor) {
     info.push('Plugins: ' + (Capacitor.Plugins ? Object.keys(Capacitor.Plugins).join(', ') : 'none'));
   }
@@ -508,6 +508,7 @@ window.addEventListener('DOMContentLoaded', function() {
 <script src="js/career-card.js"></script>
 <script src="js/push-notifications.js"></script>
 <script src="js/tour.js"></script>
+<script src="js/capacitor-plugins.bundle.js"></script>
 <script src="js/app.js"></script>
 
 </body>

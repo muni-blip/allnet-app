@@ -1208,21 +1208,20 @@ async function oauthSignIn(provider) {
     if (ref) localStorage.setItem('allnet_ref', ref);
 
     // ── Native app: use native Google sign-in via SocialLogin plugin ──
-    var _SocialLogin = window.Capacitor ? Capacitor.registerPlugin('SocialLogin') : null;
-    if (_SocialLogin && provider === 'google') {
+    if (window.Capacitor && window.AllNetSocialLogin && provider === 'google') {
       try {
-        await _SocialLogin.initialize({
+        await window.AllNetSocialLogin.initialize({
           google: {
             iOSClientId: '671608790356-209bv5d65us6opfkecud1ud2qu23i7et.apps.googleusercontent.com',
           }
         });
         console.log('AllNet: SocialLogin initialized, calling login...');
 
-        var loginResult = await _SocialLogin.login({
+        var loginResult = await window.AllNetSocialLogin.login({
           provider: 'google',
           options: { scopes: ['profile', 'email'] }
         });
-        console.log('AllNet: Google login result:', loginResult ? 'OK' : 'null');
+        console.log('AllNet: Google login result:', JSON.stringify(loginResult).substring(0, 200));
 
         if (loginResult && loginResult.result && loginResult.result.idToken) {
           var { data, error } = await supabase.auth.signInWithIdToken({
@@ -1235,7 +1234,7 @@ async function oauthSignIn(provider) {
             console.log('AllNet: Supabase session set via native Google sign-in');
           }
         } else {
-          console.log('AllNet: No idToken from Google login result:', JSON.stringify(loginResult));
+          console.log('AllNet: No idToken in result');
           showAlert('Sign-In Failed', 'Could not get authentication token from Google.', { icon: '⚠️' });
         }
       } catch (gErr) {

@@ -1208,17 +1208,17 @@ async function oauthSignIn(provider) {
     if (ref) localStorage.setItem('allnet_ref', ref);
 
     // ── Native app: use native Google sign-in via SocialLogin plugin ──
-    if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SocialLogin && provider === 'google') {
+    var _SocialLogin = window.Capacitor ? Capacitor.registerPlugin('SocialLogin') : null;
+    if (_SocialLogin && provider === 'google') {
       try {
-        // Initialize if not already done
-        await Capacitor.Plugins.SocialLogin.initialize({
+        await _SocialLogin.initialize({
           google: {
             iOSClientId: '671608790356-209bv5d65us6opfkecud1ud2qu23i7et.apps.googleusercontent.com',
           }
         });
         console.log('AllNet: SocialLogin initialized, calling login...');
 
-        var loginResult = await Capacitor.Plugins.SocialLogin.login({
+        var loginResult = await _SocialLogin.login({
           provider: 'google',
           options: { scopes: ['profile', 'email'] }
         });

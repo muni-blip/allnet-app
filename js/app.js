@@ -1206,27 +1206,12 @@ async function oauthSignIn(provider) {
     // Stash referral code before OAuth redirect (URL params are lost during redirect)
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
-
-    if (window.Capacitor) {
-      // ── Native app: open OAuth in native browser, redirect back via allnet:// scheme ──
-      var { data, error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: 'https://allnet-app-git-capacitor-setup-all-net.vercel.app/auth-callback',
-          skipBrowserRedirect: true
-        }
-      });
-      if (error) return showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
-      if (data?.url) {
-        await Capacitor.Plugins.Browser.open({ url: data.url, presentationStyle: 'popover' });
-      }
-    } else {
-      // ── Web: standard redirect flow ──
-      var { error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: { redirectTo: window.location.href.split('?')[0] }
-      });
-      if (error) showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: provider,
+      options: { redirectTo: window.location.href.split('?')[0] }
+    });
+    if (error) {
+      showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
     }
   } catch (err) {
     showAlert('Sign-In Error', err.message, { icon: '⚠️' });
@@ -2804,55 +2789,8 @@ async function logOut() {
 // ═══════════════════════════════════════════════
 
 // Step 0: (Capacitor only) Listen for OAuth redirect via allnet:// deep link
-console.log('AllNet: Capacitor check:', 'window.Capacitor=', typeof window.Capacitor, 'protocol=', location.protocol);
-if (window.Capacitor) {
-  console.log('AllNet: Capacitor object keys:', Object.keys(window.Capacitor));
-  console.log('AllNet: Capacitor.Plugins:', typeof Capacitor.Plugins, Capacitor.Plugins ? Object.keys(Capacitor.Plugins) : 'null');
-  
-  // Register deep link listener
-  try {
-    var CapApp = Capacitor.Plugins.App;
-    var CapBrowser = Capacitor.Plugins.Browser;
-    console.log('AllNet: CapApp=', typeof CapApp, 'CapBrowser=', typeof CapBrowser);
-
-    if (CapApp && CapApp.addListener) {
-      CapApp.addListener('appUrlOpen', function(event) {
-        console.log('AllNet: Deep link received:', event.url);
-        
-        // Close browser immediately
-        try { if (CapBrowser) CapBrowser.close(); } catch(e) {}
-        setTimeout(function() { try { if (CapBrowser) CapBrowser.close(); } catch(e) {} }, 500);
-
-        if (event.url && event.url.indexOf('auth-callback') !== -1) {
-          var hashPart = event.url.split('#')[1];
-          if (hashPart) {
-            var params = new URLSearchParams(hashPart);
-            var accessToken = params.get('access_token');
-            var refreshToken = params.get('refresh_token');
-            if (accessToken && refreshToken) {
-              console.log('AllNet: Setting session from deep link tokens');
-              supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken
-              }).then(function(r) {
-                console.log('AllNet: Session set:', r.error ? r.error.message : 'success');
-              });
-            } else {
-              console.log('AllNet: No tokens in hash. Params:', hashPart.substring(0, 100));
-            }
-          } else {
-            console.log('AllNet: No hash fragment in URL');
-          }
-        }
-      });
-      console.log('AllNet: Deep link listener registered OK');
-    } else {
-      console.log('AllNet: CapApp.addListener not available');
-    }
-  } catch(e) {
-    console.log('AllNet: Deep link setup error:', e.message);
-  }
-}
+// Note: OAuth works via standard web flow because Capacitor loads from live URL (server.url in capacitor.config.ts).
+// No deep links or bounce pages needed — the WebView handles OAuth redirects natively.
 
 // Step 1: Auth listener — catches OAuth redirects (SIGNED_IN / INITIAL_SESSION) and sign-outs.
 // Registered BEFORE initApp so no events are missed.

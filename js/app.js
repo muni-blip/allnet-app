@@ -1206,66 +1206,10 @@ async function oauthSignIn(provider) {
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
 
-    // ── Native app: OAuth via Safari sheet → Universal Link back to app ──
-    if (window.Capacitor) {
-      // Set up listener to capture tokens when iOS opens app via Universal Link
-      if (!window._authListenerAdded) {
-        window._authListenerAdded = true;
-        var AppPlugin = Capacitor.registerPlugin('App');
-        AppPlugin.addListener('appUrlOpen', async function(data) {
-          console.log('AllNet: Universal Link received:', data.url ? data.url.substring(0, 100) : 'none');
-          if (data.url && data.url.indexOf('auth-callback') !== -1) {
-            var hashStr = '';
-            var hashIdx = data.url.indexOf('#');
-            if (hashIdx !== -1) hashStr = data.url.substring(hashIdx + 1);
-            if (!hashStr) { console.log('AllNet: No hash in URL'); return; }
-
-            var params = {};
-            hashStr.split('&').forEach(function(part) {
-              var kv = part.split('=');
-              if (kv.length === 2) params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
-            });
-
-            if (params.access_token && params.refresh_token) {
-              console.log('AllNet: Setting session from Universal Link tokens');
-              var { error } = await supabase.auth.setSession({
-                access_token: params.access_token,
-                refresh_token: params.refresh_token
-              });
-              if (error) {
-                console.log('AllNet: setSession error:', error.message);
-              } else {
-                console.log('AllNet: Session set successfully');
-                try { Capacitor.registerPlugin('Browser').close(); } catch(e) {}
-              }
-            }
-          }
-        });
-        console.log('AllNet: appUrlOpen listener registered');
-      }
-
-      // Redirect to production domain — iOS intercepts via Universal Links
-      var callbackUrl = 'https://www.allnetgames.com/auth-callback';
-      var { data, error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: callbackUrl,
-          skipBrowserRedirect: true,
-        }
-      });
-      if (error) { showAlert('Sign-In Failed', error.message, { icon: '⚠️' }); return; }
-      if (data && data.url) {
-        console.log('AllNet: Opening OAuth URL:', data.url.substring(0, 120));
-        var BrowserPlugin = Capacitor.registerPlugin('Browser');
-        await BrowserPlugin.open({ url: data.url });
-      }
-      return;
-    }
-
-    // ── Web: standard OAuth redirect flow ──
+    // ── OAuth redirect flow (works for both web and native with server.url) ──
     const { error } = await supabase.auth.signInWithOAuth({
       provider: provider,
-      options: { redirectTo: window.location.href.split('?')[0] }
+      options: { redirectTo: window.location.href.split('?')[0].split('#')[0] }
     });
     if (error) {
       showAlert('Sign-In Failed', error.message, { icon: '⚠️' });

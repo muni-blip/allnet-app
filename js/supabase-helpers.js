@@ -14,11 +14,6 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 let sb;
 try {
   var authConfig = {};
-  // In Capacitor, use implicit flow — PKCE won't work because the code verifier
-  // is in the WebView's storage but the redirect lands in SFSafariViewController.
-  if (window.Capacitor) {
-    authConfig = { auth: { flowType: 'implicit' } };
-  }
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, authConfig);
 } catch(e) {
   console.error('Supabase client creation failed:', e);

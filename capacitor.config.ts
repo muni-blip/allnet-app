@@ -4,6 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.allnetgames.app',
   appName: 'AllNet',
   webDir: 'www',
+  server: {
+    url: 'https://allnet-app-git-capacitor-setup-all-net.vercel.app',
+    cleartext: false,
+  },
   plugins: {
     SplashScreen: {
       launchAutoHide: true,

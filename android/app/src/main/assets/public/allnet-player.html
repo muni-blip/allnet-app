@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<script>if(window.Capacitor){document.documentElement.classList.add('native');var _ns=document.createElement('link');_ns.rel='stylesheet';_ns.href='css/native.css';document.head.appendChild(_ns);}</script>
+<title>AllNet — Player Card</title>
+
+<!-- OG tags (Stream 6 will make these dynamic per player) -->
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="AllNet">
+<meta property="og:title" content="AllNet — Player Card">
+<meta property="og:description" content="Check out this player's basketball career card on AllNet — the pickup basketball reputation network.">
+<meta property="og:image" content="https://allnetgames.com/img/icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/career-card.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --orange: #F74501; --border: #222; }
+html, body { height: auto; overflow: auto; background: #000; color: #fff; font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+
+/* Top bar */
+.pp-topbar { position: sticky; top: 0; z-index: 100; padding: 14px 16px; background: rgba(0,0,0,0.95); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.pp-topbar__logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.pp-topbar__join { padding: 8px 20px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; color: #fff; background: var(--orange); border: none; border-radius: 8px; cursor: pointer; text-decoration: none; transition: opacity 0.2s; }
+.pp-topbar__join:hover { opacity: 0.85; }
+
+/* Loading state */
+.pp-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; }
+.pp-loading__spinner { width: 40px; height: 40px; border: 3px solid #333; border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pp-loading__text { font-family: 'Montserrat', sans-serif; font-size: 14px; color: #666; }
+
+/* Error state */
+.pp-error { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; text-align: center; padding: 24px; }
+.pp-error__icon { font-size: 48px; }
+.pp-error__title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700; }
+.pp-error__sub { font-family: 'Montserrat', sans-serif; font-size: 14px; color: #888; max-width: 300px; line-height: 1.5; }
+
+/* Badge area */
+.pp-badge { text-align: center; padding: 20px 16px 0; }
+.pp-badge-pill { display: inline-block; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--orange); background: rgba(247,69,1,0.1); border: 1px solid rgba(247,69,1,0.25); padding: 6px 16px; border-radius: 100px; }
+.pp-badge-court { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #888; margin-top: 8px; }
+
+/* Card wrapper */
+.pp-card { padding: 16px 16px 0; position: relative; }
+.pp-card__loader { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 5; background: #000; transition: opacity 0.4s ease; }
+.pp-card__loader.hidden { opacity: 0; pointer-events: none; }
+.pp-card__loader-spin { width: 32px; height: 32px; border: 3px solid #333; border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.pp-card .cc-border { opacity: 0; transition: opacity 0.4s ease; }
+.pp-card.loaded .cc-border { opacity: 1; }
+.pp-card.loaded .pp-card__loader { opacity: 0; pointer-events: none; }
+
+/* Stats row */
+.pp-stats { display: flex; justify-content: center; gap: 24px; padding: 24px 16px 0; }
+.pp-stat { text-align: center; }
+.pp-stat__val { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 800; color: #fff; }
+.pp-stat__label { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+/* Match history */
+.pp-matches { padding: 32px 16px 0; max-width: 375px; margin: 0 auto; }
+.pp-matches__title { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; color: #fff; margin-bottom: 16px; }
+.pp-match { background: #181818; border: 1px solid #2e2e2e; display: flex; align-items: center; padding: 14px 16px; margin-bottom: 8px; gap: 14px; }
+.pp-match__format { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 100px; white-space: nowrap; }
+.pp-match__format--win { color: #22C55E; background: rgba(34,197,94,0.12); }
+.pp-match__format--lose { color: #EF4444; background: rgba(239,68,68,0.12); }
+.pp-match__format--draw { color: #FACC15; background: rgba(250,204,21,0.12); }
+.pp-match__info { flex: 1; min-width: 0; }
+.pp-match__opp { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-match__meta { font-family: 'Montserrat', sans-serif; font-size: 11px; color: #666; margin-top: 2px; }
+.pp-match__empty { text-align: center; padding: 32px 16px; color: #555; font-family: 'Montserrat', sans-serif; font-size: 14px; }
+
+/* CTA */
+.pp-cta { padding: 40px 16px 48px; max-width: 375px; margin: 0 auto; text-align: center; }
+.pp-cta__box { background: #111; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px 24px; }
+.pp-cta__icon { font-size: 36px; margin-bottom: 12px; }
+.pp-cta__title { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; }
+.pp-cta__sub { font-family: 'Montserrat', sans-serif; font-size: 13px; color: #999; line-height: 1.5; margin-bottom: 20px; }
+.pp-cta__stars { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: var(--orange); margin-bottom: 16px; }
+.pp-cta__btn { display: inline-block; padding: 14px 40px; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 15px; color: #fff; background: var(--orange); border: none; border-radius: 10px; cursor: pointer; text-decoration: none; text-transform: uppercase; letter-spacing: 0.04em; transition: opacity 0.2s; }
+.pp-cta__btn:hover { opacity: 0.85; }
+
+/* Signup Modal */
+.pp-signup { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; padding: 20px; }
+.pp-signup.active { display: flex; }
+.pp-signup__card { background: #1a1a1a; border-radius: 20px; padding: 36px 28px; max-width: 360px; width: 100%; text-align: center; animation: ppSlideUp 0.3s ease; }
+@keyframes ppSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.pp-signup__close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #666; font-size: 20px; cursor: pointer; }
+.pp-signup__card { position: relative; }
+.pp-signup__logo { font-family: 'Oswald', sans-serif; font-size: 28px; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 8px; }
+.pp-signup__title { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 6px; }
+.pp-signup__desc { font-family: 'Montserrat', sans-serif; font-size: 13px; color: #999; line-height: 1.5; margin-bottom: 8px; }
+.pp-signup__stars { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: var(--orange); margin-bottom: 20px; }
+.pp-signup__btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; margin-bottom: 10px; transition: opacity 0.2s; }
+.pp-signup__btn:hover { opacity: 0.85; }
+.pp-signup__btn--google { background: #fff; color: #333; }
+.pp-signup__btn--apple { background: #000; color: #fff; border: 1px solid #333; }
+.pp-signup__footer { font-family: 'Montserrat', sans-serif; font-size: 12px; color: #666; margin-top: 16px; }
+.pp-signup__footer strong { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="pp-topbar">
+  <a href="/allnet-landing.html" class="pp-topbar__logo">
+    <svg height="28" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg>
+  </a>
+  <button class="pp-topbar__join" id="topJoinBtn" onclick="openSignupModal()">Join AllNet</button>
+</div>
+
+<!-- Signup Modal -->
+<div class="pp-signup" id="signupModal" onclick="if(event.target===this)closeSignupModal()">
+  <div class="pp-signup__card">
+    <button class="pp-signup__close" onclick="closeSignupModal()">✕</button>
+    <div class="pp-signup__logo">ALLNET</div>
+    <div class="pp-signup__title">Join the Network</div>
+    <div class="pp-signup__desc">Build your basketball reputation. Find better pickup games. Earn community standing.</div>
+    <div class="pp-signup__stars" id="signupStarsText">⭐ Earn 500 Stars when you sign up</div>
+    <button class="pp-signup__btn pp-signup__btn--google" onclick="ppOauthSignIn('google')">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <button class="pp-signup__btn pp-signup__btn--apple" onclick="ppOauthSignIn('apple')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+      Continue with Apple
+    </button>
+    <div class="pp-signup__footer">🏅 Sign up now to earn your <strong>Founding Hooper</strong> badge</div>
+  </div>
+</div>
+
+<!-- Content area (JS will populate) -->
+<div id="pageContent">
+  <div class="pp-loading">
+    <div class="pp-loading__spinner"></div>
+    <div class="pp-loading__text">Loading player card...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/js/career-card.js"></script>
+<script>
+/* ═══════════════════════════════
+   PUBLIC PLAYER PAGE
+   No auth required — anon reads
+   ═══════════════════════════════ */
+
+var SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
+
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function getSlug() {
+  // Check query param first (direct access)
+  var params = new URLSearchParams(window.location.search);
+  var slug = params.get('slug');
+  if (slug) return slug;
+  // Check path: /p/{slug}
+  var match = window.location.pathname.match(/\/p\/([^\/\?]+)/);
+  if (match) return match[1];
+  return '';
+}
+
+function getRef() {
+  var params = new URLSearchParams(window.location.search);
+  return params.get('ref') || '';
+}
+
+function showError(title, sub) {
+  document.getElementById('pageContent').innerHTML =
+    '<div class="pp-error">' +
+      '<div class="pp-error__icon">🏀</div>' +
+      '<div class="pp-error__title">' + title + '</div>' +
+      '<div class="pp-error__sub">' + sub + '</div>' +
+    '</div>';
+}
+
+async function loadPlayer() {
+  // If already logged in, redirect to app
+  if (await checkExistingSession()) return;
+
+  var slug = getSlug();
+  if (!slug) { showError('Player not found', 'This link might be broken. Check the URL and try again.'); return; }
+
+  // Look up by username or short_code
+  var profile = null;
+  var { data: byUsername } = await sb.from('profiles')
+    .select('id,name,first_name,last_name,avatar_url,avatar_cutout_url,selected_cover,is_founding_hooper,founding_number,wins,losses,draws,skill_rating,social_rating,total_checkins,unique_courts,days_active,short_code,username')
+    .eq('username', slug.toLowerCase())
+    .maybeSingle();
+
+  if (byUsername) {
+    profile = byUsername;
+  } else {
+    var { data: byCode } = await sb.from('profiles')
+      .select('id,name,first_name,last_name,avatar_url,avatar_cutout_url,selected_cover,is_founding_hooper,founding_number,wins,losses,draws,skill_rating,social_rating,total_checkins,unique_courts,days_active,short_code,username')
+      .eq('short_code', slug.toUpperCase())
+      .maybeSingle();
+    profile = byCode;
+  }
+
+  if (!profile) { showError('Player not found', 'No player with that username or code exists. They may have changed it.'); return; }
+
+  _profileShortCode = profile.short_code || '';
+
+  // Update page title
+  var displayName = (profile.first_name || '') + ' ' + (profile.last_name || '');
+  document.title = 'AllNet — ' + displayName.trim();
+
+  // Fetch division stats and checkins (no match history needed)
+  var [divRes, checkinRes] = await Promise.all([
+    sb.from('player_division_stats').select('*').eq('user_id', profile.id),
+    sb.from('checkins').select('court_id, courts(name)').eq('user_id', profile.id)
+  ]);
+
+  // Division stats
+  var divisionStats = {};
+  if (divRes.data) divRes.data.forEach(function(r) { divisionStats[r.division] = r; });
+  var ds = divisionStats['1v1'] || {};
+
+  // Most played court
+  var mostPlayed = null;
+  if (checkinRes.data && checkinRes.data.length > 0) {
+    var counts = {};
+    checkinRes.data.forEach(function(c) { var n = c.courts && c.courts.name; if (n) counts[n] = (counts[n] || 0) + 1; });
+    var best = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; })[0];
+    if (best) mostPlayed = best[0];
+  }
+
+  var ref = getRef() || profile.short_code || '';
+  var referrerName = profile.first_name || profile.name || 'This player';
+
+  // Build page HTML
+  var html = '';
+
+  // Badge
+  html += '<div class="pp-badge">';
+  if (profile.is_founding_hooper) {
+    html += '<div class="pp-badge-pill">🏅 Founding Hooper #' + (profile.founding_number || '') + '</div>';
+  }
+  if (mostPlayed) {
+    html += '<div class="pp-badge-court">📍 Most played: ' + mostPlayed + '</div>';
+  }
+  html += '</div>';
+
+  // Career card with loader
+  html += '<div class="pp-card" id="ppCard"><div class="pp-card__loader"><div class="pp-card__loader-spin"></div></div><div class="cc-border"><div class="cc" id="playerCard"></div></div></div>';
+
+  // CTA
+  html += '<div class="pp-cta"><div class="pp-cta__box">';
+  html += '<div class="pp-cta__icon">🏀</div>';
+  html += '<div class="pp-cta__title">Join AllNet</div>';
+  html += '<div class="pp-cta__sub">Build your own basketball reputation. Find better pickup games. Earn community standing.</div>';
+  html += '<div class="pp-cta__stars">⭐ Earn 500 Stars when you join with ' + referrerName + '\'s invite</div>';
+  html += '<button class="pp-cta__btn" onclick="openSignupModal()">Get Started</button>';
+  html += '</div></div>';
+
+  // Update signup modal stars text with referrer name
+  var starsTextEl = document.getElementById('signupStarsText');
+  if (starsTextEl) starsTextEl.textContent = '⭐ Earn 500 Stars with ' + referrerName + '\'s invite';
+
+  document.getElementById('pageContent').innerHTML = html;
+
+  // Render career card after DOM is in place
+  var cardEl = document.getElementById('playerCard');
+  if (cardEl) {
+    cardEl.innerHTML = CareerCard.render({
+      cardId: 'psc',
+      firstName: profile.first_name || profile.name.split(' ')[0] || '',
+      lastName: profile.last_name || profile.name.split(' ').slice(1).join(' ') || '',
+      cutoutUrl: profile.avatar_cutout_url,
+      coverSlug: profile.selected_cover || 'crossover',
+      wins: ds.wins || profile.wins || 0,
+      losses: ds.losses || profile.losses || 0,
+      draws: ds.draws || profile.draws || 0,
+      skillRating: ds.skill_rating ? Number(ds.skill_rating).toFixed(1) : (profile.skill_rating ? Number(profile.skill_rating).toFixed(1) : '—'),
+      socialRating: profile.social_rating ? Number(profile.social_rating).toFixed(1) : '—',
+      divisionLabel: '1V1',
+      activeDivision: '1v1',
+      showTabs: false,
+      showDeltas: false
+    });
+    requestAnimationFrame(function() { CareerCard.fitNames('psc'); });
+
+    // Wait for cutout image to load, then fade in the card
+    var ppCardEl = document.getElementById('ppCard');
+    var cutoutImg = cardEl.querySelector('.cc__player-frame img');
+    var coverEl = cardEl.querySelector('.cc__cover');
+
+    function revealCard() {
+      if (ppCardEl && !ppCardEl.classList.contains('loaded')) {
+        ppCardEl.classList.add('loaded');
+      }
+    }
+
+    if (cutoutImg && cutoutImg.src) {
+      if (cutoutImg.complete) {
+        revealCard();
+      } else {
+        cutoutImg.onload = revealCard;
+        cutoutImg.onerror = revealCard;
+        // Timeout fallback in case image stalls
+        setTimeout(revealCard, 4000);
+      }
+    } else {
+      // No cutout — reveal immediately
+      revealCard();
+    }
+  }
+}
+
+/* ── Signup Modal ── */
+function openSignupModal() {
+  document.getElementById('signupModal').classList.add('active');
+}
+
+function closeSignupModal() {
+  document.getElementById('signupModal').classList.remove('active');
+}
+
+async function ppOauthSignIn(provider) {
+  // Stash referral code via cookie (most reliable across OAuth redirects),
+  // localStorage, AND URL param as redundant fallbacks
+  var ref = getRef() || _profileShortCode || '';
+  if (ref) {
+    document.cookie = 'allnet_ref=' + encodeURIComponent(ref) + ';path=/;max-age=3600;SameSite=Lax';
+    localStorage.setItem('allnet_ref', ref);
+  }
+
+  var redirectUrl = window.location.origin + '/allnet-app.html';
+  if (ref) redirectUrl += '?ref=' + encodeURIComponent(ref);
+
+  try {
+    var { error } = await sb.auth.signInWithOAuth({
+      provider: provider,
+      options: { redirectTo: redirectUrl }
+    });
+    if (error) console.error('OAuth error:', error);
+  } catch (err) {
+    console.error('OAuth failed:', err);
+  }
+}
+
+var _profileShortCode = '';
+
+// If user is already logged in, redirect to app
+async function checkExistingSession() {
+  try {
+    var { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      window.location.href = '/allnet-app.html';
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+loadPlayer();
+</script>
+</body>
+</html>

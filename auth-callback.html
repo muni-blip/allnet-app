@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllNet — Signed in</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0A0A0A; color: #fff; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; padding: 24px; }
+  .card { text-align: center; width: 100%; max-width: 320px; }
+  .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .card p { color: #999; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>You're signed in!</h2>
+  <p>Close this window and return to AllNet.</p>
+</div>
+<script>
+  // If tokens are in the hash, try to pass them back to the app
+  var hash = window.location.hash || '';
+  if (hash && hash.indexOf('access_token') !== -1) {
+    // Try Universal Link (may open the app directly)
+    window.location.href = 'https://allnetgames.com/auth-callback' + hash;
+  }
+</script>
+</body>
+</html>

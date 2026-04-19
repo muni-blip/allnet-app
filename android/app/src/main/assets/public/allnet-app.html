@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1772975143883614');fbq('track','PageView');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<script>if(window.Capacitor){document.documentElement.classList.add('native');var _ns=document.createElement('link');_ns.rel='stylesheet';_ns.href='css/native.css';document.head.appendChild(_ns);}</script>
+<title>AllNet — Phase 1 App</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/career-card.css">
+<link rel="stylesheet" href="css/tour.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AllNet">
+<style>
+/* ═══ Variant A: Rating Update Overlay (container only — card internals from career-card.css) ═══ */
+.rating-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.rating-overlay.active{display:flex;}
+.rating-overlay.active .cc-border{animation:ccSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;}
+@keyframes ccSlideUp{from{opacity:0;transform:translateY(60px);}to{opacity:1;transform:translateY(0);}}
+.rating-overlay__header{font-family:'Montserrat',sans-serif;font-size:14px;color:#999;margin-bottom:16px;text-align:center;}
+.rating-overlay.active .rating-overlay__header{animation:ccFadeIn 0.4s 0.1s ease both;}
+.rating-overlay.active .rating-overlay__done{animation:ccFadeIn 0.4s 0.3s ease both;}
+@keyframes ccFadeIn{from{opacity:0;}to{opacity:1;}}
+.rating-overlay__done{width:100%;max-width:345px;margin-top:20px;padding:16px;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#F74501;color:#fff;border:none;border-radius:10px;cursor:pointer;transition:opacity .2s;}
+.rating-overlay__done:hover{opacity:0.9;}
+
+/* ═══ Variant C: Public Player Card Bottom Sheet (container only) ═══ */
+.player-sheet-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;justify-content:center;}
+.player-sheet-overlay.active{display:flex;}
+.player-sheet{width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:12px 16px 32px;max-height:90vh;overflow-y:auto;animation:sheetUp .3s ease-out;}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.player-sheet__handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 16px;}
+.player-sheet__actions{display:flex;gap:10px;margin-top:16px;max-width:380px;margin-left:auto;margin-right:auto;}
+.player-sheet__action-btn{flex:1;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:transparent;border:1px solid #333;border-radius:8px;padding:12px 0;cursor:pointer;transition:all .2s;}
+.player-sheet__action-btn:hover{border-color:#fff;}
+.player-sheet__close{display:flex;justify-content:center;margin-top:16px;}
+.player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.player-sheet__close-btn:hover{background:rgba(255,255,255,0.15);}
+.player-sheet__loader{display:flex;align-items:center;justify-content:center;height:100%;}
+.player-sheet__spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.1);border-top-color:#FF5A1F;border-radius:50%;animation:psSpin .7s linear infinite;}
+@keyframes psSpin{to{transform:rotate(360deg);}}
+
+/* ═══ Resume Game Modal ═══ */
+.resume-modal-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;}
+.resume-modal-overlay.active{display:flex;}
+.resume-modal{background:var(--bg-card,#1a1a1a);border:1px solid var(--border,#2e2e2e);border-radius:16px;padding:32px 24px;max-width:360px;width:100%;text-align:center;}
+.resume-modal__icon{font-size:48px;margin-bottom:16px;}
+.resume-modal__title{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+.resume-modal__desc{font-size:14px;color:var(--text-secondary,#999);line-height:1.5;margin-bottom:16px;}
+.resume-modal__court{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:var(--orange,#F74501);margin-bottom:20px;}
+.resume-modal__actions{display:flex;flex-direction:column;gap:10px;}
+.resume-modal__btn{padding:14px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;cursor:pointer;border:none;width:100%;transition:opacity 0.2s;}
+.resume-modal__btn--primary{background:linear-gradient(135deg,#F8981D,#F74501);color:#fff;}
+.resume-modal__btn--secondary{background:transparent;border:1px solid var(--border,#2e2e2e);color:var(--text-secondary,#999);}
+.resume-modal__btn--secondary:hover{border-color:var(--text-muted,#666);}
+.resume-modal__penalty{font-size:12px;color:var(--text-muted,#666);margin-top:12px;line-height:1.4;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<style>
+/* ═══ Splash Screen ═══ */
+.splash{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s ease;}
+.splash.dismiss{opacity:0;pointer-events:none;}
+.splash__lottie{width:200px;height:150px;}
+.splash__text{position:relative;height:20px;width:100%;max-width:320px;margin-top:16px;overflow:hidden;}
+.splash__msg{position:absolute;width:100%;text-align:center;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;color:#666;opacity:0;animation:splashMsg 7.5s infinite;}
+.splash__msg:nth-child(1){animation-delay:0s;}
+.splash__msg:nth-child(2){animation-delay:2.5s;}
+.splash__msg:nth-child(3){animation-delay:5s;}
+@keyframes splashMsg{0%{opacity:0;transform:translateY(6px);}8%{opacity:1;transform:translateY(0);}28%{opacity:1;transform:translateY(0);}36%{opacity:0;transform:translateY(-6px);}100%{opacity:0;}}
+</style>
+</head>
+<body>
+
+<!-- Splash Screen — dismisses after critical data loads -->
+<div class="splash" id="splashScreen">
+  <div class="splash__lottie" id="splashLottie"></div>
+  <div class="splash__text">
+    <div class="splash__msg">Busy dribbling, one moment</div>
+    <div class="splash__msg">Practicing layups, hold on</div>
+    <div class="splash__msg">Setting a pick, one sec</div>
+  </div>
+</div>
+<script>
+  // Start Lottie immediately — no waiting for DOMContentLoaded
+  if (typeof lottie !== 'undefined') {
+    lottie.loadAnimation({
+      container: document.getElementById('splashLottie'),
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: '/img/loader-basketball.json'
+    });
+  }
+  // Safety: dismiss after 8s max in case data never resolves
+  setTimeout(function() {
+    var s = document.getElementById('splashScreen');
+    if (s && !s.classList.contains('dismiss')) { s.classList.add('dismiss'); setTimeout(function(){ s.remove(); }, 500); }
+  }, 8000);
+</script>
+
+<div class="app" id="app">
+  <!-- ═══ Top bar ═══ -->
+  <div class="nav-bar" id="navBar">
+    <button class="nav-bar__menu" onclick="openNavDrawer()" aria-label="Menu">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 13C10.1046 13 11 13.8954 11 15V20C11 21.1046 10.1046 22 9 22H4C2.89543 22 2 21.1046 2 20V15C2 13.8954 2.89543 13 4 13H9ZM20 13C21.1046 13 22 13.8954 22 15V20C22 21.1046 21.1046 22 20 22H15C13.8954 22 13 21.1046 13 20V15C13 13.8954 13.8954 13 15 13H20ZM9 2C10.1046 2 11 2.89543 11 4V9C11 10.1046 10.1046 11 9 11H4C2.89543 11 2 10.1046 2 9V4C2 2.89543 2.89543 2 4 2H9ZM20 2C21.1046 2 22 2.89543 22 4V9C22 10.1046 21.1046 11 20 11H15C13.8954 11 13 10.1046 13 9V4C13 2.89543 13.8954 2 15 2H20Z" fill="url(#menuGrad)"/><defs><linearGradient id="menuGrad" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#F8981D"/><stop offset="1" stop-color="#F74501"/></linearGradient></defs></svg>
+    </button>
+    <span class="nav-bar__logo"><svg height="20" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></span>
+    <div class="nav-bar__spacer"></div>
+    <div class="nav-bar__right" id="navBarRight" style="opacity:0;transition:opacity 0.2s">
+      <a href="allnet-stars.html" class="nav-bar__stars" id="topBarStars" style="display:none;"><span id="topBarStarsCount">0</span> <img src="https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/star-icon.png" alt="⭐" style="width:14px;height:14px;" onerror="this.replaceWith(document.createTextNode('⭐'))"></a>
+      <button class="nav-bar__bell" id="navBell" onclick="openNotifications()" style="display:none;" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="nav-bar__bell-badge" id="navBellBadge">3</span>
+      </button>
+      <button class="nav-bar__cta" id="profileBtn" onclick="handleProfileClick()">Get Started</button>
+    </div>
+  </div>
+
+  <!-- ═══ Mobile filter dropdowns (≤480px) ═══ -->
+  <div class="mobile-filters" id="mobileFilters">
+    <select class="mobile-filter-select" id="mobileStatusFilter" onchange="onMobileStatusChange(this.value)">
+      <option value="all" selected>All Courts</option>
+      <option value="active">● Active</option>
+      <option value="packed">● Packed</option>
+      <option value="watching">● Watching</option>
+    </select>
+    <select class="mobile-filter-select" id="mobileRadiusFilter" onchange="onRadiusChange(this.value)">
+      <option value="0">Map Area</option>
+      <option value="5" selected>5 mi</option>
+      <option value="10">10 mi</option>
+      <option value="15">15 mi</option>
+      <option value="25">25 mi</option>
+    </select>
+  </div>
+
+  <!-- ═══ Nav Drawer ═══ -->
+  <div class="nav-drawer-overlay" id="navOverlay" onclick="closeNavDrawer()"></div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer__header">
+      <span class="nav-drawer__header-label">Menu</span>
+    </div>
+    <nav class="nav-drawer__links">
+      <a href="allnet-app.html" class="nav-drawer__link nav-drawer__link--active" data-nav="play">
+        <span class="nav-drawer__link-label">Play</span>
+        <img src="img/basketball-selector.svg" class="nav-drawer__link-selector" alt="">
+      </a>
+      <a href="allnet-activity.html" class="nav-drawer__link" data-nav="activity">
+        <span class="nav-drawer__link-label">Activity</span>
+      </a>
+      <a href="allnet-career.html" class="nav-drawer__link" data-nav="career">
+        <span class="nav-drawer__link-label">Career</span>
+      </a>
+      <a href="allnet-stars.html" class="nav-drawer__link" data-nav="stars">
+        <span class="nav-drawer__link-label">Stars</span>
+      </a>
+      <a href="allnet-settings.html" class="nav-drawer__link" data-nav="settings">
+        <span class="nav-drawer__link-label">Settings</span>
+      </a>
+    </nav>
+    <div class="nav-drawer__footer">
+      <button class="nav-drawer__close" onclick="closeNavDrawer()">✕</button>
+    </div>
+  </div>
+
+  <!-- ═══ Map ═══ -->
+  <div class="map-view">
+    <div id="map"></div>
+    <!-- ═══ Check-in nudge banner ═══ -->
+    <div class="nudge-banner" id="nudgeBanner">
+      <div class="nudge-banner__dot"></div>
+      <div class="nudge-banner__text">Still at <strong id="nudgeCourtName">Court</strong>?</div>
+      <div class="nudge-banner__actions">
+        <button class="nudge-btn nudge-btn--stay" onclick="extendCheckin()">Still Here</button>
+        <button class="nudge-btn nudge-btn--leave" onclick="manualCheckout()">I Left</button>
+      </div>
+    </div>
+    <!-- ═══ Pulse filter chips (inside map for card-relative positioning) ═══ -->
+    <div class="pulse-filter" id="pulseFilter">
+      <button class="filter-chip active" data-filter="all" onclick="setFilter('all', this)">All Courts</button>
+      <button class="filter-chip" data-filter="active" onclick="setFilter('active', this)">
+        <span class="filter-chip__dot" style="background:var(--green-live);"></span> Active
+      </button>
+      <button class="filter-chip" data-filter="packed" onclick="setFilter('packed', this)">
+        <span class="filter-chip__dot" style="background:var(--orange);"></span> Packed
+      </button>
+      <button class="filter-chip filter-chip--watching" id="watchingChip" data-filter="watching" onclick="setFilter('watching', this)" style="display:none;">
+        <span class="filter-chip__dot" style="background:var(--yellow);"></span> Watching
+      </button>
+      <div class="radius-select-wrapper" id="radiusWrapper">
+        <select class="radius-select" id="radiusSelect" onchange="onRadiusChange(this.value)">
+          <option value="0">Map Area</option>
+          <option value="5" selected>Within 5 mi</option>
+          <option value="10">Within 10 mi</option>
+          <option value="15">Within 15 mi</option>
+          <option value="25">Within 25 mi</option>
+        </select>
+      </div>
+    </div>
+    <button class="search-area-btn" id="searchAreaBtn" onclick="searchThisArea()">🔍 Search This Area</button>
+    <button class="locate-btn" onclick="centerMap()" title="Center on OC">📍</button>
+  </div>
+
+  <!-- ═══ Sheet overlay ═══ -->
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+
+  <!-- ═══ Court detail bottom sheet ═══ -->
+  <div class="bottom-sheet" id="courtSheet">
+    <div class="sheet__body" id="sheetBody">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- ═══ Toast ═══ -->
+  <div class="toast" id="toast">
+    <span class="toast__icon">✅</span>
+    <span class="toast__text" id="toastText">Checked in at <span id="toastCourt"></span></span>
+  </div>
+
+  <!-- ═══ Sign-Up Modal ═══ -->
+  <div class="signup-modal" id="signupModal" onclick="if(event.target===this)closeSignUpModal()">
+    <div class="signup-modal__card">
+      <button class="signup-modal__close" onclick="closeSignUpModal()">✕</button>
+      <div class="signup-modal__logo">ALLNET</div>
+      <div class="signup-modal__title">Join the Network</div>
+      <div class="signup-modal__desc">Check in to courts, track your games, and build your basketball reputation.</div>
+      <button class="signup-modal__btn signup-modal__btn--google" onclick="oauthSignIn('google')">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+      <button class="signup-modal__btn signup-modal__btn--apple" onclick="oauthSignIn('apple')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        Continue with Apple
+      </button>
+      <div class="signup-modal__footer">🏅 Sign up now to earn your <strong>Founding Hooper</strong> badge</div>
+    </div>
+  </div>
+
+  <!-- ═══ Report Modal ═══ -->
+  <div class="report-modal" id="reportModal" onclick="if(event.target===this)closeReportModal()">
+    <div class="report-modal__card">
+      <div class="report-modal__title">Report Listing</div>
+      <div class="report-modal__desc">Help us keep AllNet accurate. Why is this listing incorrect?</div>
+      <div class="report-modal__options" id="reportOptions">
+        <button class="report-modal__option selected" data-reason="no_basketball_court" onclick="selectReportReason(this)">🏀 No basketball court here</button>
+        <button class="report-modal__option" data-reason="permanently_closed" onclick="selectReportReason(this)">🚫 Permanently closed</button>
+        <button class="report-modal__option" data-reason="wrong_location" onclick="selectReportReason(this)">📍 Wrong location on map</button>
+        <button class="report-modal__option" data-reason="duplicate" onclick="selectReportReason(this)">📋 Duplicate listing</button>
+      </div>
+      <textarea class="report-modal__note" id="reportNote" rows="2" placeholder="Additional details (optional)"></textarea>
+      <div class="report-modal__actions">
+        <button class="btn btn--secondary" onclick="closeReportModal()">Cancel</button>
+        <button class="btn btn--primary" id="reportSubmitBtn" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Player card modal ═══ -->
+  <div class="player-modal-overlay" id="playerModal" onclick="if(event.target===this)closePlayerCard()">
+    <div class="player-modal" style="position:relative;">
+      <button class="player-modal__close" onclick="closePlayerCard()">✕</button>
+      <div class="player-modal__header">
+        <div class="player-modal__avatar" id="pmAvatar"></div>
+        <div>
+          <div class="player-modal__name" id="pmName"></div>
+          <div class="player-modal__meta" id="pmMeta"></div>
+          <div class="player-modal__badge" id="pmBadge" style="display:none;">🏅 Founding Hooper</div>
+        </div>
+      </div>
+      <div class="player-modal__stats">
+        <div class="player-modal__stat"><div class="player-modal__stat-value" id="pmWins">0</div><div class="player-modal__stat-label">Wins</div></div>
+        <div class="player-modal__stat"><div class="player-modal__stat-value" id="pmLosses">0</div><div class="player-modal__stat-label">Losses</div></div>
+        <div class="player-modal__stat"><div class="player-modal__stat-value" id="pmDraws">0</div><div class="player-modal__stat-label">Draws</div></div>
+      </div>
+      <div class="player-modal__ratings">
+        <div class="player-modal__rating-row">
+          <div class="player-modal__rating-label">Skill Rating</div>
+          <div class="player-modal__rating-value" id="pmSkill" style="color:var(--orange);">—</div>
+        </div>
+        <div class="player-modal__rating-row">
+          <div class="player-modal__rating-label">Social Rating</div>
+          <div class="player-modal__rating-value" id="pmSocial" style="color:var(--yellow);">—</div>
+        </div>
+      </div>
+      <div class="player-modal__history">
+        <div class="player-modal__history-title">// Recent Games</div>
+        <div id="pmHistory"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Profile screen ═══ -->
+  <!-- ═══ Alerts Screen (slide-in like profile) ═══ -->
+  <div class="alerts-screen" id="alertsScreen">
+    <button class="profile-back" onclick="closeNotifications()">← Back to Map</button>
+    <div class="alerts-content">
+      <div class="alerts-header">
+        <div class="alerts-title">Notifications</div>
+        <button class="alerts-mark-all" id="alertsMarkAll" onclick="markAllNotificationsReadUI()" style="display:none;">Mark all read</button>
+      </div>
+      <div class="alerts-list" id="alertsList">
+        <div class="alerts-empty">
+          <div class="alerts-empty__icon">🔔</div>
+          <div class="alerts-empty__text">No alerts yet</div>
+          <div class="alerts-empty__sub">Watch a court to get notified when players check in</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-screen" id="profileScreen">
+    <button class="profile-back" onclick="closeProfile()">← Back to Map</button>
+    <div class="profile-content">
+      <div class="profile-card">
+        <div class="profile-card__avatar" id="profileCardAvatar" onclick="triggerProfileAvatarUpload()">U</div>
+        <input type="file" id="profileAvatarInput" accept="image/*" style="display:none;" onchange="handleProfileAvatarChange(this)">
+        <div class="profile-card__name">Your Profile</div>
+        <div class="profile-card__location">📍 OC/LA</div>
+        <div class="profile-card__founding-badge">🏅 Founding Hooper</div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat__value" id="profileDays">47</div>
+          <div class="profile-stat__label">Days In</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat__value" id="profileCheckins">0</div>
+          <div class="profile-stat__label">Check-ins</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat__value" id="profileCourts">0</div>
+          <div class="profile-stat__label">Courts</div>
+        </div>
+      </div>
+
+      <div class="profile-section-title">// Recent Activity</div>
+      <div class="history-list" id="historyList">
+        <div class="empty-checkins">No check-ins yet. Visit a court and tap "I'm Here" to start building your history.</div>
+      </div>
+
+      <div class="profile-section-title" id="watchedCourtsTitle" style="display:none;">// Watched Courts (<span id="watchedCount">0</span>)</div>
+      <div class="watched-courts-list" id="watchedCourtsList"></div>
+
+      <button class="logout-btn" onclick="logOut()">Log Out</button>
+    </div>
+  </div>
+
+  <!-- ═══ Onboarding Modal (post-OAuth: name + photo) ═══ -->
+  <div class="onboarding-modal" id="onboardingModal">
+    <div class="onboarding-modal__card">
+
+      <!-- Step 1: Real name -->
+      <div class="onboarding-step" id="onboardStep1">
+        <div class="onboarding-modal__logo"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></div>
+        <div class="onboarding-modal__title">What's your name?</div>
+        <div class="onboarding-modal__desc">AllNet uses real names. Your full name is your basketball identity on the platform.</div>
+        <div class="onboarding-field-group">
+          <input type="text" class="onboarding-input" id="onboardFirstName" placeholder="First name" maxlength="30" autocomplete="given-name" onkeydown="if(event.key==='Enter')document.getElementById('onboardLastName').focus()">
+          <input type="text" class="onboarding-input" id="onboardLastName" placeholder="Last name" maxlength="30" autocomplete="family-name" onkeydown="if(event.key==='Enter')submitOnboardingName()">
+        </div>
+        <div class="onboarding-error" id="onboardNameError"></div>
+        <button class="btn btn--primary" id="onboardNameBtn" onclick="submitOnboardingName()" style="width:100%;margin-top:6px;">Continue →</button>
+        <div class="onboarding-modal__footer">Your name will be visible to other players on AllNet</div>
+      </div>
+
+      <!-- Step 2: Profile photo (skippable) -->
+      <div class="onboarding-step" id="onboardStep2" style="display:none;">
+        <div class="onboarding-modal__logo"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></div>
+        <div class="onboarding-modal__title">Add a photo</div>
+        <div class="onboarding-modal__desc">Help other players recognize you at the court. Required to join rated games.</div>
+        <div class="onboarding-avatar-upload" onclick="document.getElementById('onboardAvatarInput').click()">
+          <div class="onboarding-avatar-preview" id="onboardAvatarPreview">
+            <span id="onboardAvatarInitials">?</span>
+            <img id="onboardAvatarImg" style="display:none;" alt="Preview">
+          </div>
+          <div class="onboarding-avatar-label" id="onboardAvatarLabel">Tap to upload a photo</div>
+        </div>
+        <input type="file" id="onboardAvatarInput" accept="image/*" style="display:none;" onchange="previewOnboardAvatar(this)">
+        <div class="onboarding-error" id="onboardPhotoError"></div>
+        <button class="btn btn--primary" id="onboardPhotoBtn" onclick="submitOnboardAvatar()" style="width:100%;margin-top:10px;" disabled>Upload Photo</button>
+        <button class="btn btn--secondary" onclick="skipAvatarUpload()" style="width:100%;margin-top:10px;flex:none;">Skip for now</button>
+        <div class="onboarding-modal__footer">You can add your photo anytime from your profile</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ In-App Alert Modal ═══ -->
+  <div class="alert-modal" id="alertModal" onclick="if(event.target===this)closeAlertModal()">
+    <div class="alert-modal__card">
+      <div class="alert-modal__icon" id="alertIcon">📍</div>
+      <div class="alert-modal__title" id="alertTitle"></div>
+      <div class="alert-modal__message" id="alertMessage"></div>
+      <div class="alert-modal__buttons">
+        <button class="btn btn--secondary alert-modal__btn" id="alertCancelBtn" onclick="closeAlertModal(false)" style="display:none;">Cancel</button>
+        <button class="btn btn--primary alert-modal__btn" id="alertBtn" onclick="closeAlertModal(true)">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Photo Prompt Modal (gate before starting a game) ═══ -->
+  <div class="photo-prompt-modal" id="photoPromptModal" onclick="if(event.target===this)closePhotoPromptModal()">
+    <div class="photo-prompt-modal__card">
+      <span class="photo-prompt-modal__icon">📸</span>
+      <div class="photo-prompt-modal__title">Add Your Photo</div>
+      <div class="photo-prompt-modal__desc">A profile photo is required to join games so other players can recognize you at the court.</div>
+      <div class="onboarding-avatar-upload" onclick="document.getElementById('promptAvatarInput').click()" style="margin:20px auto;display:block;width:fit-content;">
+        <div class="onboarding-avatar-preview" id="promptAvatarPreview" style="margin:0 auto;">
+          <span id="promptAvatarInitials">?</span>
+          <img id="promptAvatarImg" style="display:none;" alt="Preview">
+        </div>
+        <div class="onboarding-avatar-label" id="promptAvatarLabel">Tap to upload a photo</div>
+      </div>
+      <input type="file" id="promptAvatarInput" accept="image/*" style="display:none;" onchange="previewPromptAvatar(this)">
+      <div class="onboarding-error" id="promptPhotoError"></div>
+      <button class="btn btn--primary" id="promptPhotoBtn" onclick="submitPromptAvatar()" style="width:100%;margin-bottom:10px;flex:none;" disabled>Upload & Start Game</button>
+      <button class="btn btn--secondary" onclick="closePhotoPromptModal()" style="width:100%;flex:none;">Not now</button>
+    </div>
+  </div>
+
+  <!-- ═══ Variant A: Rating Update Overlay ═══ -->
+  <div class="rating-overlay" id="ratingOverlay">
+    <div class="rating-overlay__header">Your career card has updated!</div>
+    <div class="cc-border"><div class="cc" id="ratingOverlayCard"></div></div>
+    <button class="rating-overlay__done" onclick="dismissRatingOverlay()">Done</button>
+  </div>
+
+  <!-- ═══ Variant C: Public Player Card Bottom Sheet ═══ -->
+  <div class="player-sheet-overlay" id="playerSheetOverlay" onclick="closePlayerSheet(event)">
+    <div class="player-sheet" onclick="event.stopPropagation()">
+      <div class="player-sheet__handle"></div>
+      <div class="player-sheet__badge" id="playerSheetBadge"></div>
+      <div class="cc-border"><div class="cc" id="playerSheetCard"></div></div>
+      <div class="player-sheet__actions" style="display:none;">
+        <button class="player-sheet__action-btn" onclick="alert('Follow feature coming soon!')">Follow</button>
+        <button class="player-sheet__action-btn" onclick="alert('Friend feature coming soon!')">Friend</button>
+      </div>
+      <div class="player-sheet__close">
+        <button class="player-sheet__close-btn" onclick="closePlayerSheet()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Resume Game Modal ═══ -->
+  <div class="resume-modal-overlay" id="resumeGameModal">
+    <div class="resume-modal">
+      <div class="resume-modal__icon">🏀</div>
+      <div class="resume-modal__title" id="resumeModalTitle">Active Game</div>
+      <div class="resume-modal__desc" id="resumeModalDesc">You have an active game. Would you like to resume?</div>
+      <div class="resume-modal__court" id="resumeModalCourt"></div>
+      <div class="resume-modal__actions">
+        <button class="resume-modal__btn resume-modal__btn--primary" id="resumeBtn" onclick="resumeGame()">Resume Game</button>
+        <button class="resume-modal__btn resume-modal__btn--secondary" id="leaveResumeBtn" onclick="leaveFromResume()">Leave Game</button>
+      </div>
+      <div class="resume-modal__penalty" id="resumeModalPenalty"></div>
+    </div>
+  </div>
+
+  <!-- ═══ Post-Signup Referral Prompt ═══ -->
+  <div class="referral-prompt" id="referralPrompt" onclick="if(event.target===this)closeReferralPrompt()">
+    <div class="referral-prompt__card">
+      <div class="referral-prompt__icon">⭐</div>
+      <div class="referral-prompt__title">Invite Friends, Earn Stars</div>
+      <div class="referral-prompt__desc">Share AllNet with 3 friends and earn <strong>1,500 Stars</strong> to unlock covers and sprays for your career card.</div>
+      <div class="referral-prompt__reward">+500 Stars per friend who joins</div>
+      <button class="btn btn--primary" id="referralPromptShareBtn" onclick="referralPromptShare()" style="width:100%;margin-bottom:10px;">Share AllNet</button>
+      <button class="btn btn--secondary" onclick="closeReferralPrompt()" style="width:100%;opacity:0.6;">Maybe later</button>
+    </div>
+  </div>
+
+  <!-- ═══ Upload Processing Overlay ═══ -->
+  <div class="upload-overlay" id="uploadOverlay">
+    <div class="upload-overlay__spinner"></div>
+    <div class="upload-overlay__text" id="uploadOverlayText">Processing photo...</div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-helpers.js"></script>
+<script src="js/career-card.js"></script>
+<script src="js/push-notifications.js"></script>
+<script src="js/tour.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

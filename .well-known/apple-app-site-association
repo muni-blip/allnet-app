@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "DC7V9U9D6S.com.allnetgames.app",
+        "paths": ["/auth-callback*"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllNet — Signing in...</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0A0A0A; color: #fff; font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; padding: 24px; }
+  .card { text-align: center; width: 100%; max-width: 320px; }
+  .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .card p { color: #999; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+  .btn { display: block; width: 100%; padding: 16px; background: #FF5A1F; color: #fff; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; text-align: center; margin-bottom: 12px; }
+  .btn:active { background: #E5500F; }
+  .status { color: #22C55E; font-size: 11px; margin-top: 16px; font-family: monospace; word-break: break-all; }
+  .status.error { color: #EF4444; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>You're signed in!</h2>
+  <p>Tap below to return to the app.</p>
+  <a id="returnBtn" class="btn" href="allnet://auth-callback">Open AllNet</a>
+  <div id="status" class="status"></div>
+</div>
+<script>
+  var hash = window.location.hash || '';
+  var search = window.location.search || '';
+  var btn = document.getElementById('returnBtn');
+  var status = document.getElementById('status');
+
+  if (hash && hash.indexOf('access_token') !== -1) {
+    // Implicit flow: tokens in hash fragment
+    btn.href = 'allnet://auth-callback' + hash;
+    status.textContent = 'Tokens received (implicit flow)';
+  } else if (search && search.indexOf('code=') !== -1) {
+    // PKCE flow: code in query string (can't exchange here)
+    btn.href = 'allnet://auth-callback' + search;
+    status.textContent = 'Auth code received (PKCE flow)';
+    status.className = 'status error';
+  } else {
+    status.textContent = 'No tokens in URL — hash: ' + (hash || 'empty') + ' search: ' + (search || 'empty');
+    status.className = 'status error';
+  }
+</script>
+</body>
+</html>

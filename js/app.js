@@ -1246,14 +1246,19 @@ async function oauthSignIn(provider) {
 
       // Redirect to production domain — iOS intercepts via Universal Links
       var callbackUrl = 'https://www.allnetgames.com/auth-callback';
-      var { error } = await supabase.auth.signInWithOAuth({
+      var { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: callbackUrl,
-          skipBrowserRedirect: false,
+          skipBrowserRedirect: true,
         }
       });
-      if (error) showAlert('Sign-In Failed', error.message, { icon: '⚠️' });
+      if (error) { showAlert('Sign-In Failed', error.message, { icon: '⚠️' }); return; }
+      if (data && data.url) {
+        console.log('AllNet: Opening OAuth URL:', data.url.substring(0, 120));
+        var BrowserPlugin = Capacitor.registerPlugin('Browser');
+        await BrowserPlugin.open({ url: data.url });
+      }
       return;
     }
 

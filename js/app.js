@@ -1206,20 +1206,19 @@ async function oauthSignIn(provider) {
     var ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) localStorage.setItem('allnet_ref', ref);
 
-    // ── Native app: OAuth via Safari sheet → auth-callback deep link ──
+    // ── Native app: OAuth via Safari sheet → Universal Link back to app ──
     if (window.Capacitor) {
-      // Set up listener to capture tokens when app reopens via deep link
+      // Set up listener to capture tokens when iOS opens app via Universal Link
       if (!window._authListenerAdded) {
         window._authListenerAdded = true;
         var AppPlugin = Capacitor.registerPlugin('App');
         AppPlugin.addListener('appUrlOpen', async function(data) {
-          console.log('AllNet: Deep link received:', data.url ? data.url.substring(0, 80) : 'none');
-          if (data.url && data.url.indexOf('allnet://') === 0) {
-            // Extract tokens from the URL fragment
+          console.log('AllNet: Universal Link received:', data.url ? data.url.substring(0, 100) : 'none');
+          if (data.url && data.url.indexOf('auth-callback') !== -1) {
             var hashStr = '';
             var hashIdx = data.url.indexOf('#');
             if (hashIdx !== -1) hashStr = data.url.substring(hashIdx + 1);
-            if (!hashStr) return;
+            if (!hashStr) { console.log('AllNet: No hash in URL'); return; }
 
             var params = {};
             hashStr.split('&').forEach(function(part) {
@@ -1228,7 +1227,7 @@ async function oauthSignIn(provider) {
             });
 
             if (params.access_token && params.refresh_token) {
-              console.log('AllNet: Setting session from deep link tokens');
+              console.log('AllNet: Setting session from Universal Link tokens');
               var { error } = await supabase.auth.setSession({
                 access_token: params.access_token,
                 refresh_token: params.refresh_token
@@ -1236,26 +1235,21 @@ async function oauthSignIn(provider) {
               if (error) {
                 console.log('AllNet: setSession error:', error.message);
               } else {
-                console.log('AllNet: Session set successfully from deep link');
-                // Close the Safari sheet if it's still open
-                try {
-                  var BrowserPlugin = Capacitor.registerPlugin('Browser');
-                  await BrowserPlugin.close();
-                } catch(e) {}
+                console.log('AllNet: Session set successfully');
+                try { Capacitor.registerPlugin('Browser').close(); } catch(e) {}
               }
             }
           }
         });
-        console.log('AllNet: appUrlOpen listener added');
+        console.log('AllNet: appUrlOpen listener registered');
       }
 
-      // Redirect to auth-callback on our web server (not capacitor://localhost)
-      var callbackUrl = 'https://allnet-app-git-capacitor-setup-all-net.vercel.app/auth-callback';
+      // Redirect to production domain — iOS intercepts via Universal Links
+      var callbackUrl = 'https://www.allnetgames.com/auth-callback';
       var { error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: callbackUrl,
-          queryParams: { prompt: 'select_account' },
           skipBrowserRedirect: false,
         }
       });

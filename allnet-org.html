@@ -456,17 +456,16 @@ function renderPlayerList() {
     var heightStr = '';
     if (p.height_inches) { var ft = Math.floor(p.height_inches / 12); var inn = p.height_inches % 12; heightStr = ft + "'" + inn + '" · '; }
     var posStr = (p.positions && p.positions.length > 0) ? p.positions.slice(0,2).join('/') + ' · ' : '';
-    // Org history badge
+    // Org history badge (use org logo instead of emoji)
     var historyBadge = '';
     if (typeof p.org_session_count !== 'undefined') {
-      historyBadge = p.org_session_count > 0
-        ? '<span style="color:var(--green-live);font-size:10px;margin-right:4px;">🔁 ' + p.org_session_count + '</span>'
-        : '<span style="color:var(--orange);font-size:10px;margin-right:4px;">🆕</span>';
+      if (p.org_session_count > 0) {
+        var logoImg = currentOrg.org_logo_url ? '<img src="' + escHtml(currentOrg.org_logo_url) + '" style="width:14px;height:14px;border-radius:50%;vertical-align:middle;margin-right:2px;">' : '';
+        historyBadge = '<span style="color:var(--green-live);font-size:10px;margin-right:4px;">' + logoImg + p.org_session_count + '</span>';
+      } else {
+        historyBadge = '<span style="color:var(--orange);font-size:10px;margin-right:4px;">🆕</span>';
+      }
     }
-    // Check-in indicator for confirmed tab
-    var checkinIcon = '';
-    if (currentTab === 'confirmed' && p.checked_in_at) { checkinIcon = '<span style="color:var(--green-live);font-size:12px;margin-right:4px;">✓</span>'; }
-    else if (currentTab === 'confirmed' && !p.checked_in_at) { checkinIcon = '<span style="color:var(--text-muted);font-size:12px;margin-right:4px;">⏳</span>'; }
     var actions = '';
     if (currentTab === 'pending') {
       actions = '<div class="player-row__actions"><button class="player-row__btn player-row__btn--approve" onclick="event.stopPropagation();adminAction(\'' + p.registration_id + '\',\'confirmed\')">Approve</button><button class="player-row__btn player-row__btn--decline" onclick="event.stopPropagation();adminAction(\'' + p.registration_id + '\',\'declined\')">Decline</button></div>';
@@ -480,7 +479,7 @@ function renderPlayerList() {
     }
     return '<div class="player-row" onclick="openPlayerSheet(\'' + p.user_id + '\')">' +
       '<div class="player-row__avatar">' + avatarHtml + '</div>' +
-      '<div class="player-row__info"><div class="player-row__name">' + checkinIcon + historyBadge + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div><div class="player-row__stats">' + heightStr + posStr + record + ' · Skill <span class="player-row__rating-val--' + ratingColor + '">' + Number(p.skill_rating).toFixed(1) + '</span> · Social ' + Number(p.social_rating).toFixed(1) + '</div></div>' + actions + '</div>';
+      '<div class="player-row__info"><div class="player-row__name">' + historyBadge + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div><div class="player-row__stats">' + heightStr + posStr + record + ' · Skill <span class="player-row__rating-val--' + ratingColor + '">' + Number(p.skill_rating).toFixed(1) + '</span> · Social ' + Number(p.social_rating).toFixed(1) + '</div></div>' + actions + '</div>';
   }).join('');
 }
 
@@ -925,7 +924,8 @@ async function showPlayerCard(userId) {
         var histHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px;">';
         history.forEach(function(h) {
           var dateStr = h.last_session_date ? ' · Last: ' + new Date(h.last_session_date + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
-          histHtml += '<span class="player-sheet__bball-tag">🔁 ' + escHtml(h.org_name) + ': ' + h.session_count + ' run' + (h.session_count > 1 ? 's' : '') + dateStr + '</span>';
+          var logoImg = h.org_logo ? '<img src="' + escHtml(h.org_logo) + '" style="width:14px;height:14px;border-radius:50%;vertical-align:middle;margin-right:3px;">' : '';
+          histHtml += '<span class="player-sheet__bball-tag">' + logoImg + escHtml(h.org_name) + ': ' + h.session_count + ' run' + (h.session_count > 1 ? 's' : '') + dateStr + '</span>';
         });
         histHtml += '</div>';
         bballEl.innerHTML += histHtml;

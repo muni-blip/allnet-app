@@ -373,8 +373,46 @@ fbq('init','1772975143883614');fbq('track','PageView');
         <div class="onboarding-modal__footer">Your name will be visible to other players on AllNet</div>
       </div>
 
-      <!-- Step 2: Profile photo (skippable) -->
+      <!-- Step 2: Basketball profile -->
       <div class="onboarding-step" id="onboardStep2" style="display:none;">
+        <div class="onboarding-modal__logo"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></div>
+        <div class="onboarding-modal__title">Your basketball profile</div>
+        <div class="onboarding-modal__desc">Help organizers build balanced teams. This info is visible to run admins.</div>
+
+        <div class="onboarding-field-group" style="gap:12px;">
+          <label class="onboard-label">What is your height?</label>
+          <select class="onboarding-input" id="onboardHeight" style="appearance:auto;-webkit-appearance:auto;">
+            <option value="">Select height</option>
+          </select>
+
+          <label class="onboard-label" style="margin-top:8px;">What positions do you prefer to play?</label>
+          <div class="onboard-label__hint">Tap in order of preference (first = primary)</div>
+          <div class="onboard-positions" id="onboardPositions">
+            <button type="button" class="onboard-pos-btn" data-pos="PG" onclick="togglePosition(this)"><span class="onboard-pos-btn__abbr">PG</span><span class="onboard-pos-btn__name">Point Guard</span></button>
+            <button type="button" class="onboard-pos-btn" data-pos="SG" onclick="togglePosition(this)"><span class="onboard-pos-btn__abbr">SG</span><span class="onboard-pos-btn__name">Shooting Guard</span></button>
+            <button type="button" class="onboard-pos-btn" data-pos="SF" onclick="togglePosition(this)"><span class="onboard-pos-btn__abbr">SF</span><span class="onboard-pos-btn__name">Small Forward</span></button>
+            <button type="button" class="onboard-pos-btn" data-pos="PF" onclick="togglePosition(this)"><span class="onboard-pos-btn__abbr">PF</span><span class="onboard-pos-btn__name">Power Forward</span></button>
+            <button type="button" class="onboard-pos-btn" data-pos="C" onclick="togglePosition(this)"><span class="onboard-pos-btn__abbr">C</span><span class="onboard-pos-btn__name">Center</span></button>
+          </div>
+          <div class="onboard-pos-order" id="onboardPosOrder"></div>
+
+          <label class="onboard-label" style="margin-top:8px;">Do you currently play in any leagues?</label>
+          <div class="onboard-label__hint">You must be actively participating</div>
+          <select class="onboarding-input" id="onboardLeague" style="appearance:auto;-webkit-appearance:auto;">
+            <option value="">None / Recreational</option>
+            <option value="junior_varsity">Junior Varsity</option>
+            <option value="varsity">Varsity</option>
+            <option value="collegiate">Collegiate</option>
+            <option value="pro_semi_pro">Pro / Semi-Pro</option>
+          </select>
+        </div>
+
+        <div class="onboarding-error" id="onboardProfileError"></div>
+        <button class="btn btn--primary" id="onboardProfileBtn" onclick="submitOnboardingProfile()" style="width:100%;margin-top:6px;">Continue →</button>
+      </div>
+
+      <!-- Step 3: Profile photo (skippable) -->
+      <div class="onboarding-step" id="onboardStep3" style="display:none;">
         <div class="onboarding-modal__logo"><svg height="24" viewBox="0 0 685 318" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></div>
         <div class="onboarding-modal__title">Add a photo</div>
         <div class="onboarding-modal__desc">Help other players recognize you at the court. Required to join rated games.</div>

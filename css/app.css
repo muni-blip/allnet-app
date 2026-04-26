@@ -2096,6 +2096,75 @@ html, body {
   text-align: center;
 }
 
+/* Basketball profile step */
+.onboard-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.onboard-label__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: -4px;
+  margin-bottom: 4px;
+}
+.onboard-positions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.onboard-pos-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+.onboard-pos-btn.selected {
+  border-color: var(--orange);
+  background: rgba(247, 69, 1, 0.08);
+}
+.onboard-pos-btn__abbr {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  width: 32px;
+}
+.onboard-pos-btn__name {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.onboard-pos-btn__rank {
+  position: absolute;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.onboard-pos-order {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 16px;
+}
+
 .onboarding-modal__footer {
   margin-top: 16px;
   font-size: 12px;

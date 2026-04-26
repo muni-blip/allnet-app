@@ -22,6 +22,24 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
 .cc-action-btn { flex: 1; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 14px; line-height: 16px; color: #fff; background: transparent; border: 1px solid #5a5a5a; padding: 12px 8px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .cc-action-btn:hover { border-color: #fff; }
 
+/* ── Basketball Profile Section ── */
+.career-bball { padding: 24px 16px 0; max-width: 375px; margin: 0 auto; }
+.career-bball__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.career-bball__title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; }
+.career-bball__edit { background: none; border: none; color: var(--orange); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+.career-bball__display { display: flex; flex-wrap: wrap; gap: 8px; }
+.career-bball__tag { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; background: rgba(255,255,255,0.06); border: 1px solid #333; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #ccc; }
+.career-bball__field { margin-bottom: 12px; }
+.career-bball__label { display: block; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+.career-bball__select { width: 100%; padding: 10px 14px; background: #181818; border: 1px solid #333; border-radius: 8px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; appearance: auto; -webkit-appearance: auto; }
+.career-bball__positions { display: flex; flex-direction: column; gap: 6px; }
+.career-bball__pos-btn { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #181818; border: 1px solid #333; border-radius: 8px; cursor: pointer; position: relative; }
+.career-bball__pos-btn.selected { border-color: var(--orange); background: rgba(247,69,1,0.08); }
+.career-bball__pos-abbr { font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 700; color: #fff; width: 28px; }
+.career-bball__pos-name { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #999; }
+.career-bball__pos-rank { position: absolute; right: 10px; width: 20px; height: 20px; border-radius: 50%; background: var(--orange); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.career-bball__empty { font-size: 13px; color: var(--text-muted); }
+
 /* ── Username & Share Section ── */
 .career-username { padding: 32px 16px 0; max-width: 375px; margin: 0 auto; }
 .career-username__label { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
@@ -274,6 +292,36 @@ html, body { height: auto; overflow: auto; overscroll-behavior-x: none; }
   <div class="career-badge" id="careerBadge"></div>
   <div class="cc-wrapper"><div class="cc-border"><div class="cc" id="careerCard"><div class="cc__placeholder"><div class="cc__placeholder-icon">📷</div><div class="cc__placeholder-text">Upload a photo to generate your career card</div></div></div></div></div>
   <div class="cc-actions"><button class="cc-action-btn" onclick="openPhotoModal()">CHANGE PHOTO</button><button class="cc-action-btn" onclick="openCoverPicker()">UPDATE COVER</button></div>
+
+  <!-- Basketball Profile -->
+  <div class="career-bball" id="careerBball" style="display:none;">
+    <div class="career-bball__header">
+      <span class="career-bball__title">BASKETBALL PROFILE</span>
+      <button class="career-bball__edit" id="bballEditBtn" onclick="toggleBballEdit()">Edit</button>
+    </div>
+    <div class="career-bball__display" id="bballDisplay"></div>
+    <div class="career-bball__form" id="bballForm" style="display:none;">
+      <div class="career-bball__field">
+        <label class="career-bball__label">Height</label>
+        <select class="career-bball__select" id="bballHeight"></select>
+      </div>
+      <div class="career-bball__field">
+        <label class="career-bball__label">Positions (tap in order of preference)</label>
+        <div class="career-bball__positions" id="bballPositions"></div>
+      </div>
+      <div class="career-bball__field">
+        <label class="career-bball__label">League Experience <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+        <select class="career-bball__select" id="bballLeague">
+          <option value="">None / Recreational</option>
+          <option value="junior_varsity">Junior Varsity</option>
+          <option value="varsity">Varsity</option>
+          <option value="collegiate">Collegiate</option>
+          <option value="pro_semi_pro">Pro / Semi-Pro</option>
+        </select>
+      </div>
+      <button class="btn btn--primary" id="bballSaveBtn" onclick="saveBballProfile()" style="width:100%;margin-top:8px;">Save</button>
+    </div>
+  </div>
 
   <!-- Username Claim -->
   <div class="career-username" id="usernameSection">
@@ -1500,6 +1548,126 @@ async function initCareerPage() {
     } catch (e) { console.error('Most played court error:', e); }
     badgeEl.innerHTML = html;
   }
+
+  // Render basketball profile section
+  renderBballProfile();
+}
+
+var careerPositions = [];
+
+function renderBballProfile() {
+  var section = document.getElementById('careerBball');
+  var display = document.getElementById('bballDisplay');
+  if (!section || !display || !currentProfile) return;
+
+  section.style.display = '';
+  var tags = [];
+
+  if (currentProfile.height_inches) {
+    var ft = Math.floor(currentProfile.height_inches / 12);
+    var inn = currentProfile.height_inches % 12;
+    tags.push('<span class="career-bball__tag">📏 ' + ft + "'" + inn + '"</span>');
+  }
+  if (currentProfile.positions && currentProfile.positions.length > 0) {
+    tags.push('<span class="career-bball__tag">🏀 ' + currentProfile.positions.join(' / ') + '</span>');
+  }
+  if (currentProfile.league_experience && currentProfile.league_experience !== 'recreational') {
+    var labels = { junior_varsity: 'Junior Varsity', varsity: 'Varsity', collegiate: 'Collegiate', pro_semi_pro: 'Pro / Semi-Pro' };
+    tags.push('<span class="career-bball__tag">🏆 ' + (labels[currentProfile.league_experience] || currentProfile.league_experience) + '</span>');
+  }
+
+  if (tags.length === 0) {
+    display.innerHTML = '<div class="career-bball__empty">Add your height and positions to join organized runs.</div>';
+    document.getElementById('bballEditBtn').textContent = 'Add';
+  } else {
+    display.innerHTML = tags.join('');
+    document.getElementById('bballEditBtn').textContent = 'Edit';
+  }
+}
+
+function toggleBballEdit() {
+  var form = document.getElementById('bballForm');
+  var display = document.getElementById('bballDisplay');
+  var btn = document.getElementById('bballEditBtn');
+
+  if (form.style.display === 'none') {
+    form.style.display = '';
+    display.style.display = 'none';
+    btn.textContent = 'Cancel';
+    populateBballForm();
+  } else {
+    form.style.display = 'none';
+    display.style.display = '';
+    btn.textContent = currentProfile.height_inches ? 'Edit' : 'Add';
+  }
+}
+
+function populateBballForm() {
+  // Height dropdown
+  var sel = document.getElementById('bballHeight');
+  if (sel.options.length <= 1) {
+    sel.innerHTML = '<option value="">Select height</option>';
+    for (var i = 60; i <= 84; i++) {
+      var f = Math.floor(i / 12), n = i % 12;
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = f + "'" + n + '"';
+      sel.appendChild(opt);
+    }
+  }
+  if (currentProfile.height_inches) sel.value = currentProfile.height_inches;
+
+  // Positions
+  careerPositions = currentProfile.positions ? currentProfile.positions.slice() : [];
+  var posContainer = document.getElementById('bballPositions');
+  var allPos = [['PG','Point Guard'],['SG','Shooting Guard'],['SF','Small Forward'],['PF','Power Forward'],['C','Center']];
+  posContainer.innerHTML = allPos.map(function(p) {
+    var idx = careerPositions.indexOf(p[0]);
+    var sel = idx > -1 ? ' selected' : '';
+    var rank = idx > -1 ? '<span class="career-bball__pos-rank">' + (idx+1) + '</span>' : '';
+    return '<button type="button" class="career-bball__pos-btn' + sel + '" data-pos="' + p[0] + '" onclick="toggleCareerPos(this)"><span class="career-bball__pos-abbr">' + p[0] + '</span><span class="career-bball__pos-name">' + p[1] + '</span>' + rank + '</button>';
+  }).join('');
+
+  // League
+  var league = document.getElementById('bballLeague');
+  league.value = currentProfile.league_experience || '';
+}
+
+function toggleCareerPos(btn) {
+  var pos = btn.dataset.pos;
+  var idx = careerPositions.indexOf(pos);
+  if (idx > -1) { careerPositions.splice(idx, 1); } else { careerPositions.push(pos); }
+  // Re-render all buttons
+  var btns = document.querySelectorAll('.career-bball__pos-btn');
+  btns.forEach(function(b) {
+    var p = b.dataset.pos, i = careerPositions.indexOf(p);
+    var r = b.querySelector('.career-bball__pos-rank');
+    if (i > -1) { b.classList.add('selected'); if (!r) { r = document.createElement('span'); r.className = 'career-bball__pos-rank'; b.appendChild(r); } r.textContent = i + 1; }
+    else { b.classList.remove('selected'); if (r) r.remove(); }
+  });
+}
+
+async function saveBballProfile() {
+  var height = document.getElementById('bballHeight').value;
+  var league = document.getElementById('bballLeague').value || null;
+  if (!height) { alert('Please select your height'); return; }
+  if (careerPositions.length === 0) { alert('Please select at least one position'); return; }
+
+  var btn = document.getElementById('bballSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try {
+    var { error } = await supabase.from('profiles').update({
+      height_inches: parseInt(height), positions: careerPositions, league_experience: league
+    }).eq('id', currentUser.id);
+    if (error) throw error;
+    currentProfile.height_inches = parseInt(height);
+    currentProfile.positions = careerPositions.slice();
+    currentProfile.league_experience = league;
+    document.getElementById('bballForm').style.display = 'none';
+    document.getElementById('bballDisplay').style.display = '';
+    renderBballProfile();
+  } catch(e) { console.error('Save bball error:', e); alert('Failed to save'); }
+  btn.disabled = false; btn.textContent = 'Save';
 }
 initCareerPage();
 

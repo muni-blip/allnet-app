@@ -520,17 +520,31 @@ async function cancelRegistration() {
 async function giveProp(toUserId) {
   if (!currentUser) return;
   var myProps = sessionData.user_props || [];
-  if (myProps.indexOf(toUserId) !== -1) return; // already propped
-  if (myProps.length >= 10) { alert('Maximum 10 props per session'); return; }
-  try {
-    var { data, error } = await supabase.rpc('give_prop', { p_session_id: sessionData.session.id, p_to_user_id: toUserId });
-    if (error) throw error;
-    if (data && data.error) { alert(data.error); return; }
-    sessionData.user_props = (sessionData.user_props || []).concat([toUserId]);
-    sessionData.prop_counts = sessionData.prop_counts || {};
-    sessionData.prop_counts[toUserId] = (sessionData.prop_counts[toUserId] || 0) + 1;
-    renderSession();
-  } catch(err) { console.error('Prop error:', err); }
+  var hasPropped = myProps.indexOf(toUserId) !== -1;
+
+  if (hasPropped) {
+    // Remove prop
+    try {
+      var { data, error } = await supabase.rpc('remove_prop', { p_session_id: sessionData.session.id, p_to_user_id: toUserId });
+      if (error) throw error;
+      if (data && data.error) { alert(data.error); return; }
+      sessionData.user_props = myProps.filter(function(id) { return id !== toUserId; });
+      sessionData.prop_counts[toUserId] = Math.max((sessionData.prop_counts[toUserId] || 1) - 1, 0);
+      renderSession();
+    } catch(err) { console.error('Remove prop error:', err); }
+  } else {
+    // Give prop
+    if (myProps.length >= 10) { alert('Maximum 10 props per session'); return; }
+    try {
+      var { data, error } = await supabase.rpc('give_prop', { p_session_id: sessionData.session.id, p_to_user_id: toUserId });
+      if (error) throw error;
+      if (data && data.error) { alert(data.error); return; }
+      sessionData.user_props = myProps.concat([toUserId]);
+      sessionData.prop_counts = sessionData.prop_counts || {};
+      sessionData.prop_counts[toUserId] = (sessionData.prop_counts[toUserId] || 0) + 1;
+      renderSession();
+    } catch(err) { console.error('Prop error:', err); }
+  }
 }
 
 init();

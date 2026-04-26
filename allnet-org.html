@@ -285,12 +285,16 @@ async function loadSessions() {
   const { data, error } = await supabase.rpc('get_org_sessions', { p_org_id: currentOrg.org_id });
   if (error) { console.error('loadSessions:', error); document.getElementById('upcomingSessions').innerHTML = '<div class="org-empty"><div class="org-empty__text">Failed to load sessions.</div></div>'; return; }
   currentSessions = data || [];
-  const todayLocal = new Date();
-  const today = todayLocal.getFullYear() + '-' +
-    String(todayLocal.getMonth() + 1).padStart(2, '0') + '-' +
-    String(todayLocal.getDate()).padStart(2, '0');
-  const upcoming = currentSessions.filter(s => s.date >= today && s.status !== 'cancelled');
-  const past = currentSessions.filter(s => s.date < today || s.status === 'completed');
+  const now = new Date();
+  const upcoming = currentSessions.filter(s => {
+    if (s.status === 'cancelled') return false;
+    var sessionStart = new Date(s.date + 'T' + s.start_time);
+    return sessionStart > now;
+  });
+  const past = currentSessions.filter(s => {
+    var sessionStart = new Date(s.date + 'T' + s.start_time);
+    return sessionStart <= now || s.status === 'completed';
+  });
 
   document.getElementById('upcomingSessions').innerHTML = upcoming.length === 0
     ? '<div class="org-empty"><div class="org-empty__text">No upcoming sessions. Create one to get started.</div></div>'

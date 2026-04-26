@@ -140,7 +140,8 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--orange); }
 .form-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 .form-input[type="date"]::-webkit-inner-spin-button { display: none; }
-.form-select { appearance: none; cursor: pointer; }
+.form-select { appearance: auto; -webkit-appearance: auto; cursor: pointer; }
+.form-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 .form-textarea { resize: vertical; min-height: 80px; }
 .form-row { display: flex; gap: 12px; }
 .form-row > .form-group { flex: 1; }
@@ -210,6 +211,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
     <div class="form-row"><div class="form-group"><label class="form-label">Date</label><input class="form-input" id="formDate" type="date"></div><div class="form-group"><label class="form-label">Max Players</label><input class="form-input" id="formMaxPlayers" type="number" value="22" min="2" max="50"></div></div>
     <div class="form-row"><div class="form-group"><label class="form-label">Start Time</label><input class="form-input" id="formStartTime" type="time" value="19:00"></div><div class="form-group"><label class="form-label">End Time</label><input class="form-input" id="formEndTime" type="time" value="21:00"></div></div>
     <div class="form-group"><label class="form-label">Venue</label><div class="venue-wrapper"><input class="form-input" id="formVenue" type="text" placeholder="Search or type venue name..." autocomplete="off" oninput="onVenueInput(this.value)"><div class="venue-suggestions" id="venueSuggestions"></div></div></div>
+    <div class="form-group"><label class="form-label">Check-in Deadline</label><select class="form-select" id="formCheckinDeadline"><option value="30">30 min before start</option><option value="60" selected>1 hour before start</option><option value="120">2 hours before start</option><option value="180">3 hours before start</option></select><div class="form-hint">Players must check in before this time or lose their spot</div></div>
     <div class="form-group"><label class="form-label">Description (optional)</label><textarea class="form-textarea" id="formDesc" placeholder="What should players know about this session?"></textarea></div>
     <button class="form-submit" id="formSubmit" onclick="submitCreateSession()">Create Session</button>
   </div>
@@ -351,9 +353,11 @@ async function loadRoster() {
   const shareUrl = 'allnetgames.com/r/' + currentOrg.org_slug + '/' + session.short_code;
   document.getElementById('shareBar').innerHTML = '<span class="share-bar__url">' + shareUrl + '</span><button class="share-bar__btn" onclick="copyShareLink(\'' + shareUrl + '\')">Copy Link</button>';
   document.getElementById('autoPromoteBar').innerHTML = '<div class="auto-promote-bar__label"><strong>Auto-fill from waitlist</strong><br>Automatically promote when a spot opens</div><label class="toggle-switch"><input type="checkbox" ' + (session.auto_promote ? 'checked' : '') + ' onchange="toggleAutoPromote(this.checked)"><span class="toggle-switch__slider"></span></label>';
+  var standby = currentRoster.filter(r => r.status === 'standby');
   document.getElementById('detailTabs').innerHTML =
     '<button class="detail-tab' + (currentTab === 'confirmed' ? ' active' : '') + '" onclick="switchTab(\'confirmed\')">Roster (' + confirmed.length + ')</button>' +
     '<button class="detail-tab' + (currentTab === 'pending' ? ' active' : '') + '" onclick="switchTab(\'pending\')">Pending (' + pending.length + ')</button>' +
+    (standby.length > 0 ? '<button class="detail-tab' + (currentTab === 'standby' ? ' active' : '') + '" onclick="switchTab(\'standby\')">Standby (' + standby.length + ')</button>' : '') +
     '<button class="detail-tab' + (currentTab === 'waitlisted' ? ' active' : '') + '" onclick="switchTab(\'waitlisted\')">Waitlist (' + waitlisted.length + ')</button>';
   renderPlayerList();
 }
@@ -361,7 +365,8 @@ async function loadRoster() {
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('.detail-tab[onclick*="' + tab + '"]').classList.add('active');
+  var tabBtn = document.querySelector('.detail-tab[onclick*="' + tab + '"]');
+  if (tabBtn) tabBtn.classList.add('active');
   renderPlayerList();
 }
 
@@ -378,22 +383,54 @@ function renderPlayerList() {
     var heightStr = '';
     if (p.height_inches) { var ft = Math.floor(p.height_inches / 12); var inn = p.height_inches % 12; heightStr = ft + "'" + inn + '" · '; }
     var posStr = (p.positions && p.positions.length > 0) ? p.positions.slice(0,2).join('/') + ' · ' : '';
+    // Check-in indicator for confirmed tab
+    var checkinIcon = '';
+    if (currentTab === 'confirmed' && p.checked_in_at) { checkinIcon = '<span style="color:var(--green-live);font-size:12px;margin-right:4px;">✓</span>'; }
+    else if (currentTab === 'confirmed' && !p.checked_in_at) { checkinIcon = '<span style="color:var(--text-muted);font-size:12px;margin-right:4px;">⏳</span>'; }
     var actions = '';
     if (currentTab === 'pending') {
       actions = '<div class="player-row__actions"><button class="player-row__btn player-row__btn--approve" onclick="event.stopPropagation();adminAction(\'' + p.registration_id + '\',\'confirmed\')">Approve</button><button class="player-row__btn player-row__btn--decline" onclick="event.stopPropagation();adminAction(\'' + p.registration_id + '\',\'declined\')">Decline</button></div>';
     } else if (currentTab === 'waitlisted') {
       actions = '<div class="player-row__actions"><span class="player-row__pos">#' + p.waitlist_position + '</span><button class="player-row__btn player-row__btn--promote" onclick="event.stopPropagation();promotePlayer(\'' + p.registration_id + '\')">Promote</button></div>';
     } else if (currentTab === 'confirmed') {
-      actions = '<div class="player-row__actions"><button class="player-row__btn player-row__btn--remove" onclick="event.stopPropagation();removePlayer(\'' + p.registration_id + '\')">Remove</button></div>';
+      var checkinBtn = !p.checked_in_at ? '<button class="player-row__btn player-row__btn--approve" onclick="event.stopPropagation();adminCheckin(\'' + p.registration_id + '\')" style="font-size:10px;">Check In</button>' : '';
+      actions = '<div class="player-row__actions">' + checkinBtn + '<button class="player-row__btn player-row__btn--remove" onclick="event.stopPropagation();removePlayer(\'' + p.registration_id + '\')">Remove</button></div>';
+    } else if (currentTab === 'standby') {
+      actions = '<div class="player-row__actions"><button class="player-row__btn player-row__btn--approve" onclick="event.stopPropagation();reinstatePlayer(\'' + p.registration_id + '\')">Reinstate</button></div>';
     }
     return '<div class="player-row" onclick="openPlayerSheet(\'' + p.user_id + '\')">' +
       '<div class="player-row__avatar">' + avatarHtml + '</div>' +
-      '<div class="player-row__info"><div class="player-row__name">' + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div><div class="player-row__stats">' + heightStr + posStr + record + ' · Skill <span class="player-row__rating-val--' + ratingColor + '">' + Number(p.skill_rating).toFixed(1) + '</span> · Social ' + Number(p.social_rating).toFixed(1) + '</div></div>' + actions + '</div>';
+      '<div class="player-row__info"><div class="player-row__name">' + checkinIcon + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div><div class="player-row__stats">' + heightStr + posStr + record + ' · Skill <span class="player-row__rating-val--' + ratingColor + '">' + Number(p.skill_rating).toFixed(1) + '</span> · Social ' + Number(p.social_rating).toFixed(1) + '</div></div>' + actions + '</div>';
   }).join('');
 }
 
 function showLoading() { document.getElementById('actionLoading').classList.add('active'); }
 function hideLoading() { document.getElementById('actionLoading').classList.remove('active'); }
+
+async function adminCheckin(regId) {
+  showLoading();
+  try {
+    var { error } = await supabase.from('session_registrations')
+      .update({ checked_in_at: new Date().toISOString() })
+      .eq('id', regId);
+    if (error) throw error;
+    showToast('Player checked in');
+    await openSessionDetail(currentSessionId);
+  } catch(e) { console.error(e); showToast('Failed to check in'); }
+  hideLoading();
+}
+
+async function reinstatePlayer(regId) {
+  showLoading();
+  try {
+    var { data, error } = await supabase.rpc('reinstate_from_standby', { p_registration_id: regId });
+    if (error) throw error;
+    if (data && data.error) { showToast(data.error); hideLoading(); return; }
+    showToast('Player reinstated to roster');
+    await openSessionDetail(currentSessionId);
+  } catch(e) { console.error(e); showToast('Failed to reinstate'); }
+  hideLoading();
+}
 
 async function adminAction(regId, newStatus) {
   showLoading();
@@ -619,7 +656,8 @@ async function submitCreateSession() {
   if (!title || !date || !startTime || !venue) { showToast('Please fill in all required fields'); return; }
   btn.disabled = true; btn.textContent = 'Creating...';
   try {
-    var { data, error } = await supabase.rpc('create_run_session', { p_org_id: currentOrg.org_id, p_title: title, p_session_type: 'open', p_date: date, p_start_time: startTime, p_end_time: endTime || null, p_venue_name: venue, p_max_players: maxPlayers, p_description: desc || null, p_auto_promote: false });
+  var checkinDeadline = parseInt(document.getElementById('formCheckinDeadline').value) || 60;
+    var { data, error } = await supabase.rpc('create_run_session', { p_org_id: currentOrg.org_id, p_title: title, p_session_type: 'open', p_date: date, p_start_time: startTime, p_end_time: endTime || null, p_venue_name: venue, p_max_players: maxPlayers, p_description: desc || null, p_auto_promote: false, p_checkin_deadline_minutes: checkinDeadline });
     if (error) throw error;
     showToast('Session created');
     goBack();

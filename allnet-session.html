@@ -263,16 +263,36 @@ function renderSession() {
     var reg = sessionData.user_registration;
     html += '<div class="sp-status">';
     if (reg.status === 'confirmed') {
-      html += '<div class="sp-status__badge sp-status__badge--confirmed">Confirmed</div>';
-      html += '<div class="sp-status__text">You\'re in! See you on the court.</div>';
+      if (reg.checked_in_at) {
+        html += '<div class="sp-status__badge sp-status__badge--confirmed">Checked In ✓</div>';
+        html += '<div class="sp-status__text">You\'re all set! See you on the court.</div>';
+      } else {
+        var checkinWindow = getCheckinWindow(s);
+        if (checkinWindow && checkinWindow.isOpen) {
+          html += '<div class="sp-status__badge sp-status__badge--confirmed">Confirmed</div>';
+          html += '<div class="sp-status__text">Check-in is open! Confirm your attendance before ' + checkinWindow.deadlineStr + '.</div>';
+          html += '<button onclick="checkinForSession()" style="margin-top:12px;width:100%;padding:14px;font-family:\'Oswald\',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:#fff;background:var(--green);border:none;border-radius:8px;cursor:pointer;">Check In Now</button>';
+        } else if (checkinWindow && !checkinWindow.isOpen && checkinWindow.opensIn) {
+          html += '<div class="sp-status__badge sp-status__badge--confirmed">Confirmed</div>';
+          html += '<div class="sp-status__text">You\'re in! Check-in opens ' + checkinWindow.opensIn + '.</div>';
+        } else {
+          html += '<div class="sp-status__badge sp-status__badge--confirmed">Confirmed</div>';
+          html += '<div class="sp-status__text">You\'re in! See you on the court.</div>';
+        }
+      }
     } else if (reg.status === 'pending') {
       html += '<div class="sp-status__badge sp-status__badge--pending">Pending</div>';
       html += '<div class="sp-status__text">Your spot request is pending review by the organizer.</div>';
     } else if (reg.status === 'waitlisted') {
       html += '<div class="sp-status__badge sp-status__badge--waitlisted">Waitlisted #' + reg.waitlist_position + '</div>';
       html += '<div class="sp-status__text">Session is full. You\'ll be notified if a spot opens.</div>';
+    } else if (reg.status === 'standby') {
+      html += '<div class="sp-status__badge" style="background:rgba(234,179,8,0.15);color:#EAB308;border:1px solid rgba(234,179,8,0.3);">Standby</div>';
+      html += '<div class="sp-status__text">You missed the check-in deadline. Show up to the court — the organizer may have a spot for you.</div>';
     }
-    html += '<button onclick="cancelRegistration()" style="margin-top:12px;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;">Cancel Registration</button>';
+    if (reg.status !== 'standby') {
+      html += '<button onclick="cancelRegistration()" style="margin-top:12px;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;">Cancel Registration</button>';
+    }
     html += '</div>';
   }
 
@@ -370,6 +390,36 @@ async function signInApple() {
 
 function showPhotoRequired() {
   document.getElementById('photoModal').style.display = 'flex';
+}
+
+function getCheckinWindow(session) {
+  if (!session.checkin_deadline_minutes || !session.start_time || !session.date) return null;
+  var sessionStart = new Date(session.date + 'T' + session.start_time);
+  var opensAt = new Date(sessionStart.getTime() - 24 * 60 * 60 * 1000);
+  var closesAt = new Date(sessionStart.getTime() - session.checkin_deadline_minutes * 60 * 1000);
+  var now = new Date();
+
+  var deadlineStr = closesAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  if (now >= opensAt && now <= closesAt) {
+    return { isOpen: true, deadlineStr: deadlineStr };
+  } else if (now < opensAt) {
+    var diff = opensAt.getTime() - now.getTime();
+    var hours = Math.floor(diff / 3600000);
+    var opensIn = hours > 24 ? Math.ceil(hours / 24) + ' days' : hours + ' hours';
+    return { isOpen: false, opensIn: opensIn };
+  }
+  return { isOpen: false, passed: true };
+}
+
+async function checkinForSession() {
+  try {
+    var { data, error } = await supabase.rpc('checkin_for_session', { p_session_id: sessionData.session.id });
+    if (error) throw error;
+    if (data && data.error) { alert(data.error); return; }
+    sessionData.user_registration.checked_in_at = data.checked_in_at;
+    renderSession();
+  } catch(err) { console.error('Check-in error:', err); }
 }
 
 async function cancelRegistration() {

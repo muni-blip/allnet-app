@@ -157,15 +157,35 @@ async function loadUpcoming() {
     html += '<div class="up-empty__notif">🔔 <a href="allnet-settings.html">Turn on run notifications</a> to know when spots open up.</div></div>';
   } else {
     myRuns.forEach(function(r) {
-      var badgeClass = 'up-card__badge--' + r.status;
-      var badgeText = r.status === 'confirmed' ? 'Confirmed' : r.status === 'pending' ? 'Pending Review' : 'Waitlisted #' + r.waitlist_position;
       var timeStr = formatTime(r.start_time) + (r.end_time ? ' — ' + formatTime(r.end_time) : '');
+      var checkinWindow = getCheckinWindow(r);
+      var badgeHtml = '', actionHtml = '';
+
+      if (r.status === 'confirmed' && r.checked_in_at) {
+        badgeHtml = '<div class="up-card__badge up-card__badge--confirmed">Checked In ✓</div>';
+      } else if (r.status === 'confirmed' && checkinWindow && checkinWindow.isOpen) {
+        badgeHtml = '<div class="up-card__badge up-card__badge--confirmed">Confirmed</div>';
+        actionHtml = '<div style="margin-top:10px;"><button class="up-card__btn" style="background:var(--green-live);color:#052e16;" onclick="event.stopPropagation();checkinRun(\'' + r.session_id + '\',this)">Check In Now</button></div>';
+      } else if (r.status === 'confirmed') {
+        badgeHtml = '<div class="up-card__badge up-card__badge--confirmed">Confirmed</div>';
+      } else if (r.status === 'pending') {
+        badgeHtml = '<div class="up-card__badge up-card__badge--pending">Pending Review</div>';
+      } else if (r.status === 'waitlisted') {
+        badgeHtml = '<div class="up-card__badge up-card__badge--waitlisted">Waitlisted #' + r.waitlist_position + '</div>';
+      } else if (r.status === 'standby') {
+        badgeHtml = '<div class="up-card__badge" style="background:rgba(234,179,8,0.15);color:#EAB308;border:1px solid rgba(234,179,8,0.3);">Standby</div>';
+      }
+
+      var cancelHtml = r.status !== 'standby'
+        ? '<div style="margin-top:10px;"><button onclick="event.stopPropagation();cancelRun(\'' + r.session_id + '\')" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;">Cancel Registration</button></div>'
+        : '';
+
       html += '<div class="up-card" onclick="window.location.href=\'/r/' + escHtml(r.org_slug) + '/' + escHtml(r.short_code) + '\'">';
-      html += '<div class="up-card__badge ' + badgeClass + '">' + badgeText + '</div>';
+      html += badgeHtml;
       html += '<div class="up-card__title">' + escHtml(r.title) + '</div>';
       html += '<div class="up-card__meta">' + formatDate(r.date) + ' · ' + timeStr + '<br>' + escHtml(r.venue_name) + '</div>';
       html += '<div class="up-card__org">' + escHtml(r.org_name) + '</div>';
-      html += '<div style="margin-top:10px;"><button onclick="event.stopPropagation();cancelRun(\'' + r.session_id + '\')" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;">Cancel Registration</button></div>';
+      html += actionHtml || cancelHtml;
       html += '</div>';
     });
   }
@@ -257,6 +277,33 @@ async function cancelRun(sessionId) {
     showToast('Registration cancelled');
     await loadUpcoming();
   } catch(err) { console.error('Cancel error:', err); }
+}
+
+function getCheckinWindow(session) {
+  if (!session.checkin_deadline_minutes || !session.start_time || !session.date) return null;
+  var sessionStart = new Date(session.date + 'T' + session.start_time);
+  var opensAt = new Date(sessionStart.getTime() - 24 * 60 * 60 * 1000);
+  var closesAt = new Date(sessionStart.getTime() - session.checkin_deadline_minutes * 60 * 1000);
+  var now = new Date();
+  if (now >= opensAt && now <= closesAt) return { isOpen: true };
+  if (now < opensAt) return { isOpen: false };
+  return { isOpen: false, passed: true };
+}
+
+async function checkinRun(sessionId, btnEl) {
+  btnEl.disabled = true;
+  btnEl.textContent = 'Checking in...';
+  try {
+    var { data, error } = await supabase.rpc('checkin_for_session', { p_session_id: sessionId });
+    if (error) throw error;
+    if (data && data.error) { showToast(data.error); btnEl.disabled = false; btnEl.textContent = 'Check In Now'; return; }
+    showToast('Checked in successfully!');
+    await loadUpcoming();
+  } catch(err) {
+    console.error('Check-in error:', err);
+    btnEl.disabled = false;
+    btnEl.textContent = 'Check In Now';
+  }
 }
 
 function showToast(msg) {

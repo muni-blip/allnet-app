@@ -18,27 +18,21 @@ export default async function handler(req, res) {
   try {
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const { data: session } = await sb.from('run_sessions')
-      .select('title, date, start_time, end_time, venue_name, max_players, short_code, org_id')
-      .eq('short_code', code.toUpperCase())
-      .maybeSingle();
+    const { data } = await sb.rpc('get_public_session_info', {
+      p_org_slug: org.toLowerCase(),
+      p_session_code: code.toUpperCase()
+    });
 
-    if (session) {
-      const { data: orgData } = await sb.from('organizations')
-        .select('name, slug')
-        .eq('id', session.org_id)
-        .eq('slug', org.toLowerCase())
-        .maybeSingle();
-
-      if (orgData) {
-        // Get confirmed count
-        const { count } = await sb.from('session_registrations')
-          .select('*', { count: 'exact', head: true })
-          .eq('session_id', session.org_id) // need session id
-          .eq('status', 'confirmed');
-
-        sessionInfo = { ...session, org_name: orgData.name, confirmed: count || 0 };
-      }
+    if (data && !data.error) {
+      sessionInfo = {
+        title: data.session.title,
+        date: data.session.date,
+        start_time: data.session.start_time,
+        venue_name: data.session.venue_name,
+        max_players: data.session.max_players,
+        org_name: data.org.name,
+        confirmed: data.confirmed_count || 0
+      };
     }
   } catch (e) {
     console.error('Session fetch error:', e);

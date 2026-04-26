@@ -456,6 +456,13 @@ function renderPlayerList() {
     var heightStr = '';
     if (p.height_inches) { var ft = Math.floor(p.height_inches / 12); var inn = p.height_inches % 12; heightStr = ft + "'" + inn + '" · '; }
     var posStr = (p.positions && p.positions.length > 0) ? p.positions.slice(0,2).join('/') + ' · ' : '';
+    // Org history badge
+    var historyBadge = '';
+    if (typeof p.org_session_count !== 'undefined') {
+      historyBadge = p.org_session_count > 0
+        ? '<span style="color:var(--green-live);font-size:10px;margin-right:4px;">🔁 ' + p.org_session_count + '</span>'
+        : '<span style="color:var(--orange);font-size:10px;margin-right:4px;">🆕</span>';
+    }
     // Check-in indicator for confirmed tab
     var checkinIcon = '';
     if (currentTab === 'confirmed' && p.checked_in_at) { checkinIcon = '<span style="color:var(--green-live);font-size:12px;margin-right:4px;">✓</span>'; }
@@ -473,7 +480,7 @@ function renderPlayerList() {
     }
     return '<div class="player-row" onclick="openPlayerSheet(\'' + p.user_id + '\')">' +
       '<div class="player-row__avatar">' + avatarHtml + '</div>' +
-      '<div class="player-row__info"><div class="player-row__name">' + checkinIcon + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div><div class="player-row__stats">' + heightStr + posStr + record + ' · Skill <span class="player-row__rating-val--' + ratingColor + '">' + Number(p.skill_rating).toFixed(1) + '</span> · Social ' + Number(p.social_rating).toFixed(1) + '</div></div>' + actions + '</div>';
+      '<div class="player-row__info"><div class="player-row__name">' + checkinIcon + historyBadge + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div><div class="player-row__stats">' + heightStr + posStr + record + ' · Skill <span class="player-row__rating-val--' + ratingColor + '">' + Number(p.skill_rating).toFixed(1) + '</span> · Social ' + Number(p.social_rating).toFixed(1) + '</div></div>' + actions + '</div>';
   }).join('');
 }
 
@@ -910,6 +917,20 @@ async function showPlayerCard(userId) {
       }
       bballEl.innerHTML = tags.join('');
     }
+
+    // Org history
+    try {
+      var { data: history } = await supabase.rpc('get_player_org_history', { p_user_id: userId });
+      if (history && history.length > 0) {
+        var histHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px;">';
+        history.forEach(function(h) {
+          var dateStr = h.last_session_date ? ' · Last: ' + new Date(h.last_session_date + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '';
+          histHtml += '<span class="player-sheet__bball-tag">🔁 ' + escHtml(h.org_name) + ': ' + h.session_count + ' run' + (h.session_count > 1 ? 's' : '') + dateStr + '</span>';
+        });
+        histHtml += '</div>';
+        bballEl.innerHTML += histHtml;
+      }
+    } catch(e) { console.error('Org history error:', e); }
 
     // Admin action buttons based on roster status
     var p = currentRoster.find(function(r) { return r.user_id === userId; });

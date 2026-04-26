@@ -82,6 +82,30 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--text-primary
 .sp-error__text { font-size: 16px; color: var(--text-secondary); }
 
 .sp-closed { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-sm); padding: 12px; text-align: center; margin-top: 24px; font-size: 13px; color: var(--red); font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em; }
+.sp-section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.12em; margin: 24px 0 12px; }
+.sp-teams__grid { display: flex; flex-direction: column; gap: 12px; }
+.sp-team-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.sp-team-card__name { font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 700; color: #fff; padding: 12px 14px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+.sp-team-card__players { padding: 4px 0; }
+.sp-team-player { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
+.sp-team-player__av { width: 28px; height: 28px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); overflow: hidden; flex-shrink: 0; }
+.sp-team-player__av img { width: 100%; height: 100%; object-fit: cover; }
+.sp-team-player__name { font-size: 13px; color: #fff; font-weight: 600; }
+.sp-team-player__meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted); }
+.sp-team-player__info { display: flex; flex-direction: column; gap: 1px; }
+.sp-teams-pending { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2); border-radius: 8px; padding: 16px; text-align: center; margin-top: 16px; font-size: 13px; color: #EAB308; }
+.sp-games { margin-top: 8px; }
+.sp-game-result { padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; font-size: 13px; color: var(--text-secondary); }
+.sp-game-result strong { color: var(--green-live); }
+.sp-props { margin-top: 8px; }
+.sp-props__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+.sp-prop-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; position: relative; transition: border-color 0.2s; }
+.sp-prop-card--active { border-color: var(--orange); background: rgba(247,69,1,0.08); }
+.sp-prop-card__av { width: 36px; height: 36px; border-radius: 50%; background: #333; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-muted); }
+.sp-prop-card__av img { width: 100%; height: 100%; object-fit: cover; }
+.sp-prop-card__name { font-size: 10px; color: #fff; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.sp-prop-card__count { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--orange); }
+.sp-prop-card__check { position: absolute; top: 4px; right: 4px; font-size: 10px; color: var(--orange); }
 
 /* Sign-up modal */
 .sp-auth-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; }
@@ -254,6 +278,66 @@ function renderSession() {
         avatarInner = (p.first_name || '?')[0].toUpperCase();
       }
       html += '<div class="sp-roster__player"><div class="sp-roster__avatar">' + avatarInner + '</div>' + escHtml(p.first_name) + '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Teams display (when visible)
+  var lookup = sessionData.player_lookup || {};
+  if (sessionData.teams && sessionData.teams.teams && sessionData.teams.teams.length > 0) {
+    html += '<div class="sp-teams"><div class="sp-section-label">TEAMS</div><div class="sp-teams__grid">';
+    sessionData.teams.teams.forEach(function(team) {
+      html += '<div class="sp-team-card"><div class="sp-team-card__name">' + escHtml(team.name) + '</div><div class="sp-team-card__players">';
+      (team.player_ids || []).forEach(function(id) {
+        var p = lookup[id];
+        if (p) {
+          var hStr = p.height_inches ? Math.floor(p.height_inches/12) + "'" + (p.height_inches%12) + '"' : '';
+          var posStr = (p.positions && p.positions.length > 0) ? p.positions.slice(0,2).join('/') : '';
+          var av = p.avatar_url ? '<img src="' + escHtml(p.avatar_url) + '" alt="">' : (p.first_name||'?')[0].toUpperCase();
+          html += '<div class="sp-team-player"><div class="sp-team-player__av">' + av + '</div><div class="sp-team-player__info"><div class="sp-team-player__name">' + escHtml(p.first_name) + '</div><div class="sp-team-player__meta">' + [hStr, posStr].filter(Boolean).join(' · ') + '</div></div></div>';
+        }
+      });
+      html += '</div></div>';
+    });
+    html += '</div></div>';
+  } else if (sessionData.session.teams_visible_at && new Date(sessionData.session.teams_visible_at) > new Date()) {
+    html += '<div class="sp-teams-pending">Teams will be revealed at ' + new Date(sessionData.session.teams_visible_at).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'}) + '</div>';
+  }
+
+  // Game results
+  if (sessionData.games && sessionData.games.length > 0) {
+    html += '<div class="sp-games"><div class="sp-section-label">GAME RESULTS</div>';
+    sessionData.games.forEach(function(g) {
+      var winLabel = g.winner === 'team_a' ? escHtml(g.team_a_name) + ' won' : g.winner === 'team_b' ? escHtml(g.team_b_name) + ' won' : 'Draw';
+      html += '<div class="sp-game-result">Game ' + g.game_number + ': ' + escHtml(g.team_a_name) + ' vs ' + escHtml(g.team_b_name) + ' — <strong>' + winLabel + '</strong></div>';
+    });
+    html += '</div>';
+  }
+
+  // Props section (after session starts, for participants)
+  var canProp = false;
+  if (sessionData.user_registration && sessionData.session.start_time) {
+    var sessionStart = new Date(sessionData.session.date + 'T' + sessionData.session.start_time);
+    canProp = new Date() >= sessionStart;
+  }
+  if (canProp && Object.keys(lookup).length > 0) {
+    var myProps = sessionData.user_props || [];
+    var propCounts = sessionData.prop_counts || {};
+    html += '<div class="sp-props"><div class="sp-section-label">GIVE PROPS <span style="color:var(--text-muted);font-weight:400;">(' + myProps.length + '/10)</span></div>';
+    html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Tap a player to give them props. +0.02 social rating each.</div>';
+    html += '<div class="sp-props__grid">';
+    Object.entries(lookup).forEach(function(entry) {
+      var uid = entry[0], p = entry[1];
+      if (uid === (currentUser && currentUser.id)) return; // skip self
+      var hasPropped = myProps.indexOf(uid) !== -1;
+      var count = propCounts[uid] || 0;
+      var av = p.avatar_url ? '<img src="' + escHtml(p.avatar_url) + '" alt="">' : (p.first_name||'?')[0].toUpperCase();
+      html += '<div class="sp-prop-card' + (hasPropped ? ' sp-prop-card--active' : '') + '" onclick="giveProp(\'' + uid + '\')">';
+      html += '<div class="sp-prop-card__av">' + av + '</div>';
+      html += '<div class="sp-prop-card__name">' + escHtml(p.first_name) + '</div>';
+      if (count > 0) html += '<div class="sp-prop-card__count">🔥 ' + count + '</div>';
+      if (hasPropped) html += '<div class="sp-prop-card__check">✓</div>';
+      html += '</div>';
     });
     html += '</div></div>';
   }
@@ -431,6 +515,22 @@ async function cancelRegistration() {
     sessionData.user_registration = null;
     renderSession();
   } catch(err) { console.error('Cancel error:', err); }
+}
+
+async function giveProp(toUserId) {
+  if (!currentUser) return;
+  var myProps = sessionData.user_props || [];
+  if (myProps.indexOf(toUserId) !== -1) return; // already propped
+  if (myProps.length >= 10) { alert('Maximum 10 props per session'); return; }
+  try {
+    var { data, error } = await supabase.rpc('give_prop', { p_session_id: sessionData.session.id, p_to_user_id: toUserId });
+    if (error) throw error;
+    if (data && data.error) { alert(data.error); return; }
+    sessionData.user_props = (sessionData.user_props || []).concat([toUserId]);
+    sessionData.prop_counts = sessionData.prop_counts || {};
+    sessionData.prop_counts[toUserId] = (sessionData.prop_counts[toUserId] || 0) + 1;
+    renderSession();
+  } catch(err) { console.error('Prop error:', err); }
 }
 
 init();

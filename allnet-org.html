@@ -126,6 +126,44 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .player-sheet__close{display:flex;justify-content:center;margin-top:16px;}
 .player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
 .player-sheet__close-btn:hover{background:rgba(255,255,255,0.15);}
+/* Teams builder */
+.teams-panel{padding:0 16px;}
+.teams-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.teams-add-btn{padding:8px 16px;font-family:var(--font-display);font-size:12px;font-weight:700;text-transform:uppercase;color:#fff;background:var(--orange);border:none;border-radius:6px;cursor:pointer;}
+.teams-reveal{display:flex;align-items:center;gap:8px;}
+.teams-reveal__btn{padding:8px 14px;font-family:var(--font-display);font-size:11px;font-weight:700;text-transform:uppercase;border:none;border-radius:6px;cursor:pointer;}
+.teams-reveal__btn--show{background:var(--green-live);color:#052e16;}
+.teams-reveal__btn--hide{background:#333;color:#999;}
+.teams-reveal__status{font-size:11px;color:var(--text-muted);}
+.team-section{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;}
+.team-section--unassigned{border-color:rgba(255,255,255,0.08);}
+.team-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);}
+.team-header__name{font-family:var(--font-display);font-size:16px;font-weight:700;color:#fff;}
+.team-header__input{background:transparent;border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-family:var(--font-display);font-size:16px;font-weight:700;color:#fff;width:140px;}
+.team-header__stats{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);display:flex;gap:10px;}
+.team-header__remove{background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;padding:4px;}
+.team-player{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 0.15s;}
+.team-player:hover{background:rgba(255,255,255,0.03);}
+.team-player:last-child{border-bottom:none;}
+.team-player__info{flex:1;min-width:0;}
+.team-player__name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.team-player__meta{font-family:var(--font-mono);font-size:10px;color:var(--text-muted);}
+.team-player__avatar{width:32px;height:32px;border-radius:50%;background:#333;flex-shrink:0;overflow:hidden;}
+.team-player__avatar img{width:100%;height:100%;object-fit:cover;}
+.team-empty{padding:20px 14px;text-align:center;font-size:12px;color:var(--text-muted);}
+/* Game log */
+.teams-games{margin-top:24px;}
+.teams-games__header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.game-log-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;}
+.game-log__teams{font-size:13px;color:#fff;}
+.game-log__winner{font-family:var(--font-mono);font-size:11px;color:var(--green-live);margin-left:8px;}
+.game-log__draw{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-left:8px;}
+.game-log__delete{background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;}
+.log-game-form{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+.log-game-form select,.log-game-form button{margin-top:8px;}
+.team-assign-menu{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:10;background:#222;border:1px solid var(--border);border-radius:8px;padding:4px;display:flex;flex-direction:column;min-width:120px;box-shadow:0 4px 16px rgba(0,0,0,0.5);}
+.team-assign-option{padding:8px 12px;font-size:12px;color:#fff;background:none;border:none;cursor:pointer;text-align:left;border-radius:4px;}
+.team-assign-option:hover{background:rgba(255,255,255,0.08);}
 .player-sheet__bball{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;padding:0 8px;}
 .player-sheet__bball-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:20px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary);}
 .player-sheet__bball-tag svg{width:14px;height:14px;opacity:0.5;}
@@ -204,6 +242,21 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
     <div class="auto-promote-bar" id="autoPromoteBar"></div>
     <div class="detail-tabs" id="detailTabs"></div>
     <div class="player-list" id="playerList"></div>
+    <div class="teams-panel" id="teamsPanel" style="display:none;">
+      <div class="teams-controls">
+        <button class="teams-add-btn" onclick="addTeam()">+ Add Team</button>
+        <div class="teams-reveal" id="teamsReveal"></div>
+      </div>
+      <div class="teams-builder" id="teamsBuilder"></div>
+      <div class="teams-games" id="teamsGames">
+        <div class="teams-games__header">
+          <span class="org-section-label" style="margin:0;">GAME LOG</span>
+          <button class="teams-add-btn" onclick="showLogGameForm()">+ Log Game</button>
+        </div>
+        <div id="logGameForm" style="display:none;"></div>
+        <div id="gameLogList"></div>
+      </div>
+    </div>
   </div>
 
   <div class="create-form" id="createForm">
@@ -365,7 +418,8 @@ async function loadRoster() {
     '<button class="detail-tab' + (currentTab === 'confirmed' ? ' active' : '') + '" onclick="switchTab(\'confirmed\')">Roster (' + confirmed.length + ')</button>' +
     '<button class="detail-tab' + (currentTab === 'pending' ? ' active' : '') + '" onclick="switchTab(\'pending\')">Pending (' + pending.length + ')</button>' +
     (standby.length > 0 ? '<button class="detail-tab' + (currentTab === 'standby' ? ' active' : '') + '" onclick="switchTab(\'standby\')">Standby (' + standby.length + ')</button>' : '') +
-    '<button class="detail-tab' + (currentTab === 'waitlisted' ? ' active' : '') + '" onclick="switchTab(\'waitlisted\')">Waitlist (' + waitlisted.length + ')</button>';
+    '<button class="detail-tab' + (currentTab === 'waitlisted' ? ' active' : '') + '" onclick="switchTab(\'waitlisted\')">Waitlist (' + waitlisted.length + ')</button>' +
+    '<button class="detail-tab' + (currentTab === 'teams' ? ' active' : '') + '" onclick="switchTab(\'teams\')">Teams</button>';
   renderPlayerList();
 }
 
@@ -374,7 +428,19 @@ function switchTab(tab) {
   document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
   var tabBtn = document.querySelector('.detail-tab[onclick*="' + tab + '"]');
   if (tabBtn) tabBtn.classList.add('active');
-  renderPlayerList();
+
+  var playerList = document.getElementById('playerList');
+  var teamsPanel = document.getElementById('teamsPanel');
+
+  if (tab === 'teams') {
+    playerList.style.display = 'none';
+    teamsPanel.style.display = '';
+    initTeamsTab();
+  } else {
+    playerList.style.display = '';
+    teamsPanel.style.display = 'none';
+    renderPlayerList();
+  }
 }
 
 function renderPlayerList() {
@@ -510,6 +576,261 @@ async function toggleAutoPromote(enabled) {
   showToast(enabled ? 'Auto-fill enabled' : 'Auto-fill disabled');
 }
 function copyShareLink(url) { navigator.clipboard.writeText('https://' + url).then(function() { showToast('Link copied'); }); }
+
+// ── Team Management ──
+var teamData = { teams: [] }; // { teams: [{ name: "Team 1", player_ids: [...] }] }
+var currentGames = [];
+var teamsVisibleAt = null;
+
+function initTeamsTab() {
+  var session = currentSessions.find(s => s.id === currentSessionId);
+  if (session) {
+    teamData = session.team_assignments || { teams: [] };
+    if (!teamData.teams) teamData.teams = [];
+    teamsVisibleAt = session.teams_visible_at;
+  }
+  loadGames();
+  renderTeamsBuilder();
+  renderRevealControls();
+}
+
+function renderTeamsBuilder() {
+  var container = document.getElementById('teamsBuilder');
+  var confirmed = currentRoster.filter(r => r.status === 'confirmed');
+  var assignedIds = new Set();
+  teamData.teams.forEach(t => (t.player_ids || []).forEach(id => assignedIds.add(id)));
+  var unassigned = confirmed.filter(p => !assignedIds.has(p.user_id));
+
+  var html = '';
+
+  // Unassigned pool
+  html += '<div class="team-section team-section--unassigned">';
+  html += '<div class="team-header"><span class="team-header__name">Unassigned (' + unassigned.length + ')</span></div>';
+  if (unassigned.length > 0) {
+    html += unassigned.map(p => renderTeamPlayer(p, -1)).join('');
+  } else {
+    html += '<div class="team-empty">All players assigned</div>';
+  }
+  html += '</div>';
+
+  // Team sections
+  teamData.teams.forEach(function(team, idx) {
+    var players = (team.player_ids || []).map(id => confirmed.find(p => p.user_id === id)).filter(Boolean);
+    var avgH = players.length > 0 ? Math.round(players.reduce((s,p) => s + (p.height_inches||0), 0) / players.length) : 0;
+    var avgS = players.length > 0 ? (players.reduce((s,p) => s + Number(p.skill_rating||0), 0) / players.length).toFixed(1) : '—';
+    var positions = {};
+    players.forEach(p => { if (p.positions && p.positions[0]) positions[p.positions[0]] = (positions[p.positions[0]]||0) + 1; });
+    var posStr = Object.entries(positions).map(e => e[1] + ' ' + e[0]).join(', ') || 'none';
+    var hFt = avgH ? Math.floor(avgH/12) + "'" + (avgH%12) + '"' : '—';
+
+    html += '<div class="team-section">';
+    html += '<div class="team-header">';
+    html += '<input class="team-header__input" value="' + escHtml(team.name) + '" onchange="renameTeam(' + idx + ',this.value)">';
+    html += '<div class="team-header__stats"><span>' + players.length + ' players</span><span>Avg ' + hFt + '</span><span>Skill ' + avgS + '</span></div>';
+    html += '<button class="team-header__remove" onclick="removeTeam(' + idx + ')">✕</button>';
+    html += '</div>';
+    if (players.length > 0) {
+      html += players.map(p => renderTeamPlayer(p, idx)).join('');
+    } else {
+      html += '<div class="team-empty">Tap a player to assign them here</div>';
+    }
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+function renderTeamPlayer(p, currentTeamIdx) {
+  var hStr = p.height_inches ? Math.floor(p.height_inches/12) + "'" + (p.height_inches%12) + '"' : '';
+  var posStr = (p.positions && p.positions.length > 0) ? p.positions.slice(0,2).join('/') : '';
+  var meta = [hStr, posStr, 'Skill ' + Number(p.skill_rating||0).toFixed(1)].filter(Boolean).join(' · ');
+  var avatarHtml = p.avatar_cutout_url
+    ? '<img src="' + escHtml(p.avatar_cutout_url) + '" alt="">'
+    : ((p.first_name||'?')[0] + (p.last_name||'?')[0]).toUpperCase();
+
+  return '<div class="team-player" style="position:relative;" onclick="showAssignMenu(\'' + p.user_id + '\',' + currentTeamIdx + ',event)">' +
+    '<div class="team-player__avatar">' + avatarHtml + '</div>' +
+    '<div class="team-player__info"><div class="team-player__name">' + escHtml(p.first_name) + ' ' + escHtml(p.last_name) + '</div>' +
+    '<div class="team-player__meta">' + meta + '</div></div></div>';
+}
+
+function showAssignMenu(userId, currentIdx, evt) {
+  evt.stopPropagation();
+  // Remove any existing menu
+  var old = document.querySelector('.team-assign-menu');
+  if (old) old.remove();
+
+  var menu = document.createElement('div');
+  menu.className = 'team-assign-menu';
+  // Unassigned option
+  if (currentIdx !== -1) {
+    menu.innerHTML += '<button class="team-assign-option" onclick="assignPlayer(\'' + userId + '\',-1)">Unassigned</button>';
+  }
+  teamData.teams.forEach(function(t, i) {
+    if (i !== currentIdx) {
+      menu.innerHTML += '<button class="team-assign-option" onclick="assignPlayer(\'' + userId + '\',' + i + ')">' + escHtml(t.name) + '</button>';
+    }
+  });
+  if (menu.innerHTML === '') { return; } // no options
+
+  var rect = evt.currentTarget.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.top = rect.top + 'px';
+  menu.style.right = '20px';
+  menu.style.zIndex = '100';
+  document.body.appendChild(menu);
+
+  setTimeout(function() {
+    document.addEventListener('click', function dismiss() { menu.remove(); document.removeEventListener('click', dismiss); }, { once: true });
+  }, 10);
+}
+
+function assignPlayer(userId, teamIdx) {
+  // Remove from all teams
+  teamData.teams.forEach(t => { t.player_ids = (t.player_ids||[]).filter(id => id !== userId); });
+  // Add to target team
+  if (teamIdx >= 0 && teamData.teams[teamIdx]) {
+    teamData.teams[teamIdx].player_ids.push(userId);
+  }
+  renderTeamsBuilder();
+  saveTeamAssignments();
+}
+
+function addTeam() {
+  var num = teamData.teams.length + 1;
+  teamData.teams.push({ name: 'Team ' + num, player_ids: [] });
+  renderTeamsBuilder();
+  saveTeamAssignments();
+}
+
+function removeTeam(idx) {
+  teamData.teams.splice(idx, 1);
+  renderTeamsBuilder();
+  saveTeamAssignments();
+}
+
+function renameTeam(idx, name) {
+  teamData.teams[idx].name = name;
+  saveTeamAssignments();
+}
+
+async function saveTeamAssignments() {
+  var { data, error } = await supabase.rpc('save_team_assignments', { p_session_id: currentSessionId, p_assignments: teamData });
+  if (error) console.error('Failed to save teams:', error);
+  var s = currentSessions.find(s => s.id === currentSessionId);
+  if (s) s.team_assignments = teamData;
+}
+
+function renderRevealControls() {
+  var el = document.getElementById('teamsReveal');
+  if (teamsVisibleAt && new Date(teamsVisibleAt) <= new Date()) {
+    el.innerHTML = '<span class="teams-reveal__status">Teams visible to players</span> <button class="teams-reveal__btn teams-reveal__btn--hide" onclick="hideTeams()">Hide Teams</button>';
+  } else if (teamsVisibleAt) {
+    el.innerHTML = '<span class="teams-reveal__status">Reveal at ' + new Date(teamsVisibleAt).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'}) + '</span> <button class="teams-reveal__btn teams-reveal__btn--hide" onclick="hideTeams()">Cancel</button>';
+  } else {
+    el.innerHTML = '<button class="teams-reveal__btn teams-reveal__btn--show" onclick="revealTeams()">Reveal Teams Now</button>';
+  }
+}
+
+async function revealTeams() {
+  var { data, error } = await supabase.rpc('set_teams_visibility', { p_session_id: currentSessionId, p_visible_at: new Date().toISOString() });
+  if (error) { showToast('Failed'); return; }
+  teamsVisibleAt = new Date().toISOString();
+  var s = currentSessions.find(s => s.id === currentSessionId);
+  if (s) s.teams_visible_at = teamsVisibleAt;
+  renderRevealControls();
+  showToast('Teams are now visible to players');
+}
+
+async function hideTeams() {
+  var { data, error } = await supabase.rpc('set_teams_visibility', { p_session_id: currentSessionId, p_visible_at: null });
+  if (error) { showToast('Failed'); return; }
+  teamsVisibleAt = null;
+  var s = currentSessions.find(s => s.id === currentSessionId);
+  if (s) s.teams_visible_at = null;
+  renderRevealControls();
+  showToast('Teams hidden from players');
+}
+
+// ── Game Log ──
+async function loadGames() {
+  var { data, error } = await supabase.from('run_games').select('*').eq('session_id', currentSessionId).order('game_number', { ascending: true });
+  currentGames = data || [];
+  renderGameLog();
+}
+
+function renderGameLog() {
+  var el = document.getElementById('gameLogList');
+  if (currentGames.length === 0) { el.innerHTML = '<div class="team-empty">No games logged yet</div>'; return; }
+  el.innerHTML = currentGames.map(function(g) {
+    var winLabel = g.winner === 'team_a' ? '<span class="game-log__winner">' + escHtml(g.team_a_name) + ' won</span>'
+                 : g.winner === 'team_b' ? '<span class="game-log__winner">' + escHtml(g.team_b_name) + ' won</span>'
+                 : g.winner === 'draw' ? '<span class="game-log__draw">Draw</span>' : '<span class="game-log__draw">No result</span>';
+    return '<div class="game-log-item"><div><span class="game-log__teams">Game ' + g.game_number + ': ' + escHtml(g.team_a_name) + ' vs ' + escHtml(g.team_b_name) + '</span>' + winLabel + '</div>' +
+      '<button class="game-log__delete" onclick="deleteGame(\'' + g.id + '\')">Delete</button></div>';
+  }).join('');
+}
+
+function showLogGameForm() {
+  var el = document.getElementById('logGameForm');
+  if (teamData.teams.length < 2) { showToast('Create at least 2 teams first'); return; }
+  var opts = teamData.teams.map((t,i) => '<option value="' + i + '">' + escHtml(t.name) + '</option>').join('');
+  el.innerHTML = '<div class="log-game-form">' +
+    '<div style="display:flex;gap:8px;align-items:center;"><select class="form-select" id="logTeamA" style="flex:1;">' + opts + '</select>' +
+    '<span style="color:var(--text-muted);">vs</span>' +
+    '<select class="form-select" id="logTeamB" style="flex:1;">' + opts.replace('value="0"', 'value="0"').replace('value="1" selected', 'value="1"') + '</select></div>' +
+    '<select class="form-select" id="logWinner"><option value="team_a">Team A wins</option><option value="team_b">Team B wins</option><option value="draw">Draw</option></select>' +
+    '<div style="display:flex;gap:8px;margin-top:8px;"><button class="teams-add-btn" onclick="logGame()">Log Game</button><button class="teams-add-btn" style="background:#333;" onclick="document.getElementById(\'logGameForm\').style.display=\'none\'">Cancel</button></div></div>';
+  // Default Team B to second team
+  if (teamData.teams.length >= 2) document.getElementById('logTeamB').value = '1';
+  // Update winner labels dynamically
+  updateWinnerLabels();
+  document.getElementById('logTeamA').addEventListener('change', updateWinnerLabels);
+  document.getElementById('logTeamB').addEventListener('change', updateWinnerLabels);
+  el.style.display = '';
+}
+
+function updateWinnerLabels() {
+  var aIdx = parseInt(document.getElementById('logTeamA').value);
+  var bIdx = parseInt(document.getElementById('logTeamB').value);
+  var sel = document.getElementById('logWinner');
+  sel.options[0].text = teamData.teams[aIdx].name + ' wins';
+  sel.options[1].text = teamData.teams[bIdx].name + ' wins';
+}
+
+async function logGame() {
+  var aIdx = parseInt(document.getElementById('logTeamA').value);
+  var bIdx = parseInt(document.getElementById('logTeamB').value);
+  if (aIdx === bIdx) { showToast('Pick two different teams'); return; }
+  var winner = document.getElementById('logWinner').value;
+  var teamA = teamData.teams[aIdx];
+  var teamB = teamData.teams[bIdx];
+
+  showLoading();
+  try {
+    var { data, error } = await supabase.rpc('log_run_game', {
+      p_session_id: currentSessionId,
+      p_team_a_name: teamA.name, p_team_b_name: teamB.name,
+      p_team_a_ids: teamA.player_ids || [], p_team_b_ids: teamB.player_ids || [],
+      p_winner: winner
+    });
+    if (error || (data && data.error)) { showToast((data && data.error) || error.message); return; }
+    showToast('Game ' + data.game_number + ' logged');
+    document.getElementById('logGameForm').style.display = 'none';
+    await loadGames();
+  } finally { hideLoading(); }
+}
+
+async function deleteGame(gameId) {
+  if (!confirm('Delete this game? Player ratings from it will be reverted.')) return;
+  showLoading();
+  try {
+    var { data, error } = await supabase.rpc('delete_run_game', { p_game_id: gameId });
+    if (error || (data && data.error)) { showToast('Delete failed'); return; }
+    showToast('Game deleted');
+    await loadGames();
+  } finally { hideLoading(); }
+}
 
 function openPlayerSheet(userId) {
   showPlayerCard(userId);

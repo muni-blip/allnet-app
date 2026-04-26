@@ -185,6 +185,10 @@ async function loadUpcoming() {
       html += '<div class="up-card__title">' + escHtml(r.title) + '</div>';
       html += '<div class="up-card__meta">' + formatDate(r.date) + ' · ' + timeStr + '<br>' + escHtml(r.venue_name) + '</div>';
       html += '<div class="up-card__org">' + escHtml(r.org_name) + '</div>';
+      // Teams badge
+      if (r.teams_visible_at && new Date(r.teams_visible_at) <= new Date()) {
+        html += '<div style="margin-top:8px;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--green-live);text-transform:uppercase;letter-spacing:0.08em;">🏀 Teams are live — check your lineup</div>';
+      }
       html += actionHtml || cancelHtml;
       html += '</div>';
     });

@@ -161,7 +161,7 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 .game-log__delete{background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;}
 .log-game-form{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
 .log-game-form select,.log-game-form button{margin-top:8px;}
-.team-assign-menu{position:fixed;z-index:100;background:#222;border:1px solid var(--border);border-radius:8px;padding:4px;display:flex;flex-direction:column;width:auto;min-width:100px;max-width:160px;box-shadow:0 4px 16px rgba(0,0,0,0.5);}
+.team-assign-menu{position:fixed;z-index:100;background:#222;border:1px solid var(--border);border-radius:8px;padding:4px;display:flex;flex-direction:column;box-shadow:0 4px 16px rgba(0,0,0,0.5);width:fit-content;}
 .team-assign-option{padding:6px 10px;font-size:12px;color:#fff;background:none;border:none;cursor:pointer;text-align:left;border-radius:4px;white-space:nowrap;}
 .team-assign-option:hover{background:rgba(255,255,255,0.08);}
 .player-sheet__bball{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;padding:0 8px;}
@@ -662,13 +662,14 @@ function showAssignMenu(userId, currentIdx, evt) {
 
   var menu = document.createElement('div');
   menu.className = 'team-assign-menu';
+  menu.style.cssText = 'position:fixed;z-index:100;background:#222;border:1px solid #333;border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
   // Unassigned option
   if (currentIdx !== -1) {
-    menu.innerHTML += '<button class="team-assign-option" onclick="assignPlayer(\'' + userId + '\',-1)">Unassigned</button>';
+    menu.innerHTML += '<button style="display:block;padding:6px 12px;font-size:12px;color:#fff;background:none;border:none;cursor:pointer;text-align:left;white-space:nowrap;" onmouseover="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseout="this.style.background=\'none\'" onclick="assignPlayer(\'' + userId + '\',-1)">Unassigned</button>';
   }
   teamData.teams.forEach(function(t, i) {
     if (i !== currentIdx) {
-      menu.innerHTML += '<button class="team-assign-option" onclick="assignPlayer(\'' + userId + '\',' + i + ')">' + escHtml(t.name) + '</button>';
+      menu.innerHTML += '<button style="display:block;padding:6px 12px;font-size:12px;color:#fff;background:none;border:none;cursor:pointer;text-align:left;white-space:nowrap;" onmouseover="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseout="this.style.background=\'none\'" onclick="assignPlayer(\'' + userId + '\',' + i + ')">' + escHtml(t.name) + '</button>';
     }
   });
   if (menu.innerHTML === '') { return; } // no options

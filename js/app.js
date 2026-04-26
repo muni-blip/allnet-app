@@ -1782,13 +1782,109 @@ async function submitOnboardingName() {
       profileAvatarEl.textContent = initials;
     }
 
-    // Advance to step 2
+    // Advance to step 2 (basketball profile)
     document.getElementById('onboardStep1').style.display = 'none';
     document.getElementById('onboardStep2').style.display = 'flex';
-    document.getElementById('onboardAvatarInitials').textContent = initials;
 
   } catch (err) {
     console.error('Failed to save name:', err);
+    errorEl.textContent = 'Failed to save. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Continue →';
+  }
+}
+
+// ── Basketball Profile Step (onboarding step 2) ──
+
+var selectedPositions = [];
+
+// Populate height dropdown on page load
+(function populateHeightDropdown() {
+  var sel = document.getElementById('onboardHeight');
+  if (!sel) return;
+  for (var inches = 60; inches <= 84; inches++) {
+    var ft = Math.floor(inches / 12);
+    var inn = inches % 12;
+    var opt = document.createElement('option');
+    opt.value = inches;
+    opt.textContent = ft + "'" + inn + '"' + (inches === 72 ? ' (6 ft)' : inches === 60 ? ' (5 ft)' : '');
+    sel.appendChild(opt);
+  }
+})();
+
+function togglePosition(btnEl) {
+  var pos = btnEl.dataset.pos;
+  var idx = selectedPositions.indexOf(pos);
+  if (idx > -1) {
+    // Deselect
+    selectedPositions.splice(idx, 1);
+    btnEl.classList.remove('selected');
+    var rank = btnEl.querySelector('.onboard-pos-btn__rank');
+    if (rank) rank.remove();
+  } else {
+    // Select
+    selectedPositions.push(pos);
+    btnEl.classList.add('selected');
+  }
+  // Update all rank badges
+  var allBtns = document.querySelectorAll('.onboard-pos-btn');
+  allBtns.forEach(function(b) {
+    var p = b.dataset.pos;
+    var r = b.querySelector('.onboard-pos-btn__rank');
+    var i = selectedPositions.indexOf(p);
+    if (i > -1) {
+      if (!r) { r = document.createElement('span'); r.className = 'onboard-pos-btn__rank'; b.appendChild(r); }
+      r.textContent = i + 1;
+    } else if (r) { r.remove(); }
+  });
+  // Update order display
+  var orderEl = document.getElementById('onboardPosOrder');
+  if (orderEl) {
+    orderEl.textContent = selectedPositions.length > 0
+      ? selectedPositions.map(function(p, i) { return (i + 1) + '. ' + p; }).join('  ')
+      : '';
+  }
+}
+
+async function submitOnboardingProfile() {
+  var height = document.getElementById('onboardHeight').value;
+  var league = document.getElementById('onboardLeague').value || null;
+  var errorEl = document.getElementById('onboardProfileError');
+
+  if (!height) {
+    errorEl.textContent = 'Please select your height';
+    return;
+  }
+  if (selectedPositions.length === 0) {
+    errorEl.textContent = 'Please select at least one position';
+    return;
+  }
+
+  errorEl.textContent = '';
+  var btn = document.getElementById('onboardProfileBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    var { error } = await supabase.from('profiles').update({
+      height_inches: parseInt(height),
+      positions: selectedPositions,
+      league_experience: league
+    }).eq('id', currentUser.id);
+
+    if (error) throw error;
+
+    currentProfile.height_inches = parseInt(height);
+    currentProfile.positions = selectedPositions;
+    currentProfile.league_experience = league;
+
+    // Advance to step 3 (photo)
+    document.getElementById('onboardStep2').style.display = 'none';
+    document.getElementById('onboardStep3').style.display = 'flex';
+    document.getElementById('onboardAvatarInitials').textContent = currentProfile.initials || '?';
+
+  } catch (err) {
+    console.error('Failed to save basketball profile:', err);
     errorEl.textContent = 'Failed to save. Please try again.';
     btn.disabled = false;
     btn.textContent = 'Continue →';
@@ -1884,6 +1980,7 @@ function closeOnboarding() {
   // Reset for potential future re-open
   document.getElementById('onboardStep1').style.display = 'flex';
   document.getElementById('onboardStep2').style.display = 'none';
+  document.getElementById('onboardStep3').style.display = 'none';
   const nameBtn = document.getElementById('onboardNameBtn');
   nameBtn.disabled = false;
   nameBtn.textContent = 'Continue →';

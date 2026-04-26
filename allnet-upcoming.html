@@ -92,9 +92,9 @@ html, body { height: 100%; font-family: var(--font-body); background: var(--bg);
 <div class="up-photo-overlay" id="photoOverlay" onclick="closePhotoModal(event)">
   <div class="up-photo-sheet" onclick="event.stopPropagation()">
     <div class="up-photo__handle"></div>
-    <div class="up-photo__icon">📸</div>
-    <div class="up-photo__title">Photo Required</div>
-    <div class="up-photo__desc">Run organizers require a profile photo so they can identify players. Add one to your profile to request a spot.</div>
+    <div class="up-photo__icon">📋</div>
+    <div class="up-photo__title" id="profileModalTitle">Complete Your Profile</div>
+    <div class="up-photo__desc" id="profileModalDesc">Run organizers need your basketball profile to build balanced teams. Complete your profile to request a spot.</div>
     <a href="allnet-career.html" class="up-photo__btn">Go to Profile</a>
     <button class="up-photo__cancel" onclick="closePhotoModal()">Cancel</button>
   </div>
@@ -165,6 +165,7 @@ async function loadUpcoming() {
       html += '<div class="up-card__title">' + escHtml(r.title) + '</div>';
       html += '<div class="up-card__meta">' + formatDate(r.date) + ' · ' + timeStr + '<br>' + escHtml(r.venue_name) + '</div>';
       html += '<div class="up-card__org">' + escHtml(r.org_name) + '</div>';
+      html += '<div style="margin-top:10px;"><button onclick="event.stopPropagation();cancelRun(\'' + r.session_id + '\')" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;">Cancel Registration</button></div>';
       html += '</div>';
     });
   }
@@ -199,7 +200,22 @@ async function loadUpcoming() {
 }
 
 async function requestSpot(sessionId, btnEl) {
-  if (!currentProfile || !currentProfile.avatar_cutout_url) {
+  if (!currentProfile) return;
+  var missing = [];
+  if (!currentProfile.avatar_cutout_url) missing.push('photo');
+  if (!currentProfile.height_inches) missing.push('height');
+  if (!currentProfile.positions || currentProfile.positions.length === 0) missing.push('positions');
+
+  if (missing.length > 0) {
+    var title = document.getElementById('profileModalTitle');
+    var desc = document.getElementById('profileModalDesc');
+    if (missing.indexOf('photo') > -1) {
+      title.textContent = 'Complete Your Profile';
+      desc.textContent = 'Run organizers need your profile photo and basketball info to vet and build balanced teams.';
+    } else {
+      title.textContent = 'Basketball Profile Needed';
+      desc.textContent = 'Add your height and preferred positions so organizers can build balanced teams.';
+    }
     document.getElementById('photoOverlay').classList.add('active');
     return;
   }
@@ -209,7 +225,7 @@ async function requestSpot(sessionId, btnEl) {
     var { data, error } = await supabase.rpc('register_for_session', { p_session_id: sessionId });
     if (error) throw error;
     if (data && data.error) {
-      if (data.error.indexOf('photo') !== -1) {
+      if (data.error.indexOf('photo') !== -1 || data.error.indexOf('profile') !== -1) {
         document.getElementById('photoOverlay').classList.add('active');
       } else {
         showToast(data.error);
@@ -230,6 +246,17 @@ async function requestSpot(sessionId, btnEl) {
 function closePhotoModal(e) {
   if (e && e.target !== e.currentTarget) return;
   document.getElementById('photoOverlay').classList.remove('active');
+}
+
+async function cancelRun(sessionId) {
+  if (!confirm('Are you sure you want to cancel your registration?')) return;
+  try {
+    var { data, error } = await supabase.rpc('cancel_registration', { p_session_id: sessionId });
+    if (error) throw error;
+    if (data && data.error) { showToast(data.error); return; }
+    showToast('Registration cancelled');
+    await loadUpcoming();
+  } catch(err) { console.error('Cancel error:', err); }
 }
 
 function showToast(msg) {

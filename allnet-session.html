@@ -121,9 +121,9 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--text-primary
 <div id="photoModal" style="position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);display:none;align-items:flex-end;justify-content:center;" onclick="this.style.display='none'">
   <div style="width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:24px 20px 40px;animation:sheetUp .3s ease-out;" onclick="event.stopPropagation()">
     <div style="width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 20px;"></div>
-    <div style="text-align:center;font-size:48px;margin-bottom:12px;">📸</div>
-    <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:8px;">Photo Required</div>
-    <div style="font-size:13px;color:#999;text-align:center;line-height:1.5;margin-bottom:20px;">Run organizers require a profile photo so they can identify players. Add one to your profile to request a spot.</div>
+    <div style="text-align:center;font-size:48px;margin-bottom:12px;">📋</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff;text-align:center;margin-bottom:8px;">Complete Your Profile</div>
+    <div style="font-size:13px;color:#999;text-align:center;line-height:1.5;margin-bottom:20px;">Run organizers need your profile photo, height, and preferred positions to vet players and build balanced teams.</div>
     <a href="/allnet-career.html" style="display:block;width:100%;padding:14px;font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;color:#fff;background:#F74501;border:none;border-radius:8px;cursor:pointer;text-align:center;text-decoration:none;">Go to Profile</a>
     <button onclick="document.getElementById('photoModal').style.display='none'" style="display:block;width:100%;padding:12px;font-size:14px;color:#666;background:none;border:none;cursor:pointer;text-align:center;margin-top:8px;">Cancel</button>
   </div>
@@ -272,6 +272,7 @@ function renderSession() {
       html += '<div class="sp-status__badge sp-status__badge--waitlisted">Waitlisted #' + reg.waitlist_position + '</div>';
       html += '<div class="sp-status__text">Session is full. You\'ll be notified if a spot opens.</div>';
     }
+    html += '<button onclick="cancelRegistration()" style="margin-top:12px;background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;">Cancel Registration</button>';
     html += '</div>';
   }
 
@@ -313,10 +314,11 @@ async function registerForSession() {
   btn.textContent = 'Requesting...';
 
   try {
-    // Check if user has a profile photo
+    // Check profile completeness — photo + basketball profile
     var { data: profile } = await supabase.from('profiles')
-      .select('avatar_cutout_url').eq('id', currentUser.id).single();
-    if (!profile || !profile.avatar_cutout_url) {
+      .select('avatar_cutout_url, height_inches, positions').eq('id', currentUser.id).single();
+    
+    if (!profile || !profile.avatar_cutout_url || !profile.height_inches || !profile.positions || profile.positions.length === 0) {
       btn.disabled = false;
       btn.textContent = 'Request Spot';
       showPhotoRequired();
@@ -329,7 +331,7 @@ async function registerForSession() {
 
     if (error) throw error;
     if (data && data.error) {
-      if (data.error.indexOf('photo') !== -1) { showPhotoRequired(); }
+      if (data.error.indexOf('photo') !== -1 || data.error.indexOf('profile') !== -1) { showPhotoRequired(); }
       else { alert(data.error); }
       btn.disabled = false; btn.textContent = 'Request Spot'; return;
     }
@@ -368,6 +370,17 @@ async function signInApple() {
 
 function showPhotoRequired() {
   document.getElementById('photoModal').style.display = 'flex';
+}
+
+async function cancelRegistration() {
+  if (!confirm('Are you sure you want to cancel your registration?')) return;
+  try {
+    var { data, error } = await supabase.rpc('cancel_registration', { p_session_id: sessionData.session.id });
+    if (error) throw error;
+    if (data && data.error) { alert(data.error); return; }
+    sessionData.user_registration = null;
+    renderSession();
+  } catch(err) { console.error('Cancel error:', err); }
 }
 
 init();

@@ -2025,6 +2025,9 @@ html, body {
   padding: 40px 28px 32px;
   width: 90%;
   max-width: 360px;
+  max-height: 85vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   text-align: center;
 }
 

@@ -285,7 +285,10 @@ async function loadSessions() {
   const { data, error } = await supabase.rpc('get_org_sessions', { p_org_id: currentOrg.org_id });
   if (error) { console.error('loadSessions:', error); document.getElementById('upcomingSessions').innerHTML = '<div class="org-empty"><div class="org-empty__text">Failed to load sessions.</div></div>'; return; }
   currentSessions = data || [];
-  const today = new Date().toISOString().split('T')[0];
+  const todayLocal = new Date();
+  const today = todayLocal.getFullYear() + '-' +
+    String(todayLocal.getMonth() + 1).padStart(2, '0') + '-' +
+    String(todayLocal.getDate()).padStart(2, '0');
   const upcoming = currentSessions.filter(s => s.date >= today && s.status !== 'cancelled');
   const past = currentSessions.filter(s => s.date < today || s.status === 'completed');
 

@@ -449,11 +449,47 @@ async function adminAction(regId, newStatus) {
   } finally { hideLoading(); }
 }
 async function promotePlayer(regId) {
+  // Check if check-in window is relevant for this session
+  var session = currentSessions.find(s => s.id === currentSessionId);
+  if (session && session.checkin_deadline_minutes && session.start_time) {
+    var sessionStart = new Date(session.date + 'T' + session.start_time);
+    var opensAt = new Date(sessionStart.getTime() - 24 * 60 * 60 * 1000);
+    if (new Date() >= opensAt) {
+      // Check-in window is open — ask admin
+      showPromoteModal(regId);
+      return;
+    }
+  }
+  // Window not open or no check-in configured — promote without check-in
+  doPromote(regId, false);
+}
+
+function showPromoteModal(regId) {
+  var overlay = document.getElementById('promoteModalOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'promoteModalOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = '<div style="background:#181818;border:1px solid #333;border-radius:16px;padding:28px 24px;max-width:340px;width:90%;text-align:center;" onclick="event.stopPropagation()">' +
+      '<div style="font-family:var(--font-display);font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;">Promote Player</div>' +
+      '<div style="font-size:13px;color:#999;line-height:1.5;margin-bottom:20px;">Check-in is currently open. Would you also like to check this player in?</div>' +
+      '<button id="promoteWithCheckin" style="width:100%;padding:12px;font-family:var(--font-display);font-size:14px;font-weight:700;text-transform:uppercase;color:#fff;background:var(--green-live);border:none;border-radius:8px;cursor:pointer;margin-bottom:8px;">Promote & Check In</button>' +
+      '<button id="promoteWithout" style="width:100%;padding:12px;font-family:var(--font-display);font-size:14px;font-weight:700;text-transform:uppercase;color:#fff;background:var(--orange);border:none;border-radius:8px;cursor:pointer;margin-bottom:8px;">Promote Only</button>' +
+      '<button onclick="document.getElementById(\'promoteModalOverlay\').style.display=\'none\'" style="width:100%;padding:10px;font-size:13px;color:#666;background:none;border:none;cursor:pointer;">Cancel</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('promoteWithCheckin').onclick = function() { overlay.style.display = 'none'; doPromote(regId, true); };
+  document.getElementById('promoteWithout').onclick = function() { overlay.style.display = 'none'; doPromote(regId, false); };
+  overlay.style.display = 'flex';
+}
+
+async function doPromote(regId, alsoCheckin) {
   showLoading();
   try {
-    var { data, error } = await supabase.rpc('promote_from_waitlist', { p_registration_id: regId });
+    var { data, error } = await supabase.rpc('promote_from_waitlist', { p_registration_id: regId, p_also_checkin: alsoCheckin });
     if (error || (data && data.error)) { showToast((data && data.error) || error.message || 'Promote failed'); return; }
-    showToast('Player promoted from waitlist');
+    showToast(alsoCheckin ? 'Player promoted & checked in' : 'Player promoted from waitlist');
     await loadRoster();
   } finally { hideLoading(); }
 }

@@ -12,7 +12,7 @@ const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 export default async function handler(req, res) {
   const slug = (req.query.slug || '').toLowerCase().trim();
-  if (!slug) return res.redirect(302, '/allnet-landing.html');
+  if (!slug) return res.redirect(302, '/');
 
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -180,7 +180,7 @@ h1{font-family:var(--fd);font-size:28px;font-weight:700;text-transform:uppercase
 </head>
 <body>
 <nav class="nav"><div>
-  <a href="/allnet-landing.html"><svg height="20" viewBox="0 0 685 318" fill="none"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a>
+  <a href="/"><svg height="20" viewBox="0 0 685 318" fill="none"><path d="M546.941 97.7H653.081V121.712H613.757V219.5H586.439V121.712H546.941V97.7Z" fill="white"/><path d="M538.737 121.712H482.883V146.594H516.813V170.606H482.883V195.488H538.737V219.5H455.565V97.7H538.737V121.712Z" fill="white"/><path d="M407.304 97.7H434.622V219.5H407.304V185.744L362.238 144.854V219.5H334.92V97.7H362.238V108.314L407.304 149.03V97.7Z" fill="white"/><path d="M267.07 195.488H322.924V219.5H255.064L239.752 204.188V97.7H267.07V195.488Z" fill="white"/><path d="M172.423 195.488H228.277V219.5H160.417L145.105 204.188V97.7H172.423V195.488Z" fill="white"/><path d="M109.74 97.7L125.052 113.012V219.5H97.734V194.792H58.236V291.5L30.918 307.5V113.012L46.23 97.7H109.74ZM58.236 170.606H97.734V121.712H58.236V170.606Z" fill="white"/><path d="M626 26.5L653 10.5V98.5H626V26.5Z" fill="white"/></svg></a>
   <a href="/allnet-app.html" class="btn">Open App</a>
 </div></nav>
 <div class="wrap">
@@ -207,7 +207,7 @@ ${leaderboard.length > 0 ? '<div class="lb-formula">Score = (Skill × 0.4) + (So
 </div>
 
 <div class="footer">
-  <a href="/allnet-landing.html">AllNet</a> — The Reputation Network for Pickup Basketball
+  <a href="/">AllNet</a> — The Reputation Network for Pickup Basketball
   <p>266 courts across OC &amp; LA. Free forever.</p>
 </div>
 </div>

@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/allnet-landing.html",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/.well-known/apple-app-site-association",

@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const code = req.query.code || '';
 
   if (!org || !code) {
-    return res.redirect(302, '/allnet-landing.html');
+    return res.redirect(302, '/');
   }
 
   // Fetch session data for OG tags

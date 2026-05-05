@@ -32,7 +32,7 @@ textarea{resize:vertical;min-height:60px}
 .btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:13px;cursor:pointer}
 .btn-primary{background:var(--orange);color:#fff}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--subtle)}
-.btn-green{background:var(--green);color:#fff}
+.btn-green{background:var(--green);color:#052e16}
 .btn-red{background:var(--red);color:#fff}
 .btn-sm{padding:5px 12px;font-size:12px}
 
@@ -241,11 +241,18 @@ async function loadOrgs(){
   sel.innerHTML=orgs.map(o=>'<option value="'+o.org_id+'">'+esc(o.org_name)+'</option>').join('');
   sel.onchange=function(){selectedOrgId=sel.value;updatePublicLink();loadSessions()};
   selectedOrgId=orgs[0].org_id;updatePublicLink();await loadSessions();
+  // Restore session detail from URL hash
+  var hash=window.location.hash;
+  if(hash&&hash.startsWith('#session=')){
+    var sid=hash.replace('#session=','');
+    if(sid)await openDetail(sid);
+  }
 }
 function updatePublicLink(){var o=orgs.find(x=>x.org_id===selectedOrgId);var l=document.getElementById('publicLink');if(o){l.href='/org/'+o.org_slug;l.style.display='inline-block'}}
 
 // ─── Sessions ───
 async function loadSessions(){
+  window.location.hash='';
   document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   try{var{data}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=data||[]}catch(e){sessions=[]}
   renderList();
@@ -271,13 +278,15 @@ function renderList(){
 // ─── Detail ───
 async function openDetail(sessionId){
   currentSessionId=sessionId;activeTab='confirmed';
+  window.location.hash='session='+sessionId;
   document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   try{
     var{data:roster}=await sb.rpc('get_session_roster',{p_session_id:sessionId});currentRoster=roster||[];
     var{data:games}=await sb.from('run_games').select('*').eq('session_id',sessionId).order('game_number');currentGames=games||[];
-    var session=sessions.find(function(s){return s.id===sessionId});
-    if(session&&session.team_assignments){teamData=session.team_assignments;if(!teamData.teams)teamData.teams=[]}else teamData={teams:[]};
-    teamsVisibleAt=session?session.teams_visible_at:null;
+    // Fetch team data directly from run_sessions (not in get_org_sessions)
+    var{data:sessionRow}=await sb.from('run_sessions').select('team_assignments,teams_visible_at').eq('id',sessionId).single();
+    if(sessionRow&&sessionRow.team_assignments){teamData=sessionRow.team_assignments;if(!teamData.teams)teamData.teams=[]}else teamData={teams:[]};
+    teamsVisibleAt=sessionRow?sessionRow.teams_visible_at:null;
   }catch(e){console.error(e)}
   renderDetail();
 }
@@ -380,7 +389,7 @@ async function promotePlayer(regId){
 }
 async function removePlayer(regId){
   showConfirm('Remove Player','Remove this player from the session?',async function(){
-    var{data}=await sb.rpc('cancel_registration',{p_registration_id:regId});
+    var{data}=await sb.rpc('admin_remove_player',{p_registration_id:regId});
     if(data&&data.error)return alert(data.error);toast('Removed');await openDetail(currentSessionId);
   });
 }

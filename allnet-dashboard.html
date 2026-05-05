@@ -538,8 +538,9 @@ function renderSettings(){
   return h;
 }
 async function saveSession(){
-  var{data}=await sb.rpc('update_run_session',{p_session_id:currentSessionId,p_title:document.getElementById('editTitle').value,p_date:document.getElementById('editDate').value,p_start_time:document.getElementById('editStart').value+':00',p_end_time:document.getElementById('editEnd').value+':00',p_venue_name:document.getElementById('editVenue').value,p_max_players:parseInt(document.getElementById('editMax').value),p_description:document.getElementById('editDesc').value,p_auto_promote:document.getElementById('editAutoPromote').checked});
-  if(data&&data.error)return alert(data.error);
+  var{data,error}=await sb.rpc('update_run_session',{p_session_id:currentSessionId,p_title:document.getElementById('editTitle').value,p_date:document.getElementById('editDate').value,p_start_time:document.getElementById('editStart').value+':00',p_end_time:document.getElementById('editEnd').value+':00',p_venue_name:document.getElementById('editVenue').value,p_max_players:parseInt(document.getElementById('editMax').value),p_description:document.getElementById('editDesc').value,p_auto_promote:document.getElementById('editAutoPromote').checked});
+  if(error){console.error('saveSession error:',error);alert('Save failed: '+error.message);return}
+  if(data&&data.error){alert(data.error);return}
   var{data:r}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=r||[];renderDetail();toast('Saved');
 }
 function endSession(){showConfirm('End Session','End this session? Props locked, no further games.',async function(){

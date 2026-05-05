@@ -4,6 +4,16 @@
       "source": "/allnet-landing.html",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/org",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/org/",
+      "destination": "/",
+      "permanent": false
     }
   ],
   "headers": [

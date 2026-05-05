@@ -271,8 +271,11 @@ async function openDetail(sessionId){
 function renderDetail(){
   const s=currentSession;
   const isCompleted=s.status==='completed';
+  const org=orgs.find(o=>o.org_id===selectedOrgId);
+  const shareUrl=`allnetgames.com/r/${org?.org_slug||''}/${s.short_code}`;
   let h=`<div class="detail-header"><button class="back-btn" onclick="loadSessions()">← Back</button><div class="detail-title">${esc(s.title)}</div><span class="scard__badge scard__badge--${s.status}">${s.status}</span></div>`;
-  h+=`<div class="detail-meta">${fmtDate(s.date)} · ${fmtTime(s.start_time,s.end_time)} · ${s.venue_name||'No venue'} · ${s.short_code}</div>`;
+  h+=`<div class="detail-meta">${fmtDate(s.date)} · ${fmtTime(s.start_time,s.end_time)} · ${s.venue_name||'No venue'}</div>`;
+  h+=`<div class="share-row" style="margin:12px 0 16px"><span>${shareUrl}</span><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('https://${shareUrl}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button></div>`;
 
   // Tabs
   h+=`<div class="tabs"><button class="tab ${activeTab==='roster'?'tab--active':''}" onclick="switchTab('roster')">Roster</button><button class="tab ${activeTab==='games'?'tab--active':''}" onclick="switchTab('games')">Games</button><button class="tab ${activeTab==='settings'?'tab--active':''}" onclick="switchTab('settings')">Settings</button></div>`;
@@ -281,7 +284,7 @@ function renderDetail(){
   document.getElementById('root').innerHTML=h;
 }
 
-function switchTab(t){activeTab=t;document.getElementById('tabContent').innerHTML=renderTab()}
+function switchTab(t){activeTab=t;renderDetail()}
 
 function renderTab(){
   if(activeTab==='roster')return renderRoster();
@@ -294,8 +297,34 @@ function renderTab(){
 function renderRoster(){
   const isCompleted=currentSession.status==='completed';
   if(!currentRoster.length)return'<div class="empty">No registrations yet.</div>';
+  
+  const confirmed=currentRoster.filter(p=>p.status==='confirmed');
+  const pending=currentRoster.filter(p=>p.status==='pending');
+  const waitlisted=currentRoster.filter(p=>p.status==='waitlist'||p.status==='waitlisted');
+  
   let h='';
-  currentRoster.forEach(p=>{
+  
+  if(pending.length){
+    h+=`<div class="section__title" style="color:var(--orange);margin-bottom:8px">Pending Approval (${pending.length})</div>`;
+    h+=renderRosterGroup(pending,isCompleted);
+  }
+  
+  if(confirmed.length){
+    h+=`<div class="section__title" style="margin-top:${pending.length?'16':'0'}px;margin-bottom:8px">Confirmed (${confirmed.length})</div>`;
+    h+=renderRosterGroup(confirmed,isCompleted);
+  }
+  
+  if(waitlisted.length){
+    h+=`<div class="section__title" style="margin-top:16px;margin-bottom:8px">Waitlisted (${waitlisted.length})</div>`;
+    h+=renderRosterGroup(waitlisted,isCompleted);
+  }
+  
+  return h;
+}
+
+function renderRosterGroup(players,isCompleted){
+  let h='';
+  players.forEach(p=>{
     const initials=((p.first_name||'')[0]||'')+((p.last_name||'')[0]||'');
     const cutout=p.avatar_cutout_url||p.avatar_url;
     const cover=p.selected_cover?getCoverUrl(p.selected_cover):null;
@@ -428,9 +457,7 @@ async function deleteGame(gameNum){
 function renderSettings(){
   const s=currentSession;
   const isCompleted=s.status==='completed';
-  const org=orgs.find(o=>o.org_id===selectedOrgId);
-  const shareUrl=`allnetgames.com/r/${org?.org_slug||''}/${s.short_code}`;
-  let h=`<div class="share-row"><span>${shareUrl}</span><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('https://${shareUrl}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button></div>`;
+  let h='';
 
   if(!isCompleted){
     h+=`<div class="form" style="margin-top:20px">
@@ -516,11 +543,12 @@ async function createSession(){
     p_auto_promote:document.getElementById('newAutoPromote').checked
   });
   if(data?.error)return alert(data.error);
-  // Reload and open
+  // create_run_session returns UUID directly
+  const newId = typeof data === 'string' ? data : data?.id;
   const{data:refreshed}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
   sessions=refreshed||[];
-  if(data?.session_id){
-    await openDetail(data.session_id);
+  if(newId){
+    await openDetail(newId);
   } else {
     loadSessions();
   }

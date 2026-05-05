@@ -382,21 +382,37 @@ function renderPlayerTab(status){
 
 // ─── Admin Actions ───
 async function adminCheckin(userId){
-  var{data}=await sb.rpc('admin_checkin_player',{p_session_id:currentSessionId,p_user_id:userId});
-  if(data&&data.error)return alert(data.error);toast('Checked in');await openDetail(currentSessionId);
+  try{
+    var{data,error}=await sb.rpc('admin_checkin_player',{p_session_id:currentSessionId,p_user_id:userId});
+    if(error){toast('Failed: '+error.message);return}
+    if(data&&data.error){toast(data.error);return}
+    toast('Checked in');await openDetail(currentSessionId);
+  }catch(e){console.error(e);toast('Check-in failed')}
 }
 async function adminAction(regId,status){
-  var{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:status});
-  if(data&&data.error)return alert(data.error);toast(status==='confirmed'?'Approved':'Declined');await openDetail(currentSessionId);
+  try{
+    var{data,error}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:status});
+    if(error){toast('Failed: '+error.message);return}
+    if(data&&data.error){toast(data.error);return}
+    toast(status==='confirmed'?'Approved':'Declined');await openDetail(currentSessionId);
+  }catch(e){console.error(e);toast('Action failed')}
 }
 async function promotePlayer(regId){
-  var{data}=await sb.rpc('promote_from_waitlist',{p_registration_id:regId,p_also_checkin:false});
-  if(data&&data.error)return alert(data.error);toast('Promoted');await openDetail(currentSessionId);
+  try{
+    var{data,error}=await sb.rpc('promote_from_waitlist',{p_registration_id:regId,p_also_checkin:false});
+    if(error){toast('Failed: '+error.message);return}
+    if(data&&data.error){toast(data.error);return}
+    toast('Promoted');await openDetail(currentSessionId);
+  }catch(e){console.error(e);toast('Promote failed')}
 }
 async function removePlayer(regId){
   showConfirm('Remove Player','Remove this player from the session?',async function(){
-    var{data}=await sb.rpc('admin_remove_player',{p_registration_id:regId});
-    if(data&&data.error)return alert(data.error);toast('Removed');await openDetail(currentSessionId);
+    try{
+      var{data,error}=await sb.rpc('admin_remove_player',{p_registration_id:regId});
+      if(error){toast('Failed: '+error.message);return}
+      if(data&&data.error){toast(data.error);return}
+      toast('Removed');await openDetail(currentSessionId);
+    }catch(e){console.error(e);toast('Remove failed')}
   });
 }
 
@@ -457,8 +473,8 @@ function addTeam(){teamData.teams.push({name:'Team '+(teamData.teams.length+1),p
 function removeTeam(idx){teamData.teams.splice(idx,1);renderTeamsBuilder();saveTeams()}
 function renameTeam(idx,name){teamData.teams[idx].name=name;saveTeams()}
 async function saveTeams(){
-  await sb.rpc('save_team_assignments',{p_session_id:currentSessionId,p_assignments:teamData});
-  var s=getSession();if(s)s.team_assignments=teamData;
+  try{await sb.rpc('save_team_assignments',{p_session_id:currentSessionId,p_assignments:teamData});
+  var s=getSession();if(s)s.team_assignments=teamData;}catch(e){console.error(e);toast('Save teams failed')}
 }
 function renderRevealControls(){
   var el=document.getElementById('teamsRevealArea');if(!el)return;
@@ -466,12 +482,14 @@ function renderRevealControls(){
   else if(!teamsVisibleAt)el.innerHTML='<button class="btn btn-green btn-sm" onclick="revealTeams()">Reveal Teams</button>';
 }
 async function revealTeams(){
-  await sb.rpc('set_teams_visibility',{p_session_id:currentSessionId,p_visible_at:new Date().toISOString()});
+  try{await sb.rpc('set_teams_visibility',{p_session_id:currentSessionId,p_visible_at:new Date().toISOString()});
   teamsVisibleAt=new Date().toISOString();var s=getSession();if(s)s.teams_visible_at=teamsVisibleAt;renderRevealControls();toast('Teams visible');
+  }catch(e){console.error(e);toast('Reveal failed')}
 }
 async function hideTeams(){
-  await sb.rpc('set_teams_visibility',{p_session_id:currentSessionId,p_visible_at:null});
+  try{await sb.rpc('set_teams_visibility',{p_session_id:currentSessionId,p_visible_at:null});
   teamsVisibleAt=null;var s=getSession();if(s)s.teams_visible_at=null;renderRevealControls();toast('Teams hidden');
+  }catch(e){console.error(e);toast('Hide failed')}
 }
 
 // ─── Games ───
@@ -502,20 +520,26 @@ function renderGamesSection(){
 }
 async function logGame(){
   var aIdx=document.getElementById('gameTeamA').value;var bIdx=document.getElementById('gameTeamB').value;
-  if(aIdx===bIdx)return alert('Select two different teams.');
+  if(aIdx===bIdx)return toast('Select two different teams.');
   var tA=teamData.teams[aIdx];var tB=teamData.teams[bIdx];
-  if(!tA.player_ids||!tA.player_ids.length||!tB.player_ids||!tB.player_ids.length)return alert('Both teams need players.');
+  if(!tA.player_ids||!tA.player_ids.length||!tB.player_ids||!tB.player_ids.length)return toast('Both teams need players.');
   var winner=document.getElementById('gameWinner').value;
-  var{data}=await sb.rpc('log_run_game',{p_session_id:currentSessionId,p_team_a_name:tA.name,p_team_b_name:tB.name,p_team_a_ids:tA.player_ids,p_team_b_ids:tB.player_ids,p_winner:winner});
-  if(data&&data.error)return alert(data.error);
-  var{data:games}=await sb.from('run_games').select('*').eq('session_id',currentSessionId).order('game_number');currentGames=games||[];
-  renderGamesSection();toast('Game logged');
+  try{
+    var{data,error}=await sb.rpc('log_run_game',{p_session_id:currentSessionId,p_team_a_name:tA.name,p_team_b_name:tB.name,p_team_a_ids:tA.player_ids,p_team_b_ids:tB.player_ids,p_winner:winner});
+    if(error){toast('Failed: '+error.message);return}
+    if(data&&data.error){toast(data.error);return}
+    var{data:games}=await sb.from('run_games').select('*').eq('session_id',currentSessionId).order('game_number');currentGames=games||[];
+    renderGamesSection();toast('Game logged');
+  }catch(e){console.error(e);toast('Log game failed')}
 }
 async function deleteGame(gameId){
   showConfirm('Delete Game','Delete this game? Ratings will be reverted.',async function(){
-    await sb.rpc('delete_run_game',{p_game_id:gameId});
-    var{data:games}=await sb.from('run_games').select('*').eq('session_id',currentSessionId).order('game_number');currentGames=games||[];
-    renderGamesSection();toast('Game deleted');
+    try{
+      var{error}=await sb.rpc('delete_run_game',{p_game_id:gameId});
+      if(error){toast('Delete failed: '+error.message);return}
+      var{data:games}=await sb.from('run_games').select('*').eq('session_id',currentSessionId).order('game_number');currentGames=games||[];
+      renderGamesSection();toast('Game deleted');
+    }catch(e){console.error(e);toast('Delete failed')}
   });
 }
 
@@ -544,11 +568,15 @@ async function saveSession(){
   var{data:r}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=r||[];renderDetail();toast('Saved');
 }
 function endSession(){showConfirm('End Session','End this session? Props locked, no further games.',async function(){
-  var{data}=await sb.rpc('end_run_session',{p_session_id:currentSessionId});if(data&&data.error)return alert(data.error);
+  var{data,error}=await sb.rpc('end_run_session',{p_session_id:currentSessionId});
+  if(error){toast('Failed: '+error.message);return}
+  if(data&&data.error){toast(data.error);return}
   var{data:r}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=r||[];renderDetail();toast('Session ended');
 })}
 function deleteSession(){showConfirm('Delete Session','Permanently delete? All data will be removed.',async function(){
-  var{data}=await sb.rpc('delete_run_session',{p_session_id:currentSessionId});if(data&&data.error)return alert(data.error);
+  var{data,error}=await sb.rpc('delete_run_session',{p_session_id:currentSessionId});
+  if(error){toast('Failed: '+error.message);return}
+  if(data&&data.error){toast(data.error);return}
   await loadSessions();toast('Deleted');
 })}
 
@@ -664,7 +692,7 @@ function fmtDate(ds){if(!ds)return'';return new Date(ds+'T12:00:00').toLocaleDat
 function fmtTime(t){if(!t)return'';var p=t.split(':');var h=parseInt(p[0]);return(h>12?h-12:h||12)+':'+p[1]+(h>=12?' PM':' AM')}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('visible');setTimeout(function(){t.classList.remove('visible')},2500)}
 function copyLink(url,btn){navigator.clipboard.writeText('https://'+url);btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy'},1500)}
-function showConfirm(title,msg,fn){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmModal').classList.add('open');document.getElementById('confirmAction').onclick=function(){closeConfirm();fn()}}
+function showConfirm(title,msg,fn){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmModal').classList.add('open');document.getElementById('confirmAction').onclick=async function(){closeConfirm();try{await fn()}catch(e){console.error(e);toast('Action failed')}}}
 function closeConfirm(){document.getElementById('confirmModal').classList.remove('open')}
 init();
 </script>

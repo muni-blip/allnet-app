@@ -127,25 +127,28 @@ textarea{resize:vertical;min-height:60px}
 .player-chip--a{border-color:var(--orange);color:var(--orange);background:#F7450110}
 .player-chip--b{border-color:var(--blue);color:var(--blue);background:#3B82F610}
 
-/* Player sheet overlay */
-.player-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;justify-content:center;align-items:flex-start;overflow-y:auto;padding:40px 16px}
+/* Player sheet overlay — bottom sheet like original */
+.player-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .player-sheet-overlay.active{display:flex}
-.player-sheet{max-width:400px;width:100%;padding-bottom:40px}
+.player-sheet{width:100%;max-width:420px;background:#111;border-radius:20px 20px 0 0;padding:12px 16px 32px;max-height:90vh;overflow-y:auto;animation:sheetUp .3s ease-out}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.player-sheet__handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 16px}
+.player-sheet__card-wrap{width:345px;max-width:100%;margin:0 auto}
 .player-sheet__badges{text-align:center;margin-bottom:8px}
 .badge-pill{display:inline-block;font-family:var(--font-mono);font-size:11px;color:var(--orange);background:rgba(247,69,1,0.1);padding:4px 12px;border-radius:12px;margin:2px}
-.badge-court{font-size:11px;color:var(--muted);margin-top:4px}
-.player-sheet__bball{text-align:center;margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.player-sheet__bball-tag{font-size:11px;color:var(--subtle);background:rgba(255,255,255,0.05);padding:3px 10px;border-radius:10px}
-.player-sheet__actions{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
-.player-sheet__action-btn{padding:10px 20px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:13px;cursor:pointer}
-.player-sheet__action-btn--approve{background:var(--green);color:#052e16}
-.player-sheet__action-btn--decline{background:rgba(239,68,68,0.15);color:var(--red)}
-.player-sheet__action-btn--promote{background:rgba(59,130,246,0.15);color:var(--blue)}
-.player-sheet__action-btn--remove{background:rgba(239,68,68,0.1);color:var(--red)}
+.badge-court{font-size:11px;color:var(--muted);margin-top:4px;text-align:center}
+.player-sheet__bball{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px;padding:0 8px}
+.player-sheet__bball-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:20px;font-family:var(--font-mono);font-size:11px;color:var(--subtle)}
+.player-sheet__actions{display:flex;gap:10px;margin-top:16px;max-width:380px;margin-left:auto;margin-right:auto}
+.player-sheet__action-btn{flex:1;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:transparent;border:1px solid #333;border-radius:8px;padding:12px 0;cursor:pointer}
+.player-sheet__action-btn--approve{background:var(--green);color:#052e16;border-color:var(--green)}
+.player-sheet__action-btn--decline{background:rgba(239,68,68,0.15);color:var(--red);border-color:rgba(239,68,68,0.3)}
+.player-sheet__action-btn--promote{background:rgba(59,130,246,0.15);color:var(--blue);border-color:rgba(59,130,246,0.3)}
+.player-sheet__action-btn--remove{background:rgba(239,68,68,0.15);color:var(--red);border-color:rgba(239,68,68,0.3)}
+.player-sheet__close{display:flex;justify-content:center;margin-top:16px}
+.player-sheet__close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .player-sheet__loader{text-align:center;padding:60px}
 .player-sheet__spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto}
-.player-sheet__close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--subtle);font-size:24px;cursor:pointer;z-index:10}
-.player-sheet__card-wrap{width:340px;max-width:100%;margin:0 auto}
 
 /* Form */
 .form{display:flex;flex-direction:column;gap:14px}
@@ -189,12 +192,13 @@ textarea{resize:vertical;min-height:60px}
 
 <!-- Player sheet -->
 <div class="player-sheet-overlay" id="playerSheet" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="player-sheet" style="position:relative">
-    <button class="player-sheet__close" onclick="document.getElementById('playerSheet').classList.remove('active')">&times;</button>
+  <div class="player-sheet">
+    <div class="player-sheet__handle"></div>
     <div id="playerSheetBadge" class="player-sheet__badges"></div>
     <div id="playerSheetCard" class="player-sheet__card-wrap"></div>
     <div id="playerSheetBball" class="player-sheet__bball"></div>
     <div id="playerSheetActions" class="player-sheet__actions"></div>
+    <div class="player-sheet__close"><button class="player-sheet__close-btn" onclick="document.getElementById('playerSheet').classList.remove('active')">&times;</button></div>
   </div>
 </div>
 
@@ -643,7 +647,7 @@ function renderPlayerSheetCard(){
       divisionLabel:overlay._playerData.activeDivision.toUpperCase(),activeDivision:overlay._playerData.activeDivision,
       showTabs:true,onTabClick:'switchPlayerSheetDiv',showDeltas:false,hidePlaceholder:true
     });
-    requestAnimationFrame(function(){CareerCard.fitNames('psc')});
+    requestAnimationFrame(function(){setTimeout(function(){CareerCard.fitNames('psc')},50)});
   }else{
     document.getElementById('playerSheetCard').innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:24px;font-weight:700">'+esc(p.first_name)+' '+esc(p.last_name)+'</div><div style="color:var(--subtle);margin-top:8px">Skill '+Number(p.skill_rating||0).toFixed(1)+' · Social '+Number(p.social_rating||0).toFixed(1)+'</div></div>';
   }

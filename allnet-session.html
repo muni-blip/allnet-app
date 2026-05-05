@@ -207,10 +207,10 @@ async function init() {
   var params = getParams();
   if (!params) { showError('Invalid session link'); return; }
 
-  // Check auth (don't block page load if auth fails)
+  // Check auth (getSession reads local storage instantly, getUser makes a network call that can hang)
   try {
-    var { data: { user } } = await supabase.auth.getUser();
-    currentUser = user;
+    var { data: { session: authSession } } = await supabase.auth.getSession();
+    currentUser = authSession ? authSession.user : null;
   } catch(e) { currentUser = null; }
   if (!currentUser) document.getElementById('topCta').style.display = '';
 

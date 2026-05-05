@@ -144,7 +144,8 @@ textarea{resize:vertical;min-height:60px}
 .player-sheet__action-btn--remove{background:rgba(239,68,68,0.1);color:var(--red)}
 .player-sheet__loader{text-align:center;padding:60px}
 .player-sheet__spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto}
-.player-sheet__close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--subtle);font-size:24px;cursor:pointer}
+.player-sheet__close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--subtle);font-size:24px;cursor:pointer;z-index:10}
+.player-sheet__card-wrap{width:340px;max-width:100%;margin:0 auto}
 
 /* Form */
 .form{display:flex;flex-direction:column;gap:14px}
@@ -191,7 +192,7 @@ textarea{resize:vertical;min-height:60px}
   <div class="player-sheet" style="position:relative">
     <button class="player-sheet__close" onclick="document.getElementById('playerSheet').classList.remove('active')">&times;</button>
     <div id="playerSheetBadge" class="player-sheet__badges"></div>
-    <div id="playerSheetCard"></div>
+    <div id="playerSheetCard" class="player-sheet__card-wrap"></div>
     <div id="playerSheetBball" class="player-sheet__bball"></div>
     <div id="playerSheetActions" class="player-sheet__actions"></div>
   </div>
@@ -240,11 +241,12 @@ async function loadOrgs(){
   var sel=document.getElementById('orgSelect');sel.style.display='inline-block';
   sel.innerHTML=orgs.map(o=>'<option value="'+o.org_id+'">'+esc(o.org_name)+'</option>').join('');
   sel.onchange=function(){selectedOrgId=sel.value;updatePublicLink();loadSessions()};
-  selectedOrgId=orgs[0].org_id;updatePublicLink();await loadSessions();
-  // Restore session detail from URL hash
-  var hash=window.location.hash;
-  if(hash&&hash.startsWith('#session=')){
-    var sid=hash.replace('#session=','');
+  selectedOrgId=orgs[0].org_id;updatePublicLink();
+  // Save hash before loadSessions clears it
+  var savedHash=window.location.hash;
+  await loadSessions();
+  if(savedHash&&savedHash.startsWith('#session=')){
+    var sid=savedHash.replace('#session=','');
     if(sid)await openDetail(sid);
   }
 }
@@ -281,13 +283,13 @@ async function openDetail(sessionId){
   window.location.hash='session='+sessionId;
   document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   try{
-    var{data:roster}=await sb.rpc('get_session_roster',{p_session_id:sessionId});currentRoster=roster||[];
+    var{data:roster,error:rErr}=await sb.rpc('get_session_roster',{p_session_id:sessionId});
+    currentRoster=(!rErr&&roster)?roster:[];
     var{data:games}=await sb.from('run_games').select('*').eq('session_id',sessionId).order('game_number');currentGames=games||[];
-    // Fetch team data directly from run_sessions (not in get_org_sessions)
     var{data:sessionRow}=await sb.from('run_sessions').select('team_assignments,teams_visible_at').eq('id',sessionId).single();
     if(sessionRow&&sessionRow.team_assignments){teamData=sessionRow.team_assignments;if(!teamData.teams)teamData.teams=[]}else teamData={teams:[]};
     teamsVisibleAt=sessionRow?sessionRow.teams_visible_at:null;
-  }catch(e){console.error(e)}
+  }catch(e){console.error('openDetail error:',e);currentRoster=[];currentGames=[];teamData={teams:[]}}
   renderDetail();
 }
 function getSession(){return sessions.find(function(s){return s.id===currentSessionId})||{}}

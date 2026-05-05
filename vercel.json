@@ -32,6 +32,10 @@
       "destination": "/api/player?slug=:slug"
     },
     {
+      "source": "/org/:slug",
+      "destination": "/api/org?slug=:slug"
+    },
+    {
       "source": "/courts/:slug",
       "destination": "/api/court?slug=:slug"
     },

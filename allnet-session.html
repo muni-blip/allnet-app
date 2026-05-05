@@ -175,9 +175,10 @@ html, body { min-height: 100vh; background: var(--bg); color: var(--text-primary
 <script>
 const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
-var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var _createClient = window.supabase.createClient;
+var supabase = _createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Separate anon client that won't hang on stale auth token refresh
-var supabaseAnon = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+var supabaseAnon = _createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 

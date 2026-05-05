@@ -224,8 +224,14 @@ function updatePublicLink(){
 async function loadSessions(){
   currentView='list';
   document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const{data}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
-  sessions=data||[];
+  try{
+    const{data,error}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
+    if(error)throw error;
+    sessions=data||[];
+  }catch(e){
+    console.error('loadSessions error:',e);
+    sessions=[];
+  }
   renderList();
 }
 
@@ -298,7 +304,7 @@ function renderRoster(){
   const isCompleted=currentSession.status==='completed';
   if(!currentRoster.length)return'<div class="empty">No registrations yet.</div>';
   
-  const confirmed=currentRoster.filter(p=>p.status==='confirmed');
+  const confirmed=currentRoster.filter(p=>p.status==='confirmed'||p.status==='standby');
   const pending=currentRoster.filter(p=>p.status==='pending');
   const waitlisted=currentRoster.filter(p=>p.status==='waitlist'||p.status==='waitlisted');
   
@@ -468,7 +474,7 @@ function renderSettings(){
       <div class="form__toggle"><input type="checkbox" id="editAutoPromote" ${s.auto_promote?'checked':''}><label for="editAutoPromote" style="margin:0;text-transform:none">Auto-approve registrations</label></div>
       <button class="btn btn-primary" onclick="saveSession()">Save Changes</button>
     </div>`;
-    h+=`<div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border)"><button class="btn btn-red" onclick="endSession()">End Session</button></div>`;
+    h+=`<div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:12px"><button class="btn btn-red" onclick="endSession()">End Session</button><button class="btn btn-ghost" style="border-color:var(--red);color:var(--red)" onclick="deleteSession()">Delete Session</button></div>`;
   } else {
     h+=`<div class="empty" style="margin-top:20px">This session has been completed. No further edits allowed.</div>`;
   }
@@ -504,6 +510,14 @@ function endSession(){
     sessions=refreshed||[];
     currentSession=sessions.find(s=>s.id===currentSession.id)||currentSession;
     renderDetail();
+  });
+}
+
+function deleteSession(){
+  showConfirm('Delete Session','Permanently delete this session? All registrations, games, and props will be removed. This cannot be undone.',async()=>{
+    const{data}=await sb.rpc('delete_run_session',{p_session_id:currentSession.id});
+    if(data?.error)return alert(data.error);
+    await loadSessions();
   });
 }
 

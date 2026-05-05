@@ -5,132 +5,177 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AllNet — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/career-card.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/career-card.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--orange:#F74501;--bg:#0A0A0A;--card:#111;--border:#222;--text:#fff;--muted:#666;--subtle:#999;--green:#22C55E;--red:#EF4444;--radius:12px;--radius-sm:8px}
-html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+:root{--orange:#F74501;--bg:#0A0A0A;--card:#111;--border:#222;--text:#fff;--muted:#666;--subtle:#999;--green:#22C55E;--red:#EF4444;--blue:#3B82F6;--radius:12px;--radius-sm:8px;--font-display:'Oswald',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
 button{cursor:pointer;font-family:inherit}
-input,select,textarea{font-family:inherit;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;outline:none}
+input,select,textarea{font-family:inherit;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;outline:none;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--orange)}
 textarea{resize:vertical;min-height:60px}
 
-/* Layout */
 .topbar{position:sticky;top:0;z-index:100;padding:12px 20px;background:rgba(10,10,10,0.95);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .topbar__left{display:flex;align-items:center;gap:12px}
 .topbar__logo{height:22px}
 .topbar__org{padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600}
 .topbar__right{display:flex;align-items:center;gap:10px}
-.topbar__link{font-size:13px;color:var(--subtle);text-decoration:none;padding:6px 12px;border-radius:var(--radius-sm);transition:background 0.2s}
+.topbar__link{font-size:13px;color:var(--subtle);text-decoration:none;padding:6px 12px;border-radius:var(--radius-sm)}
 .topbar__link:hover{background:#1a1a1a;color:var(--text)}
-.btn-signout{background:none;border:1px solid var(--border);color:var(--subtle);font-size:12px;padding:6px 14px;border-radius:var(--radius-sm)}
-.btn-signout:hover{border-color:var(--subtle);color:var(--text)}
-.container{max-width:900px;margin:0 auto;padding:24px 20px 80px}
-.gradient-bar{width:100%;height:4px}
+.btn-signout{background:none;border:1px solid var(--border);color:var(--subtle);font-size:12px;padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer}
+.container{max-width:960px;margin:0 auto;padding:24px 20px 80px}
 .gradient-bar img{width:100%;height:4px;object-fit:cover;display:block}
 
-/* Auth gate */
-.auth-gate{display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 20px;text-align:center}
-.auth-gate h2{font-family:'Oswald',sans-serif;font-size:24px}
-.auth-gate p{color:var(--subtle);font-size:14px}
-.btn-google{padding:12px 24px;background:#fff;color:#000;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
-
 /* Buttons */
-.btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:13px;transition:opacity 0.2s}
-.btn:hover{opacity:0.85}
+.btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:13px;cursor:pointer}
 .btn-primary{background:var(--orange);color:#fff}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--subtle)}
-.btn-ghost:hover{border-color:var(--subtle);color:var(--text)}
 .btn-green{background:var(--green);color:#fff}
 .btn-red{background:var(--red);color:#fff}
 .btn-sm{padding:5px 12px;font-size:12px}
 
+/* Auth */
+.auth-gate{display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 20px;text-align:center}
+.auth-gate h2{font-family:var(--font-display);font-size:24px}
+.btn-google{padding:12px 24px;background:#fff;color:#000;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;cursor:pointer}
+
 /* Session list */
-.page-title{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
-.session-grid{display:flex;flex-direction:column;gap:10px}
-.scard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:border-color 0.2s;display:flex;justify-content:space-between;align-items:center}
+.page-title{font-family:var(--font-display);font-size:28px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.session-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:640px){.session-grid{grid-template-columns:1fr 1fr;gap:14px}}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:border-color 0.2s}
 .scard:hover{border-color:#333}
-.scard__left{display:flex;flex-direction:column;gap:4px}
-.scard__title{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600}
-.scard__meta{font-size:13px;color:var(--subtle)}
-.scard__badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px}
+.scard__title{font-family:var(--font-display);font-size:18px;font-weight:600;margin-bottom:4px}
+.scard__meta{font-size:12px;color:var(--subtle);margin-bottom:8px}
+.scard__bar{display:flex;align-items:center;gap:8px}
+.scard__fill{flex:1;height:5px;border-radius:3px;background:var(--border);overflow:hidden}
+.scard__fill-inner{height:100%;border-radius:3px;background:var(--green)}
+.scard__count{font-family:var(--font-mono);font-size:11px;color:var(--subtle)}
+.scard__pending{font-family:var(--font-mono);font-size:11px;color:var(--orange);margin-top:6px}
+.scard__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;text-transform:uppercase;float:right}
 .scard__badge--open{background:#22C55E20;color:var(--green)}
 .scard__badge--completed{background:#EF444420;color:var(--red)}
 
-/* Detail view */
-.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.back-btn{background:none;border:none;color:var(--subtle);font-size:18px;padding:4px 8px}
-.back-btn:hover{color:var(--text)}
-.detail-title{font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;flex:1}
-.detail-meta{font-size:13px;color:var(--subtle);margin-bottom:20px}
+/* Detail */
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.back-btn{background:none;border:none;color:var(--subtle);font-size:18px;padding:4px 8px;cursor:pointer}
+.detail-title{font-family:var(--font-display);font-size:24px;font-weight:700;flex:1}
+.share-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--subtle);word-break:break-all;margin-bottom:12px}
+.share-row button{flex-shrink:0}
+
+/* Stat boxes */
+.stat-boxes{display:flex;gap:10px;margin-bottom:16px}
+.stat-box{flex:1;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center}
+.stat-box__num{font-family:var(--font-display);font-size:28px;font-weight:700}
+.stat-box__num--green{color:var(--green)}
+.stat-box__num--orange{color:var(--orange)}
+.stat-box__num--blue{color:var(--blue)}
+.stat-box__label{font-family:var(--font-mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px}
 
 /* Tabs */
-.tabs{display:flex;gap:2px;background:var(--card);border-radius:var(--radius-sm);padding:3px;margin-bottom:20px;border:1px solid var(--border)}
-.tab{flex:1;padding:8px;text-align:center;font-weight:600;font-size:13px;border-radius:6px;color:var(--muted);background:transparent;border:none;transition:all 0.2s}
-.tab--active{background:var(--text);color:var(--bg)}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto}
+.tab{flex:none;padding:10px 16px;text-align:center;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer}
+.tab--active{color:var(--orange);border-bottom-color:var(--orange)}
 
-/* Roster */
-.roster-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px}
-.roster-row__avatar{width:36px;height:36px;border-radius:50%;background:#292929;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--subtle);position:relative}
-.roster-row__avatar img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
-.roster-row__avatar .cover-bg{width:100%;height:100%;position:absolute;top:0;left:0;border-radius:50%;object-fit:cover}
-.roster-row__info{flex:1;display:flex;flex-direction:column;gap:2px}
-.roster-row__name{font-weight:600;font-size:14px}
-.roster-row__sub{font-size:12px;color:var(--muted)}
-.roster-row__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+/* Player rows */
+.player-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;transition:border-color 0.15s}
+.player-row:hover{border-color:#333}
+.player-row__avatar{width:44px;height:44px;border-radius:50%;background:#292929;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--subtle);position:relative}
+.player-row__avatar img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.player-row__info{flex:1;min-width:0}
+.player-row__name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-row__stats{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-top:2px}
+.player-row__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
 .badge-confirmed{background:#22C55E20;color:var(--green)}
-.badge-pending{background:#F7450120;color:var(--orange)}
-.badge-waitlist{background:#3B82F620;color:#3B82F6}
 .badge-checkedin{background:#22C55E40;color:var(--green)}
-.roster-row__actions{display:flex;gap:6px}
+.badge-pending{background:#F7450120;color:var(--orange)}
+.badge-waitlist{background:#3B82F620;color:var(--blue)}
+.player-row__actions{display:flex;gap:6px;flex-shrink:0}
+
+/* Teams */
+.team-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.team-section--unassigned{border-style:dashed}
+.team-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.team-header__input{font-family:var(--font-display);font-size:16px;font-weight:600;background:transparent;border:1px solid transparent;color:var(--text);padding:4px 8px;border-radius:4px;flex:1}
+.team-header__input:focus{border-color:var(--border)}
+.team-header__stats{font-family:var(--font-mono);font-size:10px;color:var(--muted);display:flex;gap:8px}
+.team-header__remove{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:4px}
+.team-player{display:flex;align-items:center;gap:8px;padding:6px;border-radius:6px;cursor:pointer}
+.team-player:hover{background:rgba(255,255,255,0.03)}
+.team-player__avatar{width:28px;height:28px;border-radius:50%;background:#292929;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--subtle)}
+.team-player__avatar img{width:100%;height:100%;object-fit:cover}
+.team-player__info{flex:1}
+.team-player__name{font-size:13px;font-weight:600}
+.team-player__meta{font-size:10px;color:var(--muted)}
+.team-empty{text-align:center;padding:12px;color:var(--muted);font-size:12px}
+.teams-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.teams-reveal{display:flex;align-items:center;gap:8px}
+.teams-reveal__status{font-size:11px;color:var(--muted)}
 
 /* Games */
-.game-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.game-card__info{display:flex;flex-direction:column;gap:4px}
-.game-card__num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.game-card__matchup{font-weight:600;font-size:14px}
+.game-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.game-card__matchup{font-weight:600;font-size:13px}
 .game-card__winner{font-size:12px;color:var(--green)}
+.game-card__num{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 
-/* Create/edit form */
+/* Log game */
+.log-game{background:#0d0d0d;border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.log-game h3{font-family:var(--font-display);font-size:16px;margin-bottom:10px}
+.player-chip{display:inline-block;padding:4px 10px;border:1px solid var(--border);border-radius:16px;font-size:12px;margin:2px;cursor:pointer;color:var(--subtle);background:var(--card)}
+.player-chip--a{border-color:var(--orange);color:var(--orange);background:#F7450110}
+.player-chip--b{border-color:var(--blue);color:var(--blue);background:#3B82F610}
+
+/* Player sheet overlay */
+.player-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;justify-content:center;align-items:flex-start;overflow-y:auto;padding:40px 16px}
+.player-sheet-overlay.active{display:flex}
+.player-sheet{max-width:400px;width:100%;padding-bottom:40px}
+.player-sheet__badges{text-align:center;margin-bottom:8px}
+.badge-pill{display:inline-block;font-family:var(--font-mono);font-size:11px;color:var(--orange);background:rgba(247,69,1,0.1);padding:4px 12px;border-radius:12px;margin:2px}
+.badge-court{font-size:11px;color:var(--muted);margin-top:4px}
+.player-sheet__bball{text-align:center;margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.player-sheet__bball-tag{font-size:11px;color:var(--subtle);background:rgba(255,255,255,0.05);padding:3px 10px;border-radius:10px}
+.player-sheet__actions{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.player-sheet__action-btn{padding:10px 20px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:13px;cursor:pointer}
+.player-sheet__action-btn--approve{background:var(--green);color:#052e16}
+.player-sheet__action-btn--decline{background:rgba(239,68,68,0.15);color:var(--red)}
+.player-sheet__action-btn--promote{background:rgba(59,130,246,0.15);color:var(--blue)}
+.player-sheet__action-btn--remove{background:rgba(239,68,68,0.1);color:var(--red)}
+.player-sheet__loader{text-align:center;padding:60px}
+.player-sheet__spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto}
+.player-sheet__close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--subtle);font-size:24px;cursor:pointer}
+
+/* Form */
 .form{display:flex;flex-direction:column;gap:14px}
 .form__row{display:flex;gap:12px}
 .form__row>*{flex:1}
 .form label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
-.form input,.form select,.form textarea{width:100%}
+.form__hint{font-size:11px;color:var(--muted);margin-top:2px}
 .form__toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--subtle)}
 .form__toggle input{width:auto}
 
-/* Log game form */
-.log-game{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
-.log-game h3{font-family:'Oswald',sans-serif;font-size:16px;margin-bottom:12px}
-.team-col{flex:1}
-.team-col h4{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.player-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1a1a1a;border:1px solid var(--border);border-radius:16px;font-size:12px;margin:2px;cursor:pointer;transition:all 0.2s;color:var(--subtle)}
-.player-chip:hover{border-color:var(--subtle)}
-.player-chip--a{border-color:var(--orange);color:var(--orange);background:#F7450110}
-.player-chip--b{border-color:#3B82F6;color:#3B82F6;background:#3B82F610}
-
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:200}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:300}
 .modal-overlay.open{display:flex}
 .modal{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:440px;width:90%}
-.modal h3{font-family:'Oswald',sans-serif;font-size:20px;margin-bottom:16px}
+.modal h3{font-family:var(--font-display);font-size:20px;margin-bottom:12px}
 .modal__actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 
-/* Utility */
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#333;color:#fff;padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;transition:transform 0.3s;z-index:400}
+.toast.visible{transform:translateX(-50%) translateY(0)}
+
 .empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-.loading{text-align:center;padding:40px;color:var(--muted)}
+.loading{text-align:center;padding:40px}
 .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto 8px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.share-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--subtle);word-break:break-all}
-.share-row button{flex-shrink:0}
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="topbar__left">
-    <img class="topbar__logo" src="/img/allnet-games-logo-white.png" alt="AllNet" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-weight:700;font-size:18px\'>ALLNET</span>'">
+    <img class="topbar__logo" src="/img/allnet-games-logo-white.png" alt="AllNet" onerror="this.outerHTML='<span style=font-family:Oswald;font-weight:700;font-size:18px>ALLNET</span>'">
     <select class="topbar__org" id="orgSelect" style="display:none"></select>
   </div>
   <div class="topbar__right">
@@ -139,63 +184,50 @@ textarea{resize:vertical;min-height:60px}
   </div>
 </div>
 <div class="gradient-bar"><img src="https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/gradient-bar-min.png" alt=""></div>
+<div class="container" id="root"><div class="loading"><div class="spinner"></div></div></div>
 
-<div class="container" id="root"><div class="loading"><div class="spinner"></div><div>Loading...</div></div></div>
+<!-- Player sheet -->
+<div class="player-sheet-overlay" id="playerSheet" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="player-sheet" style="position:relative">
+    <button class="player-sheet__close" onclick="document.getElementById('playerSheet').classList.remove('active')">&times;</button>
+    <div id="playerSheetBadge" class="player-sheet__badges"></div>
+    <div id="playerSheetCard"></div>
+    <div id="playerSheetBball" class="player-sheet__bball"></div>
+    <div id="playerSheetActions" class="player-sheet__actions"></div>
+  </div>
+</div>
 
 <!-- Confirm modal -->
 <div class="modal-overlay" id="confirmModal">
-  <div class="modal">
-    <h3 id="confirmTitle">Confirm</h3>
-    <p id="confirmMsg" style="color:var(--subtle);font-size:14px;margin-bottom:8px"></p>
-    <div class="modal__actions">
-      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
-      <button class="btn btn-red" id="confirmAction">Confirm</button>
-    </div>
+  <div class="modal"><h3 id="confirmTitle">Confirm</h3><p id="confirmMsg" style="color:var(--subtle);font-size:14px"></p>
+    <div class="modal__actions"><button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button><button class="btn btn-red" id="confirmAction">Confirm</button></div>
   </div>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
 const SB_URL='https://orrpowyewsioyxztwkdq.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const COVERS_URL='https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
+const COVERS={crossover:'Crossover',rally:'Rally',flowstate:'Flowstate',fastbreak:'Fastbreak',shatter:'Shatter',showtime:'Showtime',fadeaway:'Fadeaway'};
+function getCoverUrl(slug){return slug&&COVERS[slug]?`${COVERS_URL}/${COVERS[slug]}.png`:null}
 
-let currentUser=null;
-let orgs=[];
-let selectedOrgId=null;
-let sessions=[];
-let currentView='list'; // list | detail | create
-let currentSession=null;
-let currentRoster=[];
-let currentGames=[];
-let activeTab='roster';
+let currentUser=null,orgs=[],selectedOrgId=null,sessions=[],currentSessionId=null,currentRoster=[],currentGames=[],activeTab='confirmed';
+let teamData={teams:[]},teamsVisibleAt=null,teamAIds=[],teamBIds=[];
 
 // ─── Auth ───
 async function init(){
   const{data:{session}}=await sb.auth.getSession();
-  if(session){
-    currentUser=session.user;
-    await loadOrgs();
-  } else {
-    showAuth();
-  }
+  if(session){currentUser=session.user;await loadOrgs()}else showAuth();
   sb.auth.onAuthStateChange(async(e,s)=>{
     if(e==='SIGNED_IN'&&s){currentUser=s.user;await loadOrgs()}
     if(e==='SIGNED_OUT'){currentUser=null;showAuth()}
   });
 }
-
 function showAuth(){
-  document.getElementById('root').innerHTML=`
-    <div class="auth-gate">
-      <h2>Organizer Dashboard</h2>
-      <p>Sign in to manage your sessions and roster.</p>
-      <button class="btn-google" onclick="signInGoogle()">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continue with Google
-      </button>
-    </div>`;
+  document.getElementById('root').innerHTML='<div class="auth-gate"><h2>Organizer Dashboard</h2><p>Sign in to manage your sessions and roster.</p><button class="btn-google" onclick="signInGoogle()"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Continue with Google</button></div>';
 }
-
 async function signInGoogle(){await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}})}
 async function signOut(){await sb.auth.signOut();showAuth();document.getElementById('signoutBtn').style.display='none';document.getElementById('orgSelect').style.display='none'}
 
@@ -203,388 +235,421 @@ async function signOut(){await sb.auth.signOut();showAuth();document.getElementB
 async function loadOrgs(){
   const{data}=await sb.rpc('get_user_orgs');
   orgs=(data||[]).filter(o=>o.role==='owner'||o.role==='admin');
-  if(!orgs.length){document.getElementById('root').innerHTML='<div class="empty">You are not an admin or owner of any organization.</div>';document.getElementById('signoutBtn').style.display='inline-block';return}
+  if(!orgs.length){document.getElementById('root').innerHTML='<div class="empty">You are not an admin of any organization.</div>';document.getElementById('signoutBtn').style.display='inline-block';return}
   document.getElementById('signoutBtn').style.display='inline-block';
-  const sel=document.getElementById('orgSelect');
-  sel.style.display='inline-block';
-  sel.innerHTML=orgs.map(o=>`<option value="${o.org_id}">${esc(o.org_name)}</option>`).join('');
-  sel.onchange=()=>{selectedOrgId=sel.value;updatePublicLink();loadSessions()};
-  selectedOrgId=orgs[0].org_id;
-  updatePublicLink();
-  await loadSessions();
+  var sel=document.getElementById('orgSelect');sel.style.display='inline-block';
+  sel.innerHTML=orgs.map(o=>'<option value="'+o.org_id+'">'+esc(o.org_name)+'</option>').join('');
+  sel.onchange=function(){selectedOrgId=sel.value;updatePublicLink();loadSessions()};
+  selectedOrgId=orgs[0].org_id;updatePublicLink();await loadSessions();
 }
+function updatePublicLink(){var o=orgs.find(x=>x.org_id===selectedOrgId);var l=document.getElementById('publicLink');if(o){l.href='/org/'+o.org_slug;l.style.display='inline-block'}}
 
-function updatePublicLink(){
-  const org=orgs.find(o=>o.org_id===selectedOrgId);
-  const link=document.getElementById('publicLink');
-  if(org){link.href=`/org/${org.org_slug}`;link.style.display='inline-block'}
-}
-
-// ─── Sessions List ───
+// ─── Sessions ───
 async function loadSessions(){
-  currentView='list';
   document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  try{
-    const{data,error}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
-    if(error)throw error;
-    sessions=data||[];
-  }catch(e){
-    console.error('loadSessions error:',e);
-    sessions=[];
-  }
+  try{var{data}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=data||[]}catch(e){sessions=[]}
   renderList();
 }
-
 function renderList(){
-  let h=`<div class="page-title"><span>Sessions</span><button class="btn btn-primary" onclick="showCreate()">+ New Session</button></div>`;
-  if(!sessions.length){h+='<div class="empty">No sessions yet. Create your first one.</div>';document.getElementById('root').innerHTML=h;return}
+  var h='<div class="page-title"><span>Sessions</span><button class="btn btn-primary" onclick="showCreate()">+ New Session</button></div>';
+  if(!sessions.length){h+='<div class="empty">No sessions yet.</div>';document.getElementById('root').innerHTML=h;return}
   h+='<div class="session-grid">';
-  sessions.forEach(s=>{
-    const badge=s.status==='open'?'open':'completed';
-    h+=`<div class="scard" onclick="openDetail('${s.id}')">
-      <div class="scard__left">
-        <div class="scard__title">${esc(s.title)}</div>
-        <div class="scard__meta">${fmtDate(s.date)} · ${fmtTime(s.start_time,s.end_time)} · ${s.venue_name||'No venue'} · ${s.confirmed_count}/${s.max_players} confirmed${s.pending_count>0?' · <span style="color:var(--orange)">'+s.pending_count+' pending</span>':''}</div>
-      </div>
-      <span class="scard__badge scard__badge--${badge}">${badge}</span>
-    </div>`;
+  sessions.forEach(function(s){
+    var pct=s.max_players>0?Math.round((s.confirmed_count/s.max_players)*100):0;
+    var fillCls=pct>=100?'background:var(--red)':pct>=70?'background:var(--orange)':'background:var(--green)';
+    h+='<div class="scard" onclick="openDetail(\''+s.id+'\')">';
+    h+='<div><span class="scard__badge scard__badge--'+s.status+'">'+s.status+'</span>';
+    h+='<div class="scard__title">'+esc(s.title)+'</div>';
+    h+='<div class="scard__meta">'+fmtDate(s.date)+' · '+fmtTime(s.start_time)+' – '+fmtTime(s.end_time)+' · '+(s.venue_name||'No venue')+'</div>';
+    h+='<div class="scard__bar"><div class="scard__fill"><div class="scard__fill-inner" style="width:'+pct+'%;'+fillCls+'"></div></div><span class="scard__count">'+s.confirmed_count+'/'+s.max_players+'</span></div>';
+    if(s.pending_count>0)h+='<div class="scard__pending">'+s.pending_count+' pending approval</div>';
+    h+='</div></div>';
   });
-  h+='</div>';
-  document.getElementById('root').innerHTML=h;
+  h+='</div>';document.getElementById('root').innerHTML=h;
 }
 
-// ─── Session Detail ───
+// ─── Detail ───
 async function openDetail(sessionId){
-  currentView='detail';
-  activeTab='roster';
+  currentSessionId=sessionId;activeTab='confirmed';
   document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  const sData=sessions.find(s=>s.id===sessionId);
-  if(!sData){await loadSessions();return}
-  currentSession=sData;
-
-  // Fetch roster
-  const{data:roster}=await sb.rpc('get_session_roster',{p_session_id:sessionId});
-  currentRoster=roster||[];
-
-  // Fetch games from public info
-  const org=orgs.find(o=>o.org_id===selectedOrgId);
-  const{data:info}=await sb.rpc('get_public_session_info',{p_org_slug:org.org_slug,p_session_code:currentSession.short_code});
-  currentGames=(info&&info.games)||[];
-
+  try{
+    var{data:roster}=await sb.rpc('get_session_roster',{p_session_id:sessionId});currentRoster=roster||[];
+    var{data:games}=await sb.from('run_games').select('*').eq('session_id',sessionId).order('game_number');currentGames=games||[];
+    var session=sessions.find(function(s){return s.id===sessionId});
+    if(session&&session.team_assignments){teamData=session.team_assignments;if(!teamData.teams)teamData.teams=[]}else teamData={teams:[]};
+    teamsVisibleAt=session?session.teams_visible_at:null;
+  }catch(e){console.error(e)}
   renderDetail();
 }
+function getSession(){return sessions.find(function(s){return s.id===currentSessionId})||{}}
 
 function renderDetail(){
-  const s=currentSession;
-  const isCompleted=s.status==='completed';
-  const org=orgs.find(o=>o.org_id===selectedOrgId);
-  const shareUrl=`allnetgames.com/r/${org?.org_slug||''}/${s.short_code}`;
-  let h=`<div class="detail-header"><button class="back-btn" onclick="loadSessions()">← Back</button><div class="detail-title">${esc(s.title)}</div><span class="scard__badge scard__badge--${s.status}">${s.status}</span></div>`;
-  h+=`<div class="detail-meta">${fmtDate(s.date)} · ${fmtTime(s.start_time,s.end_time)} · ${s.venue_name||'No venue'}</div>`;
-  h+=`<div class="share-row" style="margin:12px 0 16px"><span>${shareUrl}</span><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('https://${shareUrl}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button></div>`;
+  var s=getSession();var isCompleted=s.status==='completed';
+  var confirmed=currentRoster.filter(function(p){return p.status==='confirmed'||p.status==='standby'});
+  var pending=currentRoster.filter(function(p){return p.status==='pending'});
+  var waitlisted=currentRoster.filter(function(p){return p.status==='waitlisted'||p.status==='waitlist'});
+  var org=orgs.find(function(o){return o.org_id===selectedOrgId});
+  var shareUrl='allnetgames.com/r/'+(org?org.org_slug:'')+'/'+s.short_code;
+
+  var h='<div class="detail-header"><button class="back-btn" onclick="loadSessions()">← Back</button><div class="detail-title">'+esc(s.title)+'</div><span class="scard__badge scard__badge--'+s.status+'">'+s.status+'</span></div>';
+  h+='<div style="font-size:13px;color:var(--subtle);margin-bottom:12px">'+fmtDate(s.date)+' · '+fmtTime(s.start_time)+' – '+fmtTime(s.end_time)+' · '+(s.venue_name||'')+'</div>';
+  h+='<div class="share-row"><span>'+shareUrl+'</span><button class="btn btn-ghost btn-sm" onclick="copyLink(\''+shareUrl+'\',this)">Copy</button></div>';
+
+  // Stat boxes
+  h+='<div class="stat-boxes">';
+  h+='<div class="stat-box"><div class="stat-box__num stat-box__num--green">'+confirmed.length+'</div><div class="stat-box__label">Confirmed</div></div>';
+  h+='<div class="stat-box"><div class="stat-box__num stat-box__num--orange">'+pending.length+'</div><div class="stat-box__label">Pending</div></div>';
+  h+='<div class="stat-box"><div class="stat-box__num stat-box__num--blue">'+waitlisted.length+'</div><div class="stat-box__label">Waitlisted</div></div>';
+  h+='</div>';
 
   // Tabs
-  h+=`<div class="tabs"><button class="tab ${activeTab==='roster'?'tab--active':''}" onclick="switchTab('roster')">Roster</button><button class="tab ${activeTab==='games'?'tab--active':''}" onclick="switchTab('games')">Games</button><button class="tab ${activeTab==='settings'?'tab--active':''}" onclick="switchTab('settings')">Settings</button></div>`;
-
-  h+=`<div id="tabContent">${renderTab()}</div>`;
+  h+='<div class="tabs">';
+  h+='<button class="tab '+(activeTab==='confirmed'?'tab--active':'')+'" onclick="switchTab(\'confirmed\')">Roster ('+confirmed.length+')</button>';
+  h+='<button class="tab '+(activeTab==='pending'?'tab--active':'')+'" onclick="switchTab(\'pending\')">Pending ('+pending.length+')</button>';
+  h+='<button class="tab '+(activeTab==='waitlisted'?'tab--active':'')+'" onclick="switchTab(\'waitlisted\')">Waitlist ('+waitlisted.length+')</button>';
+  h+='<button class="tab '+(activeTab==='teams'?'tab--active':'')+'" onclick="switchTab(\'teams\')">Teams</button>';
+  h+='<button class="tab '+(activeTab==='settings'?'tab--active':'')+'" onclick="switchTab(\'settings\')">Settings</button>';
+  h+='</div>';
+  h+='<div id="tabContent"></div>';
   document.getElementById('root').innerHTML=h;
+  renderTabContent();
 }
 
 function switchTab(t){activeTab=t;renderDetail()}
 
-function renderTab(){
-  if(activeTab==='roster')return renderRoster();
-  if(activeTab==='games')return renderGamesTab();
-  if(activeTab==='settings')return renderSettings();
-  return'';
+function renderTabContent(){
+  var el=document.getElementById('tabContent');if(!el)return;
+  if(activeTab==='confirmed')el.innerHTML=renderPlayerTab('confirmed');
+  else if(activeTab==='pending')el.innerHTML=renderPlayerTab('pending');
+  else if(activeTab==='waitlisted')el.innerHTML=renderPlayerTab('waitlisted');
+  else if(activeTab==='teams')el.innerHTML=renderTeamsTab();
+  else if(activeTab==='settings')el.innerHTML=renderSettings();
 }
 
-// ─── Roster Tab ───
-function renderRoster(){
-  const isCompleted=currentSession.status==='completed';
-  if(!currentRoster.length)return'<div class="empty">No registrations yet.</div>';
-  
-  const confirmed=currentRoster.filter(p=>p.status==='confirmed'||p.status==='standby');
-  const pending=currentRoster.filter(p=>p.status==='pending');
-  const waitlisted=currentRoster.filter(p=>p.status==='waitlist'||p.status==='waitlisted');
-  
-  let h='';
-  
-  if(pending.length){
-    h+=`<div class="section__title" style="color:var(--orange);margin-bottom:8px">Pending Approval (${pending.length})</div>`;
-    h+=renderRosterGroup(pending,isCompleted);
-  }
-  
-  if(confirmed.length){
-    h+=`<div class="section__title" style="margin-top:${pending.length?'16':'0'}px;margin-bottom:8px">Confirmed (${confirmed.length})</div>`;
-    h+=renderRosterGroup(confirmed,isCompleted);
-  }
-  
-  if(waitlisted.length){
-    h+=`<div class="section__title" style="margin-top:16px;margin-bottom:8px">Waitlisted (${waitlisted.length})</div>`;
-    h+=renderRosterGroup(waitlisted,isCompleted);
-  }
-  
-  return h;
-}
+// ─── Player List ───
+function renderPlayerTab(status){
+  var isCompleted=getSession().status==='completed';
+  var players;
+  if(status==='confirmed')players=currentRoster.filter(function(p){return p.status==='confirmed'||p.status==='standby'});
+  else if(status==='pending')players=currentRoster.filter(function(p){return p.status==='pending'});
+  else players=currentRoster.filter(function(p){return p.status==='waitlisted'||p.status==='waitlist'});
+  if(!players.length)return'<div class="empty">No '+status+' players.</div>';
+  return players.map(function(p){
+    var initials=((p.first_name||'')[0]||'')+((p.last_name||'')[0]||'');
+    var cutout=p.avatar_cutout_url||p.avatar_url;var cover=p.selected_cover?getCoverUrl(p.selected_cover):null;
+    var hStr=p.height_inches?Math.floor(p.height_inches/12)+"'"+(p.height_inches%12)+'"':'';
+    var posStr=(p.positions&&p.positions.length>0)?p.positions.slice(0,2).join('/'):'';
+    var meta=[hStr,posStr,'Skill '+Number(p.skill_rating||0).toFixed(1),'Social '+Number(p.social_rating||0).toFixed(1),p.org_session_count+' runs'].filter(Boolean).join(' · ');
 
-function renderRosterGroup(players,isCompleted){
-  let h='';
-  players.forEach(p=>{
-    const initials=((p.first_name||'')[0]||'')+((p.last_name||'')[0]||'');
-    const cutout=p.avatar_cutout_url||p.avatar_url;
-    const cover=p.selected_cover?getCoverUrl(p.selected_cover):null;
-    h+=`<div class="roster-row">
-      <div class="roster-row__avatar">
-        ${cover?`<img class="cover-bg" src="${cover}">`:''}
-        ${cutout?`<img src="${cutout}">`:`<span>${esc(initials.toUpperCase())}</span>`}
-      </div>
-      <div class="roster-row__info">
-        <div class="roster-row__name">${esc(p.first_name||'')} ${esc(p.last_name||'')}</div>
-        <div class="roster-row__sub">Skill ${Number(p.skill_rating).toFixed(1)} · Social ${Number(p.social_rating).toFixed(1)} · ${p.wins||0}W-${p.losses||0}L · ${p.org_session_count||0} sessions</div>
-      </div>
-      <span class="roster-row__badge ${p.checked_in_at?'badge-checkedin':p.status==='confirmed'?'badge-confirmed':p.status==='pending'?'badge-pending':'badge-waitlist'}">${p.checked_in_at?'Checked in':p.status}</span>
-      ${!isCompleted?renderRosterActions(p):''}
-    </div>`;
-  });
-  return h;
-}
-
-function renderRosterActions(p){
-  let a='<div class="roster-row__actions">';
-  if(p.status==='pending'){
-    a+=`<button class="btn btn-green btn-sm" onclick="approveReg('${p.registration_id}')">Approve</button>`;
-    a+=`<button class="btn btn-ghost btn-sm" onclick="rejectReg('${p.registration_id}')">Reject</button>`;
-  }
-  if(p.status==='confirmed'&&!p.checked_in_at){
-    a+=`<button class="btn btn-primary btn-sm" onclick="adminCheckin('${p.user_id}')">Check in</button>`;
-  }
-  if(p.status==='waitlist'){
-    a+=`<button class="btn btn-green btn-sm" onclick="promoteReg('${p.registration_id}')">Promote</button>`;
-  }
-  a+='</div>';
-  return a;
-}
-
-async function approveReg(regId){
-  const{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:'confirmed'});
-  if(data?.error)return alert(data.error);
-  await openDetail(currentSession.id);
-}
-async function rejectReg(regId){
-  const{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:'declined'});
-  if(data?.error)return alert(data.error);
-  await openDetail(currentSession.id);
-}
-async function promoteReg(regId){
-  const{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:'confirmed'});
-  if(data?.error)return alert(data.error);
-  await openDetail(currentSession.id);
-}
-async function adminCheckin(userId){
-  const{data}=await sb.rpc('admin_checkin_player',{p_session_id:currentSession.id,p_user_id:userId});
-  if(data?.error)return alert(data.error);
-  await openDetail(currentSession.id);
-}
-
-// ─── Games Tab ───
-function renderGamesTab(){
-  const isCompleted=currentSession.status==='completed';
-  let h='';
-  if(!isCompleted){
-    h+=renderLogGameForm();
-  }
-  if(!currentGames.length){h+='<div class="empty">No games logged yet.</div>';return h}
-  currentGames.forEach(g=>{
-    h+=`<div class="game-card">
-      <div class="game-card__info">
-        <div class="game-card__num">Game ${g.game_number}</div>
-        <div class="game-card__matchup">${esc(g.team_a_name)} vs ${esc(g.team_b_name)}</div>
-        ${g.winner?`<div class="game-card__winner">Winner: ${g.winner==='team_a'?esc(g.team_a_name):g.winner==='team_b'?esc(g.team_b_name):'Draw'}</div>`:''}
-      </div>
-      ${!isCompleted?`<button class="btn btn-ghost btn-sm" onclick="deleteGame('${g.game_number}')">Delete</button>`:''}
-    </div>`;
-  });
-  return h;
-}
-
-let teamAIds=[],teamBIds=[];
-function renderLogGameForm(){
-  const checkedIn=currentRoster.filter(p=>p.checked_in_at);
-  if(!checkedIn.length)return'<div class="empty">Check in players first to log games.</div>';
-  let h=`<div class="log-game"><h3>Log Game</h3>`;
-  h+=`<div style="margin-bottom:12px">Tap players to assign teams. Orange = Team A, Blue = Team B.</div>`;
-  h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px">`;
-  checkedIn.forEach(p=>{
-    const inA=teamAIds.includes(p.user_id);
-    const inB=teamBIds.includes(p.user_id);
-    const cls=inA?'player-chip--a':inB?'player-chip--b':'';
-    h+=`<span class="player-chip ${cls}" onclick="toggleTeam('${p.user_id}')">${esc(p.first_name||'')}</span>`;
-  });
-  h+=`</div>`;
-  h+=`<div class="form__row" style="margin-bottom:10px"><div><label>Team A Name</label><input id="teamAName" value="Team A"></div><div><label>Team B Name</label><input id="teamBName" value="Team B"></div></div>`;
-  h+=`<div style="margin-bottom:12px"><label>Winner</label><select id="winnerSelect"><option value="team_a">Team A</option><option value="team_b">Team B</option><option value="draw">Draw</option></select></div>`;
-  h+=`<button class="btn btn-primary" onclick="submitGame()">Log Game</button>`;
-  h+=`</div>`;
-  return h;
-}
-
-function toggleTeam(userId){
-  if(teamAIds.includes(userId)){teamAIds=teamAIds.filter(id=>id!==userId);teamBIds.push(userId)}
-  else if(teamBIds.includes(userId)){teamBIds=teamBIds.filter(id=>id!==userId)}
-  else{teamAIds.push(userId)}
-  document.getElementById('tabContent').innerHTML=renderTab();
-}
-
-async function submitGame(){
-  if(!teamAIds.length||!teamBIds.length)return alert('Assign at least 1 player to each team.');
-  const tAName=document.getElementById('teamAName').value||'Team A';
-  const tBName=document.getElementById('teamBName').value||'Team B';
-  const winner=document.getElementById('winnerSelect').value;
-  const{data}=await sb.rpc('log_run_game',{p_session_id:currentSession.id,p_team_a_name:tAName,p_team_b_name:tBName,p_team_a_ids:teamAIds,p_team_b_ids:teamBIds,p_winner:winner});
-  if(data?.error)return alert(data.error);
-  teamAIds=[];teamBIds=[];
-  await openDetail(currentSession.id);
-}
-
-async function deleteGame(gameNum){
-  showConfirm('Delete Game','Delete Game '+gameNum+'? Ratings will be reverted.',async()=>{
-    // Need game id — fetch from run_games
-    const{data:games}=await sb.from('run_games').select('id').eq('session_id',currentSession.id).eq('game_number',gameNum).single();
-    if(games){
-      const{data}=await sb.rpc('delete_run_game',{p_game_id:games.id});
-      if(data?.error)alert(data.error);
+    var actions='';
+    if(!isCompleted){
+      actions='<div class="player-row__actions">';
+      if(status==='pending'){
+        actions+='<button class="btn btn-green btn-sm" onclick="event.stopPropagation();adminAction(\''+p.registration_id+'\',\'confirmed\')">Approve</button>';
+        actions+='<button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" onclick="event.stopPropagation();adminAction(\''+p.registration_id+'\',\'declined\')">Decline</button>';
+      }
+      if(status==='confirmed'){
+        if(!p.checked_in_at)actions+='<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();adminCheckin(\''+p.user_id+'\')">Check In</button>';
+        actions+='<button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red);font-size:10px" onclick="event.stopPropagation();removePlayer(\''+p.registration_id+'\')">Remove</button>';
+      }
+      if(status==='waitlisted'){
+        actions+='<button class="btn btn-green btn-sm" onclick="event.stopPropagation();promotePlayer(\''+p.registration_id+'\')">Promote</button>';
+      }
+      actions+='</div>';
     }
-    await openDetail(currentSession.id);
+    return '<div class="player-row" onclick="openPlayerSheet(\''+p.user_id+'\')">'+
+      '<div class="player-row__avatar">'+(cover?'<img src="'+cover+'" style="border-radius:50%">':'')+(cutout?'<img src="'+cutout+'">':'<span>'+esc(initials.toUpperCase())+'</span>')+'</div>'+
+      '<div class="player-row__info"><div class="player-row__name">'+esc(p.first_name||'')+' '+esc(p.last_name||'')+'</div><div class="player-row__stats">'+meta+'</div></div>'+
+      '<span class="player-row__badge '+(p.checked_in_at?'badge-checkedin':status==='confirmed'?'badge-confirmed':status==='pending'?'badge-pending':'badge-waitlist')+'">'+(p.checked_in_at?'Checked in':p.status)+'</span>'+
+      actions+'</div>';
+  }).join('');
+}
+
+// ─── Admin Actions ───
+async function adminCheckin(userId){
+  var{data}=await sb.rpc('admin_checkin_player',{p_session_id:currentSessionId,p_user_id:userId});
+  if(data&&data.error)return alert(data.error);toast('Checked in');await openDetail(currentSessionId);
+}
+async function adminAction(regId,status){
+  var{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:status});
+  if(data&&data.error)return alert(data.error);toast(status==='confirmed'?'Approved':'Declined');await openDetail(currentSessionId);
+}
+async function promotePlayer(regId){
+  var{data}=await sb.rpc('promote_from_waitlist',{p_registration_id:regId,p_also_checkin:false});
+  if(data&&data.error)return alert(data.error);toast('Promoted');await openDetail(currentSessionId);
+}
+async function removePlayer(regId){
+  showConfirm('Remove Player','Remove this player from the session?',async function(){
+    var{data}=await sb.rpc('cancel_registration',{p_registration_id:regId});
+    if(data&&data.error)return alert(data.error);toast('Removed');await openDetail(currentSessionId);
   });
 }
 
-// ─── Settings Tab ───
-function renderSettings(){
-  const s=currentSession;
-  const isCompleted=s.status==='completed';
-  let h='';
-
+// ─── Teams Tab ───
+function renderTeamsTab(){
+  var isCompleted=getSession().status==='completed';
+  var h='';
   if(!isCompleted){
-    h+=`<div class="form" style="margin-top:20px">
-      <div class="form__row"><div><label>Title</label><input id="editTitle" value="${esc(s.title)}"></div></div>
-      <div class="form__row"><div><label>Date</label><input id="editDate" type="date" value="${s.date}"></div><div><label>Start</label><input id="editStart" type="time" value="${s.start_time?s.start_time.slice(0,5):''}"></div><div><label>End</label><input id="editEnd" type="time" value="${s.end_time?s.end_time.slice(0,5):''}"></div></div>
-      <div class="form__row"><div><label>Venue</label><input id="editVenue" value="${esc(s.venue_name||'')}"></div><div><label>Max Players</label><input id="editMax" type="number" value="${s.max_players}"></div></div>
-      <div><label>Description</label><textarea id="editDesc">${esc(s.description||'')}</textarea></div>
-      <div class="form__toggle"><input type="checkbox" id="editAutoPromote" ${s.auto_promote?'checked':''}><label for="editAutoPromote" style="margin:0;text-transform:none">Auto-approve registrations</label></div>
-      <button class="btn btn-primary" onclick="saveSession()">Save Changes</button>
-    </div>`;
-    h+=`<div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:12px"><button class="btn btn-red" onclick="endSession()">End Session</button><button class="btn btn-ghost" style="border-color:var(--red);color:var(--red)" onclick="deleteSession()">Delete Session</button></div>`;
-  } else {
-    h+=`<div class="empty" style="margin-top:20px">This session has been completed. No further edits allowed.</div>`;
+    h+='<div class="teams-controls"><button class="btn btn-primary btn-sm" onclick="addTeam()">+ Add Team</button><div class="teams-reveal" id="teamsRevealArea"></div></div>';
   }
+  h+='<div id="teamsBuilder"></div>';
+  h+='<div style="margin-top:20px" id="gamesSection"></div>';
+  // Render after DOM update
+  setTimeout(function(){renderTeamsBuilder();renderRevealControls();renderGamesSection()},0);
   return h;
 }
+function renderTeamsBuilder(){
+  var el=document.getElementById('teamsBuilder');if(!el)return;
+  var confirmed=currentRoster.filter(function(r){return r.status==='confirmed'||r.status==='standby'});
+  var assignedIds=new Set();teamData.teams.forEach(function(t){(t.player_ids||[]).forEach(function(id){assignedIds.add(id)})});
+  var unassigned=confirmed.filter(function(p){return!assignedIds.has(p.user_id)});
+  var h='<div class="team-section team-section--unassigned"><div class="team-header"><span style="font-family:var(--font-display);font-size:16px;font-weight:600">Unassigned ('+unassigned.length+')</span></div>';
+  if(unassigned.length>0)h+=unassigned.map(function(p){return renderTeamPlayer(p,-1)}).join('');
+  else h+='<div class="team-empty">All players assigned</div>';
+  h+='</div>';
+  teamData.teams.forEach(function(team,idx){
+    var players=(team.player_ids||[]).map(function(id){return confirmed.find(function(p){return p.user_id===id})}).filter(Boolean);
+    var avgS=players.length>0?(players.reduce(function(s,p){return s+Number(p.skill_rating||0)},0)/players.length).toFixed(1):'—';
+    h+='<div class="team-section"><div class="team-header"><input class="team-header__input" value="'+esc(team.name)+'" onchange="renameTeam('+idx+',this.value)"><div class="team-header__stats"><span>'+players.length+' players</span><span>Avg skill '+avgS+'</span></div><button class="team-header__remove" onclick="removeTeam('+idx+')">✕</button></div>';
+    if(players.length>0)h+=players.map(function(p){return renderTeamPlayer(p,idx)}).join('');
+    else h+='<div class="team-empty">Tap a player to assign</div>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+function renderTeamPlayer(p,currentIdx){
+  var hStr=p.height_inches?Math.floor(p.height_inches/12)+"'"+(p.height_inches%12)+'"':'';
+  var meta=[hStr,(p.positions||[]).slice(0,2).join('/'),'Skill '+Number(p.skill_rating||0).toFixed(1)].filter(Boolean).join(' · ');
+  var av=p.avatar_cutout_url?'<img src="'+esc(p.avatar_cutout_url)+'">':((p.first_name||'?')[0]+(p.last_name||'?')[0]).toUpperCase();
+  return '<div class="team-player" onclick="showAssignMenu(\''+p.user_id+'\','+currentIdx+',event)"><div class="team-player__avatar">'+av+'</div><div class="team-player__info"><div class="team-player__name">'+esc(p.first_name)+' '+esc(p.last_name)+'</div><div class="team-player__meta">'+meta+'</div></div></div>';
+}
+function showAssignMenu(userId,currentIdx,evt){
+  evt.stopPropagation();var old=document.querySelector('.team-assign-menu');if(old)old.remove();
+  var menu=document.createElement('div');menu.className='team-assign-menu';
+  menu.style.cssText='position:fixed;z-index:100;background:#222;border:1px solid #333;border-radius:8px;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.5)';
+  if(currentIdx!==-1)menu.innerHTML+='<button style="display:block;padding:6px 12px;font-size:12px;color:#fff;background:none;border:none;cursor:pointer;white-space:nowrap" onclick="assignPlayer(\''+userId+'\',-1)">Unassigned</button>';
+  teamData.teams.forEach(function(t,i){if(i!==currentIdx)menu.innerHTML+='<button style="display:block;padding:6px 12px;font-size:12px;color:#fff;background:none;border:none;cursor:pointer;white-space:nowrap" onclick="assignPlayer(\''+userId+'\','+i+')">'+esc(t.name)+'</button>'});
+  if(!menu.innerHTML)return;
+  var r=evt.currentTarget.getBoundingClientRect();menu.style.top=(r.bottom+2)+'px';menu.style.left=Math.min(r.right-120,window.innerWidth-170)+'px';
+  document.body.appendChild(menu);setTimeout(function(){document.addEventListener('click',function d(){menu.remove();document.removeEventListener('click',d)},{once:true})},10);
+}
+function assignPlayer(userId,teamIdx){
+  teamData.teams.forEach(function(t){t.player_ids=(t.player_ids||[]).filter(function(id){return id!==userId})});
+  if(teamIdx>=0&&teamData.teams[teamIdx])teamData.teams[teamIdx].player_ids.push(userId);
+  renderTeamsBuilder();saveTeams();
+}
+function addTeam(){teamData.teams.push({name:'Team '+(teamData.teams.length+1),player_ids:[]});renderTeamsBuilder();saveTeams()}
+function removeTeam(idx){teamData.teams.splice(idx,1);renderTeamsBuilder();saveTeams()}
+function renameTeam(idx,name){teamData.teams[idx].name=name;saveTeams()}
+async function saveTeams(){
+  await sb.rpc('save_team_assignments',{p_session_id:currentSessionId,p_assignments:teamData});
+  var s=getSession();if(s)s.team_assignments=teamData;
+}
+function renderRevealControls(){
+  var el=document.getElementById('teamsRevealArea');if(!el)return;
+  if(teamsVisibleAt&&new Date(teamsVisibleAt)<=new Date())el.innerHTML='<span class="teams-reveal__status">Teams visible</span> <button class="btn btn-ghost btn-sm" onclick="hideTeams()">Hide</button>';
+  else if(!teamsVisibleAt)el.innerHTML='<button class="btn btn-green btn-sm" onclick="revealTeams()">Reveal Teams</button>';
+}
+async function revealTeams(){
+  await sb.rpc('set_teams_visibility',{p_session_id:currentSessionId,p_visible_at:new Date().toISOString()});
+  teamsVisibleAt=new Date().toISOString();var s=getSession();if(s)s.teams_visible_at=teamsVisibleAt;renderRevealControls();toast('Teams visible');
+}
+async function hideTeams(){
+  await sb.rpc('set_teams_visibility',{p_session_id:currentSessionId,p_visible_at:null});
+  teamsVisibleAt=null;var s=getSession();if(s)s.teams_visible_at=null;renderRevealControls();toast('Teams hidden');
+}
 
+// ─── Games ───
+function renderGamesSection(){
+  var el=document.getElementById('gamesSection');if(!el)return;
+  var isCompleted=getSession().status==='completed';
+  var h='';
+  if(!isCompleted&&teamData.teams.length>=2){
+    h+='<div class="log-game"><h3>Log Game</h3>';
+    h+='<div class="form__row" style="margin-bottom:10px"><div><label>Team A</label><select id="gameTeamA">'+teamData.teams.map(function(t,i){return'<option value="'+i+'">'+esc(t.name)+'</option>'}).join('')+'</select></div>';
+    h+='<div><label>Team B</label><select id="gameTeamB">'+teamData.teams.map(function(t,i){return'<option value="'+i+'"'+(i===1?' selected':'')+'>'+esc(t.name)+'</option>'}).join('')+'</select></div></div>';
+    h+='<div style="margin-bottom:10px"><label>Winner</label><select id="gameWinner"><option value="team_a">Team A wins</option><option value="team_b">Team B wins</option><option value="draw">Draw</option></select></div>';
+    h+='<button class="btn btn-primary" onclick="logGame()">Log Game</button></div>';
+  }else if(!isCompleted){
+    h+='<div class="empty" style="padding:16px">Create at least 2 teams to log games.</div>';
+  }
+  if(currentGames.length>0){
+    h+='<div style="margin-top:12px">';
+    currentGames.forEach(function(g){
+      var winLabel=g.winner==='team_a'?g.team_a_name+' won':g.winner==='team_b'?g.team_b_name+' won':'Draw';
+      h+='<div class="game-card"><div><div class="game-card__num">Game '+g.game_number+'</div><div class="game-card__matchup">'+esc(g.team_a_name)+' vs '+esc(g.team_b_name)+'</div><div class="game-card__winner">'+winLabel+'</div></div>';
+      if(!isCompleted)h+='<button class="btn btn-ghost btn-sm" onclick="deleteGame(\''+g.id+'\')">Delete</button>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }else{h+='<div class="empty" style="padding:16px">No games logged yet.</div>'}
+  el.innerHTML=h;
+}
+async function logGame(){
+  var aIdx=document.getElementById('gameTeamA').value;var bIdx=document.getElementById('gameTeamB').value;
+  if(aIdx===bIdx)return alert('Select two different teams.');
+  var tA=teamData.teams[aIdx];var tB=teamData.teams[bIdx];
+  if(!tA.player_ids||!tA.player_ids.length||!tB.player_ids||!tB.player_ids.length)return alert('Both teams need players.');
+  var winner=document.getElementById('gameWinner').value;
+  var{data}=await sb.rpc('log_run_game',{p_session_id:currentSessionId,p_team_a_name:tA.name,p_team_b_name:tB.name,p_team_a_ids:tA.player_ids,p_team_b_ids:tB.player_ids,p_winner:winner});
+  if(data&&data.error)return alert(data.error);
+  var{data:games}=await sb.from('run_games').select('*').eq('session_id',currentSessionId).order('game_number');currentGames=games||[];
+  renderGamesSection();toast('Game logged');
+}
+async function deleteGame(gameId){
+  showConfirm('Delete Game','Delete this game? Ratings will be reverted.',async function(){
+    await sb.rpc('delete_run_game',{p_game_id:gameId});
+    var{data:games}=await sb.from('run_games').select('*').eq('session_id',currentSessionId).order('game_number');currentGames=games||[];
+    renderGamesSection();toast('Game deleted');
+  });
+}
+
+// ─── Settings ───
+function renderSettings(){
+  var s=getSession();var isCompleted=s.status==='completed';
+  var h='';
+  if(!isCompleted){
+    h+='<div class="form"><div class="form__row"><div><label>Title</label><input id="editTitle" value="'+esc(s.title)+'"></div></div>';
+    h+='<div class="form__row"><div><label>Date</label><input id="editDate" type="date" value="'+s.date+'"></div><div><label>Start</label><input id="editStart" type="time" value="'+(s.start_time?s.start_time.slice(0,5):'')+'"></div><div><label>End</label><input id="editEnd" type="time" value="'+(s.end_time?s.end_time.slice(0,5):'')+'"></div></div>';
+    h+='<div class="form__row"><div><label>Venue</label><input id="editVenue" value="'+esc(s.venue_name||'')+'"></div><div><label>Max Players</label><input id="editMax" type="number" value="'+s.max_players+'"></div></div>';
+    h+='<div><label>Description</label><textarea id="editDesc">'+esc(s.description||'')+'</textarea></div>';
+    h+='<div class="form__toggle"><input type="checkbox" id="editAutoPromote" '+(s.auto_promote?'checked':'')+'><label for="editAutoPromote" style="margin:0;text-transform:none">Auto-approve registrations</label></div>';
+    h+='<button class="btn btn-primary" onclick="saveSession()">Save Changes</button></div>';
+    h+='<div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:12px">';
+    h+='<button class="btn btn-red" onclick="endSession()">End Session</button>';
+    h+='<button class="btn btn-ghost" style="border-color:var(--red);color:var(--red)" onclick="deleteSession()">Delete Session</button>';
+    h+='</div>';
+  }else{h+='<div class="empty">Session completed. No further edits.</div>'}
+  return h;
+}
 async function saveSession(){
-  const{data}=await sb.rpc('update_run_session',{
-    p_session_id:currentSession.id,
-    p_title:document.getElementById('editTitle').value,
-    p_date:document.getElementById('editDate').value,
-    p_start_time:document.getElementById('editStart').value+':00',
-    p_end_time:document.getElementById('editEnd').value+':00',
-    p_venue_name:document.getElementById('editVenue').value,
-    p_max_players:parseInt(document.getElementById('editMax').value),
-    p_description:document.getElementById('editDesc').value,
-    p_auto_promote:document.getElementById('editAutoPromote').checked
-  });
-  if(data?.error)return alert(data.error);
-  // Refresh
-  const{data:refreshed}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
-  sessions=refreshed||[];
-  currentSession=sessions.find(s=>s.id===currentSession.id)||currentSession;
-  renderDetail();
-  alert('Saved!');
+  var{data}=await sb.rpc('update_run_session',{p_session_id:currentSessionId,p_title:document.getElementById('editTitle').value,p_date:document.getElementById('editDate').value,p_start_time:document.getElementById('editStart').value+':00',p_end_time:document.getElementById('editEnd').value+':00',p_venue_name:document.getElementById('editVenue').value,p_max_players:parseInt(document.getElementById('editMax').value),p_description:document.getElementById('editDesc').value,p_auto_promote:document.getElementById('editAutoPromote').checked});
+  if(data&&data.error)return alert(data.error);
+  var{data:r}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=r||[];renderDetail();toast('Saved');
 }
+function endSession(){showConfirm('End Session','End this session? Props locked, no further games.',async function(){
+  var{data}=await sb.rpc('end_run_session',{p_session_id:currentSessionId});if(data&&data.error)return alert(data.error);
+  var{data:r}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=r||[];renderDetail();toast('Session ended');
+})}
+function deleteSession(){showConfirm('Delete Session','Permanently delete? All data will be removed.',async function(){
+  var{data}=await sb.rpc('delete_run_session',{p_session_id:currentSessionId});if(data&&data.error)return alert(data.error);
+  await loadSessions();toast('Deleted');
+})}
 
-function endSession(){
-  showConfirm('End Session','End this session? Props will be locked and no further games can be logged.',async()=>{
-    const{data}=await sb.rpc('end_run_session',{p_session_id:currentSession.id});
-    if(data?.error)return alert(data.error);
-    const{data:refreshed}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
-    sessions=refreshed||[];
-    currentSession=sessions.find(s=>s.id===currentSession.id)||currentSession;
-    renderDetail();
-  });
-}
-
-function deleteSession(){
-  showConfirm('Delete Session','Permanently delete this session? All registrations, games, and props will be removed. This cannot be undone.',async()=>{
-    const{data}=await sb.rpc('delete_run_session',{p_session_id:currentSession.id});
-    if(data?.error)return alert(data.error);
-    await loadSessions();
-  });
-}
-
-// ─── Create Session ───
+// ─── Create ───
 function showCreate(){
-  currentView='create';
-  let h=`<div class="detail-header"><button class="back-btn" onclick="loadSessions()">← Back</button><div class="detail-title">New Session</div></div>`;
-  h+=`<div class="form">
-    <div><label>Title</label><input id="newTitle" placeholder="Tuesday Night Run"></div>
-    <div class="form__row"><div><label>Date</label><input id="newDate" type="date"></div><div><label>Start Time</label><input id="newStart" type="time"></div><div><label>End Time</label><input id="newEnd" type="time"></div></div>
-    <div class="form__row"><div><label>Venue Name</label><input id="newVenue" placeholder="Life Time Irvine"></div><div><label>Max Players</label><input id="newMax" type="number" value="20"></div></div>
-    <div><label>Description</label><textarea id="newDesc" placeholder="Weekly run details..."></textarea></div>
-    <div class="form__toggle"><input type="checkbox" id="newAutoPromote" checked><label for="newAutoPromote" style="margin:0;text-transform:none">Auto-approve registrations</label></div>
-    <button class="btn btn-primary" onclick="createSession()" style="margin-top:8px">Create Session</button>
-  </div>`;
+  var h='<div class="detail-header"><button class="back-btn" onclick="loadSessions()">← Back</button><div class="detail-title">New Session</div></div>';
+  h+='<div class="form"><div><label>Title</label><input id="newTitle" placeholder="Tuesday Night Run"></div>';
+  h+='<div class="form__row"><div><label>Date</label><input id="newDate" type="date"></div><div><label>Start</label><input id="newStart" type="time"></div><div><label>End</label><input id="newEnd" type="time"></div></div>';
+  h+='<div class="form__row"><div><label>Venue</label><input id="newVenue" placeholder="Life Time Irvine"></div><div><label>Max Players</label><input id="newMax" type="number" value="20"></div></div>';
+  h+='<div><label>Description</label><textarea id="newDesc" placeholder="Weekly run details..."></textarea></div>';
+  h+='<div><label>Check-in Deadline</label><select id="newCheckinDeadline"><option value="30">30 min before start</option><option value="60" selected>1 hour before start</option><option value="120">2 hours before start</option><option value="180">3 hours before start</option></select><div class="form__hint">Players must check in before this deadline or lose their spot</div></div>';
+  h+='<div class="form__toggle"><input type="checkbox" id="newAutoPromote" checked><label for="newAutoPromote" style="margin:0;text-transform:none">Auto-approve registrations</label></div>';
+  h+='<button class="btn btn-primary" onclick="createSession()" style="margin-top:8px">Create Session</button></div>';
   document.getElementById('root').innerHTML=h;
 }
-
 async function createSession(){
-  const title=document.getElementById('newTitle').value;
-  if(!title)return alert('Title is required.');
-  const date=document.getElementById('newDate').value;
-  if(!date)return alert('Date is required.');
-  const start=document.getElementById('newStart').value;
-  if(!start)return alert('Start time is required.');
+  var title=document.getElementById('newTitle').value;if(!title)return alert('Title required');
+  var date=document.getElementById('newDate').value;if(!date)return alert('Date required');
+  var start=document.getElementById('newStart').value;if(!start)return alert('Start time required');
+  var{data}=await sb.rpc('create_run_session',{p_org_id:selectedOrgId,p_title:title,p_session_type:'open',p_date:date,p_start_time:start+':00',p_end_time:(document.getElementById('newEnd').value||null)?(document.getElementById('newEnd').value+':00'):null,p_venue_name:document.getElementById('newVenue').value||'',p_max_players:parseInt(document.getElementById('newMax').value)||20,p_description:document.getElementById('newDesc').value||null,p_auto_promote:document.getElementById('newAutoPromote').checked,p_checkin_deadline_minutes:parseInt(document.getElementById('newCheckinDeadline').value)});
+  if(data&&data.error)return alert(data.error);
+  var newId=typeof data==='string'?data:null;
+  var{data:r}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});sessions=r||[];
+  if(newId)await openDetail(newId);else loadSessions();
+}
 
-  const{data}=await sb.rpc('create_run_session',{
-    p_org_id:selectedOrgId,
-    p_title:title,
-    p_session_type:'open',
-    p_date:date,
-    p_start_time:start+':00',
-    p_end_time:(document.getElementById('newEnd').value||null)?(document.getElementById('newEnd').value+':00'):null,
-    p_venue_name:document.getElementById('newVenue').value||'',
-    p_max_players:parseInt(document.getElementById('newMax').value)||20,
-    p_description:document.getElementById('newDesc').value||null,
-    p_auto_promote:document.getElementById('newAutoPromote').checked
-  });
-  if(data?.error)return alert(data.error);
-  // create_run_session returns UUID directly
-  const newId = typeof data === 'string' ? data : data?.id;
-  const{data:refreshed}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
-  sessions=refreshed||[];
-  if(newId){
-    await openDetail(newId);
-  } else {
-    loadSessions();
+// ─── Player Sheet ───
+function openPlayerSheet(userId){showPlayerCard(userId)}
+async function showPlayerCard(userId){
+  if(!userId)return;var overlay=document.getElementById('playerSheet');
+  document.getElementById('playerSheetCard').innerHTML='<div class="player-sheet__loader"><div class="player-sheet__spinner"></div></div>';
+  document.getElementById('playerSheetBadge').innerHTML='';document.getElementById('playerSheetBball').innerHTML='';document.getElementById('playerSheetActions').innerHTML='';
+  overlay.classList.add('active');
+  try{
+    var results=await Promise.all([
+      sb.from('profiles').select('id,first_name,last_name,name,avatar_url,avatar_cutout_url,selected_cover,social_rating,skill_rating,is_founding_hooper,founding_number,height_inches,positions,league_experience').eq('id',userId).single(),
+      sb.from('player_division_stats').select('*').eq('user_id',userId),
+      sb.from('checkins').select('court_id,courts(name)').eq('user_id',userId)
+    ]);
+    var player=results[0].data;var stats=results[1].data;var topCourt=results[2].data;
+    if(!player){overlay.classList.remove('active');return}
+
+    // Badge
+    var badgeHtml='';
+    if(player.is_founding_hooper)badgeHtml+='<div class="badge-pill">🏅 Founding Hooper #'+(player.founding_number||'')+'</div>';
+    if(topCourt&&topCourt.length>0){
+      var cc={};topCourt.forEach(function(c){var n=c.courts&&c.courts.name;if(n)cc[n]=(cc[n]||0)+1});
+      var top=Object.entries(cc).sort(function(a,b){return b[1]-a[1]});
+      if(top.length>0)badgeHtml+='<div class="badge-court">📍 Most played: '+top[0][0]+'</div>';
+    }
+    document.getElementById('playerSheetBadge').innerHTML=badgeHtml;
+
+    // Division stats
+    var divStats={};var bestDiv='1v1',bestGames=0;
+    if(stats)stats.forEach(function(s){divStats[s.division]=s;if(s.games_count>bestGames){bestGames=s.games_count;bestDiv=s.division}});
+    overlay._playerData={player:player,divStats:divStats,activeDivision:bestGames>0?bestDiv:'1v1'};
+    renderPlayerSheetCard();
+
+    // Basketball profile
+    var tags=[];
+    if(player.height_inches){var ft=Math.floor(player.height_inches/12);tags.push('<span class="player-sheet__bball-tag">📏 '+ft+"'"+(player.height_inches%12)+'"</span>')}
+    if(player.positions&&player.positions.length>0)tags.push('<span class="player-sheet__bball-tag">🏀 '+player.positions.slice(0,3).join(' / ')+'</span>');
+    if(player.league_experience&&player.league_experience!=='recreational'){
+      var ll={junior_varsity:'JV',varsity:'Varsity',collegiate:'Collegiate',pro_semi_pro:'Pro'};
+      tags.push('<span class="player-sheet__bball-tag">🏆 '+(ll[player.league_experience]||player.league_experience)+'</span>');
+    }
+    document.getElementById('playerSheetBball').innerHTML=tags.join('');
+
+    // Org history
+    try{
+      var{data:history}=await sb.rpc('get_player_org_history',{p_user_id:userId});
+      if(history&&history.length>0){
+        var hHtml='<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px">';
+        history.forEach(function(h){hHtml+='<span class="player-sheet__bball-tag">'+esc(h.org_name)+': '+h.session_count+' run'+(h.session_count>1?'s':'')+'</span>'});
+        hHtml+='</div>';document.getElementById('playerSheetBball').innerHTML+=hHtml;
+      }
+    }catch(e){}
+
+    // Actions based on status
+    var p=currentRoster.find(function(r){return r.user_id===userId});
+    var actHtml='';
+    if(p&&p.status==='pending')actHtml='<button class="player-sheet__action-btn player-sheet__action-btn--approve" onclick="adminAction(\''+p.registration_id+'\',\'confirmed\');document.getElementById(\'playerSheet\').classList.remove(\'active\')">Approve</button><button class="player-sheet__action-btn player-sheet__action-btn--decline" onclick="adminAction(\''+p.registration_id+'\',\'declined\');document.getElementById(\'playerSheet\').classList.remove(\'active\')">Decline</button>';
+    else if(p&&(p.status==='waitlisted'||p.status==='waitlist'))actHtml='<button class="player-sheet__action-btn player-sheet__action-btn--promote" onclick="promotePlayer(\''+p.registration_id+'\');document.getElementById(\'playerSheet\').classList.remove(\'active\')">Promote</button>';
+    else if(p&&p.status==='confirmed')actHtml='<button class="player-sheet__action-btn player-sheet__action-btn--remove" onclick="removePlayer(\''+p.registration_id+'\');document.getElementById(\'playerSheet\').classList.remove(\'active\')">Remove</button>';
+    document.getElementById('playerSheetActions').innerHTML=actHtml;
+  }catch(err){console.error(err);overlay.classList.remove('active')}
+}
+function renderPlayerSheetCard(){
+  var overlay=document.getElementById('playerSheet');if(!overlay._playerData)return;
+  var p=overlay._playerData.player;var ds=overlay._playerData.divStats[overlay._playerData.activeDivision];
+  if(typeof CareerCard!=='undefined'){
+    document.getElementById('playerSheetCard').innerHTML=CareerCard.render({
+      cardId:'psc',firstName:p.first_name||(p.name?p.name.split(' ')[0]:''),lastName:p.last_name||(p.name?p.name.split(' ').slice(1).join(' '):''),
+      cutoutUrl:p.avatar_cutout_url,avatarUrl:p.avatar_url,coverSlug:p.selected_cover||'crossover',
+      wins:ds?ds.wins:0,losses:ds?ds.losses:0,draws:ds?ds.draws:0,
+      skillRating:ds&&ds.skill_rating?Number(ds.skill_rating).toFixed(1):'—',socialRating:p.social_rating?Number(p.social_rating).toFixed(1):'—',
+      divisionLabel:overlay._playerData.activeDivision.toUpperCase(),activeDivision:overlay._playerData.activeDivision,
+      showTabs:true,onTabClick:'switchPlayerSheetDiv',showDeltas:false,hidePlaceholder:true
+    });
+    requestAnimationFrame(function(){CareerCard.fitNames('psc')});
+  }else{
+    document.getElementById('playerSheetCard').innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:24px;font-weight:700">'+esc(p.first_name)+' '+esc(p.last_name)+'</div><div style="color:var(--subtle);margin-top:8px">Skill '+Number(p.skill_rating||0).toFixed(1)+' · Social '+Number(p.social_rating||0).toFixed(1)+'</div></div>';
   }
+}
+function switchPlayerSheetDiv(div){
+  var overlay=document.getElementById('playerSheet');if(!overlay._playerData)return;
+  overlay._playerData.activeDivision=div;renderPlayerSheetCard();
 }
 
 // ─── Helpers ───
-function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-function fmtDate(ds){if(!ds)return'';const d=new Date(ds+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
-function fmtTime(s,e){if(!s)return'TBD';const f=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+(m>0?':'+String(m).padStart(2,'0'):'')+(h>=12?' PM':' AM')};return e?f(s)+' – '+f(e):f(s)}
-
-const COVERS_URL='https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
-const COVERS={crossover:'Crossover',rally:'Rally',flowstate:'Flowstate',fastbreak:'Fastbreak',shatter:'Shatter',showtime:'Showtime',fadeaway:'Fadeaway'};
-function getCoverUrl(slug){return slug&&COVERS[slug]?`${COVERS_URL}/${COVERS[slug]}.png`:null}
-
-function showConfirm(title,msg,onConfirm){
-  document.getElementById('confirmTitle').textContent=title;
-  document.getElementById('confirmMsg').textContent=msg;
-  document.getElementById('confirmModal').classList.add('open');
-  document.getElementById('confirmAction').onclick=()=>{closeConfirm();onConfirm()};
-}
+function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmtDate(ds){if(!ds)return'';return new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function fmtTime(t){if(!t)return'';var p=t.split(':');var h=parseInt(p[0]);return(h>12?h-12:h||12)+':'+p[1]+(h>=12?' PM':' AM')}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('visible');setTimeout(function(){t.classList.remove('visible')},2500)}
+function copyLink(url,btn){navigator.clipboard.writeText('https://'+url);btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy'},1500)}
+function showConfirm(title,msg,fn){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmModal').classList.add('open');document.getElementById('confirmAction').onclick=function(){closeConfirm();fn()}}
 function closeConfirm(){document.getElementById('confirmModal').classList.remove('open')}
-
 init();
 </script>
 </body>

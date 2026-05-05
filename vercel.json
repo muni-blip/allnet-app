@@ -46,6 +46,10 @@
       "destination": "/api/org?slug=:slug"
     },
     {
+      "source": "/dashboard",
+      "destination": "/allnet-dashboard.html"
+    },
+    {
       "source": "/courts/:slug",
       "destination": "/api/court?slug=:slug"
     },

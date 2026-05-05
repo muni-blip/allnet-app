@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllNet — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--orange:#F74501;--bg:#0A0A0A;--card:#111;--border:#222;--text:#fff;--muted:#666;--subtle:#999;--green:#22C55E;--red:#EF4444;--radius:12px;--radius-sm:8px}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;font-family:inherit}
+input,select,textarea{font-family:inherit;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--orange)}
+textarea{resize:vertical;min-height:60px}
+
+/* Layout */
+.topbar{position:sticky;top:0;z-index:100;padding:12px 20px;background:rgba(10,10,10,0.95);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.topbar__left{display:flex;align-items:center;gap:12px}
+.topbar__logo{height:22px}
+.topbar__org{padding:6px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:600}
+.topbar__right{display:flex;align-items:center;gap:10px}
+.topbar__link{font-size:13px;color:var(--subtle);text-decoration:none;padding:6px 12px;border-radius:var(--radius-sm);transition:background 0.2s}
+.topbar__link:hover{background:#1a1a1a;color:var(--text)}
+.btn-signout{background:none;border:1px solid var(--border);color:var(--subtle);font-size:12px;padding:6px 14px;border-radius:var(--radius-sm)}
+.btn-signout:hover{border-color:var(--subtle);color:var(--text)}
+.container{max-width:900px;margin:0 auto;padding:24px 20px 80px}
+.gradient-bar{width:100%;height:4px}
+.gradient-bar img{width:100%;height:4px;object-fit:cover;display:block}
+
+/* Auth gate */
+.auth-gate{display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 20px;text-align:center}
+.auth-gate h2{font-family:'Oswald',sans-serif;font-size:24px}
+.auth-gate p{color:var(--subtle);font-size:14px}
+.btn-google{padding:12px 24px;background:#fff;color:#000;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+
+/* Buttons */
+.btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:13px;transition:opacity 0.2s}
+.btn:hover{opacity:0.85}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--subtle)}
+.btn-ghost:hover{border-color:var(--subtle);color:var(--text)}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+/* Session list */
+.page-title{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.session-grid{display:flex;flex-direction:column;gap:10px}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:border-color 0.2s;display:flex;justify-content:space-between;align-items:center}
+.scard:hover{border-color:#333}
+.scard__left{display:flex;flex-direction:column;gap:4px}
+.scard__title{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600}
+.scard__meta{font-size:13px;color:var(--subtle)}
+.scard__badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px}
+.scard__badge--open{background:#22C55E20;color:var(--green)}
+.scard__badge--completed{background:#EF444420;color:var(--red)}
+
+/* Detail view */
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.back-btn{background:none;border:none;color:var(--subtle);font-size:18px;padding:4px 8px}
+.back-btn:hover{color:var(--text)}
+.detail-title{font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;flex:1}
+.detail-meta{font-size:13px;color:var(--subtle);margin-bottom:20px}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;background:var(--card);border-radius:var(--radius-sm);padding:3px;margin-bottom:20px;border:1px solid var(--border)}
+.tab{flex:1;padding:8px;text-align:center;font-weight:600;font-size:13px;border-radius:6px;color:var(--muted);background:transparent;border:none;transition:all 0.2s}
+.tab--active{background:var(--text);color:var(--bg)}
+
+/* Roster */
+.roster-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px}
+.roster-row__avatar{width:36px;height:36px;border-radius:50%;background:#292929;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--subtle);position:relative}
+.roster-row__avatar img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.roster-row__avatar .cover-bg{width:100%;height:100%;position:absolute;top:0;left:0;border-radius:50%;object-fit:cover}
+.roster-row__info{flex:1;display:flex;flex-direction:column;gap:2px}
+.roster-row__name{font-weight:600;font-size:14px}
+.roster-row__sub{font-size:12px;color:var(--muted)}
+.roster-row__badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.badge-confirmed{background:#22C55E20;color:var(--green)}
+.badge-pending{background:#F7450120;color:var(--orange)}
+.badge-waitlist{background:#3B82F620;color:#3B82F6}
+.badge-checkedin{background:#22C55E40;color:var(--green)}
+.roster-row__actions{display:flex;gap:6px}
+
+/* Games */
+.game-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.game-card__info{display:flex;flex-direction:column;gap:4px}
+.game-card__num{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.game-card__matchup{font-weight:600;font-size:14px}
+.game-card__winner{font-size:12px;color:var(--green)}
+
+/* Create/edit form */
+.form{display:flex;flex-direction:column;gap:14px}
+.form__row{display:flex;gap:12px}
+.form__row>*{flex:1}
+.form label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.form input,.form select,.form textarea{width:100%}
+.form__toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--subtle)}
+.form__toggle input{width:auto}
+
+/* Log game form */
+.log-game{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.log-game h3{font-family:'Oswald',sans-serif;font-size:16px;margin-bottom:12px}
+.team-col{flex:1}
+.team-col h4{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.player-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1a1a1a;border:1px solid var(--border);border-radius:16px;font-size:12px;margin:2px;cursor:pointer;transition:all 0.2s;color:var(--subtle)}
+.player-chip:hover{border-color:var(--subtle)}
+.player-chip--a{border-color:var(--orange);color:var(--orange);background:#F7450110}
+.player-chip--b{border-color:#3B82F6;color:#3B82F6;background:#3B82F610}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:200}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:440px;width:90%}
+.modal h3{font-family:'Oswald',sans-serif;font-size:20px;margin-bottom:16px}
+.modal__actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* Utility */
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.share-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--subtle);word-break:break-all}
+.share-row button{flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar__left">
+    <img class="topbar__logo" src="/img/allnet-games-logo-white.png" alt="AllNet" onerror="this.outerHTML='<span style=\'font-family:Oswald;font-weight:700;font-size:18px\'>ALLNET</span>'">
+    <select class="topbar__org" id="orgSelect" style="display:none"></select>
+  </div>
+  <div class="topbar__right">
+    <a class="topbar__link" id="publicLink" href="#" target="_blank" style="display:none">View Public Page</a>
+    <button class="btn-signout" id="signoutBtn" style="display:none" onclick="signOut()">Sign Out</button>
+  </div>
+</div>
+<div class="gradient-bar"><img src="https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/assets/gradient-bar-min.png" alt=""></div>
+
+<div class="container" id="root"><div class="loading"><div class="spinner"></div><div>Loading...</div></div></div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmMsg" style="color:var(--subtle);font-size:14px;margin-bottom:8px"></p>
+    <div class="modal__actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-red" id="confirmAction">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://orrpowyewsioyxztwkdq.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+let currentUser=null;
+let orgs=[];
+let selectedOrgId=null;
+let sessions=[];
+let currentView='list'; // list | detail | create
+let currentSession=null;
+let currentRoster=[];
+let currentGames=[];
+let activeTab='roster';
+
+// ─── Auth ───
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){
+    currentUser=session.user;
+    await loadOrgs();
+  } else {
+    showAuth();
+  }
+  sb.auth.onAuthStateChange(async(e,s)=>{
+    if(e==='SIGNED_IN'&&s){currentUser=s.user;await loadOrgs()}
+    if(e==='SIGNED_OUT'){currentUser=null;showAuth()}
+  });
+}
+
+function showAuth(){
+  document.getElementById('root').innerHTML=`
+    <div class="auth-gate">
+      <h2>Organizer Dashboard</h2>
+      <p>Sign in to manage your sessions and roster.</p>
+      <button class="btn-google" onclick="signInGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+    </div>`;
+}
+
+async function signInGoogle(){await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}})}
+async function signOut(){await sb.auth.signOut();showAuth();document.getElementById('signoutBtn').style.display='none';document.getElementById('orgSelect').style.display='none'}
+
+// ─── Orgs ───
+async function loadOrgs(){
+  const{data}=await sb.rpc('get_user_orgs');
+  orgs=(data||[]).filter(o=>o.role==='owner'||o.role==='admin');
+  if(!orgs.length){document.getElementById('root').innerHTML='<div class="empty">You are not an admin or owner of any organization.</div>';document.getElementById('signoutBtn').style.display='inline-block';return}
+  document.getElementById('signoutBtn').style.display='inline-block';
+  const sel=document.getElementById('orgSelect');
+  sel.style.display='inline-block';
+  sel.innerHTML=orgs.map(o=>`<option value="${o.org_id}">${esc(o.org_name)}</option>`).join('');
+  sel.onchange=()=>{selectedOrgId=sel.value;updatePublicLink();loadSessions()};
+  selectedOrgId=orgs[0].org_id;
+  updatePublicLink();
+  await loadSessions();
+}
+
+function updatePublicLink(){
+  const org=orgs.find(o=>o.org_id===selectedOrgId);
+  const link=document.getElementById('publicLink');
+  if(org){link.href=`/org/${org.org_slug}`;link.style.display='inline-block'}
+}
+
+// ─── Sessions List ───
+async function loadSessions(){
+  currentView='list';
+  document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const{data}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
+  sessions=data||[];
+  renderList();
+}
+
+function renderList(){
+  let h=`<div class="page-title"><span>Sessions</span><button class="btn btn-primary" onclick="showCreate()">+ New Session</button></div>`;
+  if(!sessions.length){h+='<div class="empty">No sessions yet. Create your first one.</div>';document.getElementById('root').innerHTML=h;return}
+  h+='<div class="session-grid">';
+  sessions.forEach(s=>{
+    const badge=s.status==='open'?'open':'completed';
+    h+=`<div class="scard" onclick="openDetail('${s.id}')">
+      <div class="scard__left">
+        <div class="scard__title">${esc(s.title)}</div>
+        <div class="scard__meta">${fmtDate(s.date)} · ${fmtTime(s.start_time,s.end_time)} · ${s.venue_name||'No venue'} · ${s.confirmed_count}/${s.max_players} confirmed${s.pending_count>0?' · <span style="color:var(--orange)">'+s.pending_count+' pending</span>':''}</div>
+      </div>
+      <span class="scard__badge scard__badge--${badge}">${badge}</span>
+    </div>`;
+  });
+  h+='</div>';
+  document.getElementById('root').innerHTML=h;
+}
+
+// ─── Session Detail ───
+async function openDetail(sessionId){
+  currentView='detail';
+  activeTab='roster';
+  document.getElementById('root').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const sData=sessions.find(s=>s.id===sessionId);
+  if(!sData){await loadSessions();return}
+  currentSession=sData;
+
+  // Fetch roster
+  const{data:roster}=await sb.rpc('get_session_roster',{p_session_id:sessionId});
+  currentRoster=roster||[];
+
+  // Fetch games from public info
+  const org=orgs.find(o=>o.org_id===selectedOrgId);
+  const{data:info}=await sb.rpc('get_public_session_info',{p_org_slug:org.org_slug,p_session_code:currentSession.short_code});
+  currentGames=(info&&info.games)||[];
+
+  renderDetail();
+}
+
+function renderDetail(){
+  const s=currentSession;
+  const isCompleted=s.status==='completed';
+  let h=`<div class="detail-header"><button class="back-btn" onclick="loadSessions()">← Back</button><div class="detail-title">${esc(s.title)}</div><span class="scard__badge scard__badge--${s.status}">${s.status}</span></div>`;
+  h+=`<div class="detail-meta">${fmtDate(s.date)} · ${fmtTime(s.start_time,s.end_time)} · ${s.venue_name||'No venue'} · ${s.short_code}</div>`;
+
+  // Tabs
+  h+=`<div class="tabs"><button class="tab ${activeTab==='roster'?'tab--active':''}" onclick="switchTab('roster')">Roster</button><button class="tab ${activeTab==='games'?'tab--active':''}" onclick="switchTab('games')">Games</button><button class="tab ${activeTab==='settings'?'tab--active':''}" onclick="switchTab('settings')">Settings</button></div>`;
+
+  h+=`<div id="tabContent">${renderTab()}</div>`;
+  document.getElementById('root').innerHTML=h;
+}
+
+function switchTab(t){activeTab=t;document.getElementById('tabContent').innerHTML=renderTab()}
+
+function renderTab(){
+  if(activeTab==='roster')return renderRoster();
+  if(activeTab==='games')return renderGamesTab();
+  if(activeTab==='settings')return renderSettings();
+  return'';
+}
+
+// ─── Roster Tab ───
+function renderRoster(){
+  const isCompleted=currentSession.status==='completed';
+  if(!currentRoster.length)return'<div class="empty">No registrations yet.</div>';
+  let h='';
+  currentRoster.forEach(p=>{
+    const initials=((p.first_name||'')[0]||'')+((p.last_name||'')[0]||'');
+    const cutout=p.avatar_cutout_url||p.avatar_url;
+    const cover=p.selected_cover?getCoverUrl(p.selected_cover):null;
+    h+=`<div class="roster-row">
+      <div class="roster-row__avatar">
+        ${cover?`<img class="cover-bg" src="${cover}">`:''}
+        ${cutout?`<img src="${cutout}">`:`<span>${esc(initials.toUpperCase())}</span>`}
+      </div>
+      <div class="roster-row__info">
+        <div class="roster-row__name">${esc(p.first_name||'')} ${esc(p.last_name||'')}</div>
+        <div class="roster-row__sub">Skill ${Number(p.skill_rating).toFixed(1)} · Social ${Number(p.social_rating).toFixed(1)} · ${p.wins||0}W-${p.losses||0}L · ${p.org_session_count||0} sessions</div>
+      </div>
+      <span class="roster-row__badge ${p.checked_in_at?'badge-checkedin':p.status==='confirmed'?'badge-confirmed':p.status==='pending'?'badge-pending':'badge-waitlist'}">${p.checked_in_at?'Checked in':p.status}</span>
+      ${!isCompleted?renderRosterActions(p):''}
+    </div>`;
+  });
+  return h;
+}
+
+function renderRosterActions(p){
+  let a='<div class="roster-row__actions">';
+  if(p.status==='pending'){
+    a+=`<button class="btn btn-green btn-sm" onclick="approveReg('${p.registration_id}')">Approve</button>`;
+    a+=`<button class="btn btn-ghost btn-sm" onclick="rejectReg('${p.registration_id}')">Reject</button>`;
+  }
+  if(p.status==='confirmed'&&!p.checked_in_at){
+    a+=`<button class="btn btn-primary btn-sm" onclick="adminCheckin('${p.user_id}')">Check in</button>`;
+  }
+  if(p.status==='waitlist'){
+    a+=`<button class="btn btn-green btn-sm" onclick="promoteReg('${p.registration_id}')">Promote</button>`;
+  }
+  a+='</div>';
+  return a;
+}
+
+async function approveReg(regId){
+  const{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:'confirmed'});
+  if(data?.error)return alert(data.error);
+  await openDetail(currentSession.id);
+}
+async function rejectReg(regId){
+  const{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:'declined'});
+  if(data?.error)return alert(data.error);
+  await openDetail(currentSession.id);
+}
+async function promoteReg(regId){
+  const{data}=await sb.rpc('admin_update_registration',{p_registration_id:regId,p_new_status:'confirmed'});
+  if(data?.error)return alert(data.error);
+  await openDetail(currentSession.id);
+}
+async function adminCheckin(userId){
+  const{data}=await sb.rpc('admin_checkin_player',{p_session_id:currentSession.id,p_user_id:userId});
+  if(data?.error)return alert(data.error);
+  await openDetail(currentSession.id);
+}
+
+// ─── Games Tab ───
+function renderGamesTab(){
+  const isCompleted=currentSession.status==='completed';
+  let h='';
+  if(!isCompleted){
+    h+=renderLogGameForm();
+  }
+  if(!currentGames.length){h+='<div class="empty">No games logged yet.</div>';return h}
+  currentGames.forEach(g=>{
+    h+=`<div class="game-card">
+      <div class="game-card__info">
+        <div class="game-card__num">Game ${g.game_number}</div>
+        <div class="game-card__matchup">${esc(g.team_a_name)} vs ${esc(g.team_b_name)}</div>
+        ${g.winner?`<div class="game-card__winner">Winner: ${g.winner==='team_a'?esc(g.team_a_name):g.winner==='team_b'?esc(g.team_b_name):'Draw'}</div>`:''}
+      </div>
+      ${!isCompleted?`<button class="btn btn-ghost btn-sm" onclick="deleteGame('${g.game_number}')">Delete</button>`:''}
+    </div>`;
+  });
+  return h;
+}
+
+let teamAIds=[],teamBIds=[];
+function renderLogGameForm(){
+  const checkedIn=currentRoster.filter(p=>p.checked_in_at);
+  if(!checkedIn.length)return'<div class="empty">Check in players first to log games.</div>';
+  let h=`<div class="log-game"><h3>Log Game</h3>`;
+  h+=`<div style="margin-bottom:12px">Tap players to assign teams. Orange = Team A, Blue = Team B.</div>`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px">`;
+  checkedIn.forEach(p=>{
+    const inA=teamAIds.includes(p.user_id);
+    const inB=teamBIds.includes(p.user_id);
+    const cls=inA?'player-chip--a':inB?'player-chip--b':'';
+    h+=`<span class="player-chip ${cls}" onclick="toggleTeam('${p.user_id}')">${esc(p.first_name||'')}</span>`;
+  });
+  h+=`</div>`;
+  h+=`<div class="form__row" style="margin-bottom:10px"><div><label>Team A Name</label><input id="teamAName" value="Team A"></div><div><label>Team B Name</label><input id="teamBName" value="Team B"></div></div>`;
+  h+=`<div style="margin-bottom:12px"><label>Winner</label><select id="winnerSelect"><option value="team_a">Team A</option><option value="team_b">Team B</option><option value="draw">Draw</option></select></div>`;
+  h+=`<button class="btn btn-primary" onclick="submitGame()">Log Game</button>`;
+  h+=`</div>`;
+  return h;
+}
+
+function toggleTeam(userId){
+  if(teamAIds.includes(userId)){teamAIds=teamAIds.filter(id=>id!==userId);teamBIds.push(userId)}
+  else if(teamBIds.includes(userId)){teamBIds=teamBIds.filter(id=>id!==userId)}
+  else{teamAIds.push(userId)}
+  document.getElementById('tabContent').innerHTML=renderTab();
+}
+
+async function submitGame(){
+  if(!teamAIds.length||!teamBIds.length)return alert('Assign at least 1 player to each team.');
+  const tAName=document.getElementById('teamAName').value||'Team A';
+  const tBName=document.getElementById('teamBName').value||'Team B';
+  const winner=document.getElementById('winnerSelect').value;
+  const{data}=await sb.rpc('log_run_game',{p_session_id:currentSession.id,p_team_a_name:tAName,p_team_b_name:tBName,p_team_a_ids:teamAIds,p_team_b_ids:teamBIds,p_winner:winner});
+  if(data?.error)return alert(data.error);
+  teamAIds=[];teamBIds=[];
+  await openDetail(currentSession.id);
+}
+
+async function deleteGame(gameNum){
+  showConfirm('Delete Game','Delete Game '+gameNum+'? Ratings will be reverted.',async()=>{
+    // Need game id — fetch from run_games
+    const{data:games}=await sb.from('run_games').select('id').eq('session_id',currentSession.id).eq('game_number',gameNum).single();
+    if(games){
+      const{data}=await sb.rpc('delete_run_game',{p_game_id:games.id});
+      if(data?.error)alert(data.error);
+    }
+    await openDetail(currentSession.id);
+  });
+}
+
+// ─── Settings Tab ───
+function renderSettings(){
+  const s=currentSession;
+  const isCompleted=s.status==='completed';
+  const org=orgs.find(o=>o.org_id===selectedOrgId);
+  const shareUrl=`allnetgames.com/r/${org?.org_slug||''}/${s.short_code}`;
+  let h=`<div class="share-row"><span>${shareUrl}</span><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('https://${shareUrl}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button></div>`;
+
+  if(!isCompleted){
+    h+=`<div class="form" style="margin-top:20px">
+      <div class="form__row"><div><label>Title</label><input id="editTitle" value="${esc(s.title)}"></div></div>
+      <div class="form__row"><div><label>Date</label><input id="editDate" type="date" value="${s.date}"></div><div><label>Start</label><input id="editStart" type="time" value="${s.start_time?s.start_time.slice(0,5):''}"></div><div><label>End</label><input id="editEnd" type="time" value="${s.end_time?s.end_time.slice(0,5):''}"></div></div>
+      <div class="form__row"><div><label>Venue</label><input id="editVenue" value="${esc(s.venue_name||'')}"></div><div><label>Max Players</label><input id="editMax" type="number" value="${s.max_players}"></div></div>
+      <div><label>Description</label><textarea id="editDesc">${esc(s.description||'')}</textarea></div>
+      <div class="form__toggle"><input type="checkbox" id="editAutoPromote" ${s.auto_promote?'checked':''}><label for="editAutoPromote" style="margin:0;text-transform:none">Auto-approve registrations</label></div>
+      <button class="btn btn-primary" onclick="saveSession()">Save Changes</button>
+    </div>`;
+    h+=`<div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border)"><button class="btn btn-red" onclick="endSession()">End Session</button></div>`;
+  } else {
+    h+=`<div class="empty" style="margin-top:20px">This session has been completed. No further edits allowed.</div>`;
+  }
+  return h;
+}
+
+async function saveSession(){
+  const{data}=await sb.rpc('update_run_session',{
+    p_session_id:currentSession.id,
+    p_title:document.getElementById('editTitle').value,
+    p_date:document.getElementById('editDate').value,
+    p_start_time:document.getElementById('editStart').value+':00',
+    p_end_time:document.getElementById('editEnd').value+':00',
+    p_venue_name:document.getElementById('editVenue').value,
+    p_max_players:parseInt(document.getElementById('editMax').value),
+    p_description:document.getElementById('editDesc').value,
+    p_auto_promote:document.getElementById('editAutoPromote').checked
+  });
+  if(data?.error)return alert(data.error);
+  // Refresh
+  const{data:refreshed}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
+  sessions=refreshed||[];
+  currentSession=sessions.find(s=>s.id===currentSession.id)||currentSession;
+  renderDetail();
+  alert('Saved!');
+}
+
+function endSession(){
+  showConfirm('End Session','End this session? Props will be locked and no further games can be logged.',async()=>{
+    const{data}=await sb.rpc('end_run_session',{p_session_id:currentSession.id});
+    if(data?.error)return alert(data.error);
+    const{data:refreshed}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
+    sessions=refreshed||[];
+    currentSession=sessions.find(s=>s.id===currentSession.id)||currentSession;
+    renderDetail();
+  });
+}
+
+// ─── Create Session ───
+function showCreate(){
+  currentView='create';
+  let h=`<div class="detail-header"><button class="back-btn" onclick="loadSessions()">← Back</button><div class="detail-title">New Session</div></div>`;
+  h+=`<div class="form">
+    <div><label>Title</label><input id="newTitle" placeholder="Tuesday Night Run"></div>
+    <div class="form__row"><div><label>Date</label><input id="newDate" type="date"></div><div><label>Start Time</label><input id="newStart" type="time"></div><div><label>End Time</label><input id="newEnd" type="time"></div></div>
+    <div class="form__row"><div><label>Venue Name</label><input id="newVenue" placeholder="Life Time Irvine"></div><div><label>Max Players</label><input id="newMax" type="number" value="20"></div></div>
+    <div><label>Description</label><textarea id="newDesc" placeholder="Weekly run details..."></textarea></div>
+    <div class="form__toggle"><input type="checkbox" id="newAutoPromote" checked><label for="newAutoPromote" style="margin:0;text-transform:none">Auto-approve registrations</label></div>
+    <button class="btn btn-primary" onclick="createSession()" style="margin-top:8px">Create Session</button>
+  </div>`;
+  document.getElementById('root').innerHTML=h;
+}
+
+async function createSession(){
+  const title=document.getElementById('newTitle').value;
+  if(!title)return alert('Title is required.');
+  const date=document.getElementById('newDate').value;
+  if(!date)return alert('Date is required.');
+  const start=document.getElementById('newStart').value;
+  if(!start)return alert('Start time is required.');
+
+  const{data}=await sb.rpc('create_run_session',{
+    p_org_id:selectedOrgId,
+    p_title:title,
+    p_session_type:'open',
+    p_date:date,
+    p_start_time:start+':00',
+    p_end_time:(document.getElementById('newEnd').value||null)?(document.getElementById('newEnd').value+':00'):null,
+    p_venue_name:document.getElementById('newVenue').value||'',
+    p_max_players:parseInt(document.getElementById('newMax').value)||20,
+    p_description:document.getElementById('newDesc').value||null,
+    p_auto_promote:document.getElementById('newAutoPromote').checked
+  });
+  if(data?.error)return alert(data.error);
+  // Reload and open
+  const{data:refreshed}=await sb.rpc('get_org_sessions',{p_org_id:selectedOrgId});
+  sessions=refreshed||[];
+  if(data?.session_id){
+    await openDetail(data.session_id);
+  } else {
+    loadSessions();
+  }
+}
+
+// ─── Helpers ───
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmtDate(ds){if(!ds)return'';const d=new Date(ds+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function fmtTime(s,e){if(!s)return'TBD';const f=t=>{const[h,m]=t.split(':').map(Number);return(h%12||12)+(m>0?':'+String(m).padStart(2,'0'):'')+(h>=12?' PM':' AM')};return e?f(s)+' – '+f(e):f(s)}
+
+const COVERS_URL='https://orrpowyewsioyxztwkdq.supabase.co/storage/v1/object/public/covers';
+const COVERS={crossover:'Crossover',rally:'Rally',flowstate:'Flowstate',fastbreak:'Fastbreak',shatter:'Shatter',showtime:'Showtime',fadeaway:'Fadeaway'};
+function getCoverUrl(slug){return slug&&COVERS[slug]?`${COVERS_URL}/${COVERS[slug]}.png`:null}
+
+function showConfirm(title,msg,onConfirm){
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmModal').classList.add('open');
+  document.getElementById('confirmAction').onclick=()=>{closeConfirm();onConfirm()};
+}
+function closeConfirm(){document.getElementById('confirmModal').classList.remove('open')}
+
+init();
+</script>
+</body>
+</html>

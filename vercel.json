@@ -28,7 +28,7 @@
   "rewrites": [
     {
       "source": "/.well-known/apple-app-site-association",
-      "destination": "/api/apple-app-site-association"
+      "destination": "/api/aasa"
     },
     {
       "source": "/.well-known/assetlinks.json",

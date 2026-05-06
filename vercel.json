@@ -30,6 +30,10 @@
       "destination": "/api/apple-app-site-association"
     },
     {
+      "source": "/.well-known/assetlinks.json",
+      "destination": "/api/assetlinks"
+    },
+    {
       "source": "/auth-callback",
       "destination": "/auth-callback.html"
     },

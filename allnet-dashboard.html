@@ -353,8 +353,9 @@ function renderPlayerTab(status){
     var initials=((p.first_name||'')[0]||'')+((p.last_name||'')[0]||'');
     var cutout=p.avatar_cutout_url||p.avatar_url;var cover=p.selected_cover?getCoverUrl(p.selected_cover):null;
     var hStr=p.height_inches?Math.floor(p.height_inches/12)+"'"+(p.height_inches%12)+'"':'';
+    var wStr=p.weight_lbs?p.weight_lbs+' lbs':'';
     var posStr=(p.positions&&p.positions.length>0)?p.positions.slice(0,2).join('/'):'';
-    var meta=[hStr,posStr,'Skill '+Number(p.skill_rating||0).toFixed(1),'Social '+Number(p.social_rating||0).toFixed(1),p.org_session_count+' runs'].filter(Boolean).join(' · ');
+    var meta=[hStr,wStr,posStr,'Skill '+Number(p.skill_rating||0).toFixed(1),'Social '+Number(p.social_rating||0).toFixed(1),p.org_session_count+' runs'].filter(Boolean).join(' · ');
 
     var actions='';
     if(!isCompleted){
@@ -612,7 +613,7 @@ async function showPlayerCard(userId){
   overlay.classList.add('active');
   try{
     var results=await Promise.all([
-      sb.from('profiles').select('id,first_name,last_name,name,avatar_url,avatar_cutout_url,selected_cover,social_rating,skill_rating,is_founding_hooper,founding_number,height_inches,positions,league_experience').eq('id',userId).single(),
+      sb.from('profiles').select('id,first_name,last_name,name,avatar_url,avatar_cutout_url,selected_cover,social_rating,skill_rating,is_founding_hooper,founding_number,height_inches,weight_lbs,positions,league_experience').eq('id',userId).single(),
       sb.from('player_division_stats').select('*').eq('user_id',userId),
       sb.from('checkins').select('court_id,courts(name)').eq('user_id',userId)
     ]);
@@ -637,7 +638,7 @@ async function showPlayerCard(userId){
 
     // Basketball profile
     var tags=[];
-    if(player.height_inches){var ft=Math.floor(player.height_inches/12);tags.push('<span class="player-sheet__bball-tag">📏 '+ft+"'"+(player.height_inches%12)+'"</span>')}
+    if(player.height_inches){var ft=Math.floor(player.height_inches/12);tags.push('<span class="player-sheet__bball-tag">📏 '+ft+"'"+(player.height_inches%12)+'"'+(player.weight_lbs?' · '+player.weight_lbs+' lbs':'')+'</span>')}
     if(player.positions&&player.positions.length>0)tags.push('<span class="player-sheet__bball-tag">🏀 '+player.positions.slice(0,3).join(' / ')+'</span>');
     if(player.league_experience&&player.league_experience!=='recreational'){
       var ll={junior_varsity:'JV',varsity:'Varsity',collegiate:'Collegiate',pro_semi_pro:'Pro'};

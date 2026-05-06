@@ -183,7 +183,7 @@ textarea{resize:vertical;min-height:60px}
     <select class="topbar__org" id="orgSelect" style="display:none"></select>
   </div>
   <div class="topbar__right">
-    <a class="topbar__link" id="publicLink" href="#" target="_blank" style="display:none">View Public Page</a>
+    <button class="topbar__link" id="publicLink" style="display:none;cursor:pointer;background:none;border:none" onclick="window.open('https://allnetgames.com/org/'+currentOrgSlug,'_blank','noopener,noreferrer')">View Public Page</button>
     <button class="btn-signout" id="signoutBtn" style="display:none" onclick="signOut()">Sign Out</button>
   </div>
 </div>
@@ -289,7 +289,16 @@ async function boot(savedHash){
 }
 async function signInGoogle(){await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}})}
 async function signOut(){await sb.auth.signOut()}
-function updatePublicLink(){var o=S.orgs.find(function(x){return x.org_id===S.orgId});var l=document.getElementById('publicLink');if(o){l.href='/org/'+o.org_slug;l.style.display='inline-block'}}
+var currentOrgSlug='';
+
+function updatePublicLink(){
+  var o=S.orgs.find(function(x){return x.org_id===S.orgId});
+  var l=document.getElementById('publicLink');
+  if(o){
+    currentOrgSlug=o.org_slug;
+    l.style.display='inline-block';
+  }
+}
 
 // ─── Navigation ───
 async function goToList(){

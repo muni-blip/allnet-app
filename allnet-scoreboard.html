@@ -369,17 +369,17 @@ async function loadGame() {
   }
 
   gameData = gameRes[0];
-  events = eventsRes || [];
+  events = Array.isArray(eventsRes) ? eventsRes : [];
 
   // Load player names
   const allIds = [...(gameData.team_a_player_ids || []), ...(gameData.team_b_player_ids || [])];
   const profilesRes = await sbFetch(`/rest/v1/profiles?id=in.(${allIds.join(',')})&select=id,first_name,last_name`);
   const nameMap = {};
-  (profilesRes || []).forEach(p => { nameMap[p.id] = p.first_name + (p.last_name ? ' ' + p.last_name[0] + '.' : ''); });
+  (Array.isArray(profilesRes) ? profilesRes : []).forEach(p => { nameMap[p.id] = p.first_name + (p.last_name ? ' ' + p.last_name[0] + '.' : ''); });
 
   // Build stats map
   stats = {};
-  (statsRes || []).forEach(s => {
+  (Array.isArray(statsRes) ? statsRes : []).forEach(s => {
     stats[s.player_id] = {
       ...s,
       name: nameMap[s.player_id] || 'Unknown',
@@ -602,7 +602,7 @@ document.getElementById('btnUndo').addEventListener('click', async () => {
 
   // Rebuild stats from DB (simplest approach for undo consistency)
   const statsRes = await sbFetch(`/rest/v1/run_game_stats?game_id=eq.${gameId}&select=*`);
-  (statsRes || []).forEach(s => {
+  (Array.isArray(statsRes) ? statsRes : []).forEach(s => {
     if (stats[s.player_id]) Object.assign(stats[s.player_id], s);
   });
 

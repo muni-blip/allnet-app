@@ -234,7 +234,7 @@ var S={
   sessionId:null,
   tab:'confirmed',
   roster:[],
-  games:[],
+  games:[],playerMap:{},
   teamData:{teams:[]},
   teamsVisibleAt:null,
   loading:false,        // true = show spinner overlay on detail
@@ -330,6 +330,8 @@ async function fetchDetailData(){
   ]);
   if(results[0].status==='fulfilled'&&!results[0].value.error)S.roster=results[0].value.data||[];
   else{S.roster=[];console.error('roster fetch failed',results[0])}
+  // Build player lookup map for scorekeeping
+  S.playerMap={};S.roster.forEach(function(p){S.playerMap[p.user_id]=p;});
   if(results[1].status==='fulfilled'&&!results[1].value.error)S.games=results[1].value.data||[];
   else S.games=[];
   if(results[2].status==='fulfilled'&&!results[2].value.error){
@@ -545,15 +547,94 @@ function renderGamesSection(){
     h+='<div class="form__row" style="margin-bottom:10px"><div><label>Team A</label><select id="gameTeamA">'+S.teamData.teams.map(function(t,i){return'<option value="'+i+'">'+esc(t.name)+'</option>'}).join('')+'</select></div>';
     h+='<div><label>Team B</label><select id="gameTeamB">'+S.teamData.teams.map(function(t,i){return'<option value="'+i+'"'+(i===1?' selected':'')+'>'+esc(t.name)+'</option>'}).join('')+'</select></div></div>';
     h+='<div style="margin-bottom:10px"><label>Winner</label><select id="gameWinner"><option value="team_a">Team A wins</option><option value="team_b">Team B wins</option><option value="draw">Draw</option></select></div>';
-    h+='<button class="btn btn-primary" onclick="doLogGame()">Log Game</button></div>';
+    h+='<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="doLogGame()">Log game (quick)</button>';
+    h+='<button class="btn btn-primary" style="background:#3B82F6" onclick="showJerseyModal()">Start scored game</button></div></div>';
   }else if(!isCompleted){h+='<div class="empty" style="padding:16px">Create at least 2 teams to log games.</div>'}
   if(S.games.length>0){h+='<div style="margin-top:12px">';S.games.forEach(function(g){
-    var winLabel=g.winner==='team_a'?g.team_a_name+' won':g.winner==='team_b'?g.team_b_name+' won':'Draw';
-    h+='<div class="game-card"><div><div class="game-card__num">Game '+g.game_number+'</div><div class="game-card__matchup">'+esc(g.team_a_name)+' vs '+esc(g.team_b_name)+'</div><div class="game-card__winner">'+winLabel+'</div></div>';
+    var winLabel=g.winner==='team_a'?g.team_a_name+' won':g.winner==='team_b'?g.team_b_name+' won':g.winner==='draw'?'Draw':'';
+    var scoreLabel=g.scored?(' · '+g.team_a_score+' – '+g.team_b_score):'';
+    var isLive=g.scored&&!g.ended_at;
+    h+='<div class="game-card"><div><div class="game-card__num">Game '+g.game_number+(isLive?' <span style="color:#3B82F6">● LIVE</span>':'')+'</div><div class="game-card__matchup">'+esc(g.team_a_name)+' vs '+esc(g.team_b_name)+scoreLabel+'</div>';
+    if(winLabel)h+='<div class="game-card__winner">'+winLabel+'</div>';
+    h+='</div><div style="display:flex;gap:6px;align-items:center">';
+    if(isLive)h+='<button class="btn btn-primary btn-sm" style="background:#3B82F6" onclick="window.open(\'/scoreboard/'+g.id+'\',\'_blank\')">Scoreboard</button>';
+    if(g.scored&&g.ended_at)h+='<button class="btn btn-ghost btn-sm" onclick="showBoxScoreModal(\''+g.id+'\')">Box score</button>';
     if(!isCompleted)h+='<button class="btn btn-ghost btn-sm" onclick="doDeleteGame(\''+g.id+'\')">Delete</button>';
-    h+='</div>';
+    h+='</div></div>';
   });h+='</div>'}else h+='<div class="empty" style="padding:16px">No games logged yet.</div>';
   el.innerHTML=h;
+}
+// Jersey assignment modal
+function showJerseyModal(){
+  var aIdx=document.getElementById('gameTeamA').value;var bIdx=document.getElementById('gameTeamB').value;
+  if(aIdx===bIdx)return toast('Select two different teams.');
+  var tA=S.teamData.teams[aIdx];var tB=S.teamData.teams[bIdx];
+  if(!tA.player_ids||!tA.player_ids.length||!tB.player_ids||!tB.player_ids.length)return toast('Both teams need players.');
+  var h='<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center" id="jerseyModal" onclick="if(event.target===this)this.remove()">';
+  h+='<div style="background:#141414;border:1px solid #2a2a2a;padding:20px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto">';
+  h+='<h3 style="font-family:Oswald;font-size:18px;margin-bottom:14px">Assign Jersey Numbers</h3>';
+  h+='<div style="font-size:12px;color:#888;margin-bottom:12px">'+esc(tA.name)+' vs '+esc(tB.name)+'</div>';
+  function playerRows(team,label){
+    var r='<div style="font-size:11px;color:#FF5A1F;letter-spacing:1px;font-weight:700;margin:10px 0 6px;text-transform:uppercase">'+esc(label)+'</div>';
+    (team.player_ids||[]).forEach(function(pid,i){
+      var p=S.playerMap[pid];var name=p?(p.first_name+(p.last_name?' '+p.last_name[0]+'.':'')):pid.slice(0,8);
+      r+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">';
+      r+='<input type="number" min="0" max="99" value="'+(i+1)+'" style="width:50px;background:#0a0a0a;border:1px solid #2a2a2a;color:#fff;padding:6px;font-family:JetBrains Mono;font-size:14px;text-align:center" data-jersey="'+pid+'">';
+      r+='<span style="font-size:13px;font-weight:500">'+esc(name)+'</span></div>';
+    });
+    return r;
+  }
+  h+=playerRows(tA,tA.name);h+=playerRows(tB,tB.name);
+  h+='<div style="display:flex;gap:8px;margin-top:16px">';
+  h+='<button class="btn btn-ghost" onclick="document.getElementById(\'jerseyModal\').remove()">Cancel</button>';
+  h+='<button class="btn btn-primary" style="background:#3B82F6" onclick="doStartScoredGame('+aIdx+','+bIdx+')">Start game →</button>';
+  h+='</div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+}
+async function doStartScoredGame(aIdx,bIdx){
+  var tA=S.teamData.teams[aIdx];var tB=S.teamData.teams[bIdx];
+  var jerseys={};
+  document.querySelectorAll('[data-jersey]').forEach(function(el){jerseys[el.dataset.jersey]=parseInt(el.value)||0;});
+  var modal=document.getElementById('jerseyModal');
+  var btn=modal.querySelector('.btn-primary');btn.textContent='Starting...';btn.disabled=true;
+  var res=await apiCall(function(){return sb.rpc('start_scored_game',{p_session_id:S.sessionId,p_team_a_name:tA.name,p_team_b_name:tB.name,p_team_a_ids:tA.player_ids,p_team_b_ids:tB.player_ids,p_jersey_assignments:jerseys})});
+  if(!res.ok){btn.textContent='Start game →';btn.disabled=false;return;}
+  modal.remove();
+  // Refresh games
+  var gRes=await sb.from('run_games').select('*').eq('session_id',S.sessionId).order('game_number');
+  S.games=(gRes.data||[]);renderGamesSection();
+  // Open scoreboard
+  var gameId=res.data.game_id;
+  toast('Game started! Opening scoreboard...');
+  setTimeout(function(){window.open('/scoreboard/'+gameId,'_blank');},500);
+}
+async function showBoxScoreModal(gameId){
+  var statsRes=await sb.from('run_game_stats').select('*').eq('game_id',gameId);
+  var game=S.games.find(function(g){return g.id===gameId});
+  if(!game||!statsRes.data)return toast('Could not load box score');
+  var stats=statsRes.data;
+  var h='<div style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center" id="boxModal" onclick="if(event.target===this)this.remove()">';
+  h+='<div style="background:#141414;border:1px solid #2a2a2a;padding:20px;width:95%;max-width:650px;max-height:80vh;overflow-y:auto">';
+  h+='<h3 style="font-family:Oswald;font-size:18px;margin-bottom:4px">Game '+game.game_number+' Box Score</h3>';
+  h+='<div style="font-family:JetBrains Mono;font-size:24px;font-weight:700;margin-bottom:12px">'+esc(game.team_a_name)+' '+game.team_a_score+' – '+game.team_b_score+' '+esc(game.team_b_name)+'</div>';
+  function statTable(teamName,team){
+    var rows=stats.filter(function(s){return s.team===team}).sort(function(a,b){return(b.points||0)-(a.points||0)});
+    var t='<div style="color:#FF5A1F;font-size:11px;font-weight:700;letter-spacing:1px;margin:8px 0 4px;text-transform:uppercase">'+esc(teamName)+'</div>';
+    t+='<table style="width:100%;border-collapse:collapse;font-family:JetBrains Mono;font-size:11px"><thead><tr>';
+    ['Player','PTS','REB','AST','STL','BLK','TO'].forEach(function(c){t+='<th style="padding:4px;text-align:'+(c==='Player'?'left':'center')+';color:#888;border-bottom:1px solid #2a2a2a;font-size:10px">'+c+'</th>'});
+    t+='</tr></thead><tbody>';
+    rows.forEach(function(s){
+      var name=S.playerMap[s.player_id]?S.playerMap[s.player_id].first_name:'#'+s.jersey_number;
+      t+='<tr><td style="padding:4px;font-weight:600">#'+s.jersey_number+' '+esc(name)+'</td>';
+      [s.points,s.rebounds,s.assists,s.steals,s.blocks,s.turnovers].forEach(function(v){t+='<td style="padding:4px;text-align:center">'+(v||0)+'</td>'});
+      t+='</tr>';
+    });
+    t+='</tbody></table>';return t;
+  }
+  h+=statTable(game.team_a_name,'team_a');h+=statTable(game.team_b_name,'team_b');
+  h+='<button class="btn btn-ghost" style="margin-top:12px" onclick="document.getElementById(\'boxModal\').remove()">Close</button>';
+  h+='</div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
 }
 async function doLogGame(){
   var aIdx=document.getElementById('gameTeamA').value;var bIdx=document.getElementById('gameTeamB').value;

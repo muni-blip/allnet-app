@@ -52,6 +52,10 @@
       "destination": "/allnet-dashboard.html"
     },
     {
+      "source": "/scoreboard/:id",
+      "destination": "/allnet-scoreboard.html"
+    },
+    {
       "source": "/courts/:slug",
       "destination": "/api/court?slug=:slug"
     },

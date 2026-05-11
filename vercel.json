@@ -40,6 +40,10 @@
       "destination": "/api/session?org=:org&code=:code"
     },
     {
+      "source": "/dunk/:id",
+      "destination": "/api/dunk?id=:id"
+    },
+    {
       "source": "/p/:slug",
       "destination": "/api/player?slug=:slug"
     },

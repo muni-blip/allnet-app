@@ -136,8 +136,9 @@
           result.textContent = 'Vote counted!';
         } else {
           btn.innerHTML = data.error || 'Vote failed';
-          btn.style.borderColor = '#666';
-          btn.style.color = '#666';
+          btn.style.background = '#fff';
+          btn.style.color = '#000';
+          btn.style.borderColor = '#fff';
           hint.style.display = 'none';
         }
       } catch (err) {

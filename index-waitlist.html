@@ -469,17 +469,19 @@ async function handleWaitlist(e, location) {
     fbq('track', 'Lead');
   }
 
-  // MailerLite subscription
+  // MailerLite subscription — Group: Compete Mode Waitlist (187207440908945070)
+  // Uses MailerLite embedded form endpoint (account 2263931, form 187207449308038898)
   try {
-    // TODO: Replace with MailerLite API endpoint or embedded form action
-    // For now, use MailerLite's universal script or API
-    const response = await fetch('https://assets.mailerlite.com/jsonp/871498/forms/144795108498498498/subscribe', {
+    const formData = new FormData();
+    formData.append('fields[email]', email);
+    await fetch('https://assets.mailerlite.com/jsonp/2263931/forms/187207449308038898/subscribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: { email: email }, groups: ['waitlist'] })
+      body: formData,
+      mode: 'no-cors'
     });
   } catch (err) {
-    console.log('Waitlist signup attempted:', email);
+    // Silently handle — no-cors means we can't read the response but the subscription still works
+    console.log('Waitlist signup submitted:', email);
   }
 
   // Show success

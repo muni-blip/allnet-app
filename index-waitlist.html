@@ -20,6 +20,7 @@ fbq('init','1772975143883614');fbq('track','PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1772975143883614&ev=PageView&noscript=1"/></noscript>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -82,6 +83,7 @@ a{color:inherit;text-decoration:none}
 .mode{background:var(--el);border:1px solid var(--bdr2);padding:28px 20px;position:relative;overflow:hidden;transition:border-color .3s}
 .mode:hover{border-color:var(--or)}
 .mode__icon{font-size:28px;margin-bottom:14px;display:block}
+.mode__icon svg{width:28px;height:28px;stroke:var(--or);stroke-width:1.5}
 .mode__title{font-family:var(--fd);font-size:17px;font-weight:700;text-transform:uppercase;margin-bottom:8px;line-height:1.15}
 .mode__body{font-size:13px;color:var(--ts);line-height:1.55;margin-bottom:14px}
 .mode__tags{display:flex;flex-wrap:wrap;gap:6px}
@@ -109,7 +111,8 @@ a{color:inherit;text-decoration:none}
 /* Career */
 .career-features{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .career-feat{background:var(--el);border:1px solid var(--bdr2);padding:14px 16px;font-size:13px;color:var(--ts);display:flex;align-items:center;gap:10px}
-.career-feat__icon{font-size:16px;flex-shrink:0}
+.career-feat__icon{flex-shrink:0}
+.career-feat__icon svg{width:18px;height:18px;stroke:var(--or);stroke-width:1.5}
 
 /* FAQ */
 .faq-item{border-bottom:1px solid var(--bdr);overflow:hidden}
@@ -181,7 +184,7 @@ a{color:inherit;text-decoration:none}
     <input class="hero__input" id="hero-email" type="email" placeholder="Enter your email" required>
     <button class="hero__submit" type="submit">Join Waitlist</button>
   </form>
-  <div class="hero__success" id="hero-success"><span>✓ You're on the list. We'll notify you at launch.</span></div>
+  <div class="hero__success" id="hero-success"><span><i data-lucide="check-circle" style="width:16px;height:16px;stroke:#22C55E;vertical-align:middle;margin-right:6px;display:inline-block"></i>You're on the list. We'll notify you at launch.</span></div>
   <p class="hero__fine hi hi-5">Free forever · No entry fees · Available nationwide</p>
 </section>
 
@@ -192,7 +195,7 @@ a{color:inherit;text-decoration:none}
     <div class="modes">
       <div class="mode">
         <div class="mode__accent"></div>
-        <span class="mode__icon">🏀</span>
+        <span class="mode__icon"><i data-lucide="target"></i></span>
         <div class="mode__title">3-Point Contest</div>
         <p class="mode__body">21 shots. Record your attempt from any court. Your score hits your city's daily leaderboard. Top scorers earn Stars. Resets every midnight.</p>
         <div class="mode__tags">
@@ -203,7 +206,7 @@ a{color:inherit;text-decoration:none}
       </div>
       <div class="mode">
         <div class="mode__accent"></div>
-        <span class="mode__icon">🏆</span>
+        <span class="mode__icon"><i data-lucide="trophy"></i></span>
         <div class="mode__title">Dunk Contest</div>
         <p class="mode__body">Submit your best dunk video each week. The community votes — anyone can upvote or downvote, no account needed. Top 10 in your state win big.</p>
         <div class="mode__tags">
@@ -214,7 +217,7 @@ a{color:inherit;text-decoration:none}
       </div>
       <div class="mode">
         <div class="mode__accent"></div>
-        <span class="mode__icon">⚡</span>
+        <span class="mode__icon"><i data-lucide="zap"></i></span>
         <div class="mode__title">Pickup Games</div>
         <p class="mode__body">Create or join a game at any court. 1v1 to 5v5. Every match is GPS-verified. Every opponent rates you on skill and sportsmanship.</p>
         <div class="mode__tags">
@@ -236,7 +239,7 @@ a{color:inherit;text-decoration:none}
       <div class="step">
         <div class="step__num">01</div>
         <div>
-          <div class="step__title">Download AllNet</div>
+          <div class="step__title">Once you receive the invitation, download AllNet</div>
           <div class="step__body">Free on iOS and Android. Sign up with Google or Apple in one tap.</div>
         </div>
       </div>
@@ -312,19 +315,19 @@ a{color:inherit;text-decoration:none}
     <p class="section__desc">Every attempt, every dunk, every game builds your career card. Track your 3PT average, dunk placements, pickup record, skill rating, and social rating — all in one shareable profile.</p>
     <div class="career-features">
       <div class="career-feat">
-        <span class="career-feat__icon">🔗</span>
+        <span class="career-feat__icon"><i data-lucide="link"></i></span>
         Public profile at allnetgames.com/p/you
       </div>
       <div class="career-feat">
-        <span class="career-feat__icon">📸</span>
+        <span class="career-feat__icon"><i data-lucide="share"></i></span>
         Export for IG Stories & Feed
       </div>
       <div class="career-feat">
-        <span class="career-feat__icon">🏅</span>
+        <span class="career-feat__icon"><i data-lucide="award"></i></span>
         Founding Hooper badge for early users
       </div>
       <div class="career-feat">
-        <span class="career-feat__icon">⚔️</span>
+        <span class="career-feat__icon"><i data-lucide="swords"></i></span>
         Challenge friends from their card
       </div>
     </div>
@@ -407,7 +410,7 @@ a{color:inherit;text-decoration:none}
       <input class="hero__input" type="email" placeholder="Enter your email" required>
       <button class="hero__submit" type="submit">Join Waitlist</button>
     </form>
-    <div class="bottom-cta__success" id="bottom-success"><span>✓ You're on the list. We'll notify you at launch.</span></div>
+    <div class="bottom-cta__success" id="bottom-success"><span><i data-lucide="check-circle" style="width:16px;height:16px;stroke:#22C55E;vertical-align:middle;margin-right:6px;display:inline-block"></i>You're on the list. We'll notify you at launch.</span></div>
     <p class="bottom-cta__fine">We'll notify you the moment the app goes live.</p>
   </div>
 </section>
@@ -495,6 +498,9 @@ async function handleWaitlist(e, location) {
   
   return false;
 }
+
+// Initialize Lucide icons
+lucide.createIcons();
 </script>
 </body>
 </html>

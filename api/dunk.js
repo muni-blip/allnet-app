@@ -65,7 +65,7 @@ export default async function handler(req, res) {
   html = html.replace(/__DISPLAY_NAME__/g, escapeHtml(displayName));
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=10, stale-while-revalidate=30');
   return res.status(200).send(html);
 }
 

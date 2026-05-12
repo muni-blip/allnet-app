@@ -379,7 +379,7 @@ async function fetchWaitlistCount() {
       headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' }
     });
     const count = await res.json();
-    waitlistCount = count || 0;
+    waitlistCount = (count || 0) + 500;
     updateCounters();
   } catch (err) { console.log('Count fetch failed'); }
 }

@@ -449,16 +449,6 @@ async function handleWaitlist(e, location) {
     return false;
   }
 
-  // Also write to MailerLite
-  try {
-    const formData = new FormData();
-    formData.append('fields[email]', email);
-    await fetch('https://assets.mailerlite.com/jsonp/2263931/forms/187207449308038898/subscribe', {
-      method: 'POST', body: formData, mode: 'no-cors'
-    });
-    if (!ok) ok = true;
-  } catch (err) {}
-
   if (ok) {
     form.style.display = 'none';
     document.getElementById(location + '-success').style.display = 'block';

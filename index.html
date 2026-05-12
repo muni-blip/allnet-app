@@ -415,14 +415,16 @@ async function handleWaitlist(e, location) {
   if (typeof fbq !== 'undefined') fbq('track', 'Lead');
 
   let ok = false;
-  // Write to Supabase (ignore duplicates)
+  let isDuplicate = false;
+  // Write to Supabase
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/waitlist', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal,resolution=ignore-duplicates'
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({
         email: email,
@@ -432,8 +434,20 @@ async function handleWaitlist(e, location) {
         utm_campaign: utm.utm_campaign
       })
     });
-    ok = res.ok || res.status === 409;
+    if (res.status === 201) ok = true;
+    if (res.status === 409) isDuplicate = true;
   } catch (err) {}
+
+  if (isDuplicate) {
+    btn.textContent = origText;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    const dupEl = document.createElement('div');
+    dupEl.style.cssText = 'padding:12px;background:rgba(247,69,1,.08);border:1px solid rgba(247,69,1,.2);color:#F74501;font-size:14px;margin-top:12px;text-align:center';
+    dupEl.textContent = "You're already on the waitlist! We'll notify you at launch.";
+    form.parentNode.insertBefore(dupEl, form.nextSibling);
+    return false;
+  }
 
   // Also write to MailerLite
   try {
@@ -442,7 +456,7 @@ async function handleWaitlist(e, location) {
     await fetch('https://assets.mailerlite.com/jsonp/2263931/forms/187207449308038898/subscribe', {
       method: 'POST', body: formData, mode: 'no-cors'
     });
-    ok = true;
+    if (!ok) ok = true;
   } catch (err) {}
 
   if (ok) {

@@ -43,8 +43,11 @@ img{display:block;max-width:100%}
 
 /* ---- HERO ---- */
 .hero{max-width:1440px;margin:0 auto;padding:192px 160px 200px;text-align:center;position:relative;z-index:2}
-.hero__headline{font-family:'Montserrat',sans-serif;font-weight:800;font-size:64px;line-height:64px;text-transform:uppercase;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
-.hero__headline-ghost{-webkit-text-fill-color:#000000;-webkit-text-stroke-width:2px;-webkit-text-stroke-color:#fff;color:transparent;paint-order:stroke fill}
+.hero__headline{font-family:'Montserrat',sans-serif;font-weight:800;font-size:64px;line-height:64px;text-transform:uppercase;display:flex;flex-direction:column;gap:8px;margin-bottom:24px;align-items:center}
+.hero__headline-ghost{width:100%;overflow:visible}
+.hero__headline-ghost svg{width:100%;height:auto;overflow:visible}
+.hero__headline-ghost svg text{font-family:'Montserrat',sans-serif;font-weight:800;font-size:64px;fill:none;stroke:#fff;stroke-width:1.5;stroke-dasharray:2000;stroke-dashoffset:2000;animation:trimPath 2.5s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes trimPath{to{stroke-dashoffset:0}}
 .hero__sub{font-family:'Google Sans Flex',sans-serif;font-weight:400;font-size:24px;line-height:32px;max-width:552px;margin:0 auto 40px}
 .hero__form{display:flex;gap:16px;justify-content:center;max-width:700px;margin:0 auto}
 .hero__input{background:rgba(247,69,1,.08);border:1px solid #F74501;padding:16px;font-family:'Google Sans Flex',sans-serif;font-size:20px;line-height:32px;color:#fff;width:480px;outline:none;transition:border-color .2s}
@@ -58,6 +61,7 @@ img{display:block;max-width:100%}
 @media(max-width:900px){
   .hero{padding:140px 24px 128px}
   .hero__headline{font-size:clamp(40px,7vw,52px);line-height:1;gap:4px}
+  .hero__headline-ghost svg text{font-size:64px}
   .hero__sub{font-size:16px;line-height:26px;margin-bottom:28px}
   .hero__form{flex-direction:column;align-items:stretch;max-width:480px}
   .hero__input{width:100%;font-size:16px;padding:14px}
@@ -199,7 +203,11 @@ img{display:block;max-width:100%}
 <!-- Hero -->
 <section class="hero">
   <div class="hero__headline hi hi-1">
-    <div class="hero__headline-ghost">THE NBA2K EXPERIENCE,</div>
+    <div class="hero__headline-ghost">
+      <svg viewBox="0 0 1120 70" xmlns="http://www.w3.org/2000/svg">
+        <text x="50%" y="60" text-anchor="middle" dominant-baseline="auto">THE NBA2K EXPERIENCE,</text>
+      </svg>
+    </div>
     <div>BUT MAKE IT REAL LIFE.</div>
   </div>
   <p class="hero__sub hi hi-2">Daily 3-point contests. Weekly dunk challenges. Pickup games that count. All with real rewards.</p>

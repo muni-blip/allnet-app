@@ -11,7 +11,7 @@ posthog.init('phc_cnyzcI8G4d4i5TD5Zg31NLZUUD88khAf07jJ42W34Ay', {
   person_profiles: 'identified_only',
   capture_pageview: true,
   capture_pageleave: true,
-  autocapture: true
+  autocapture: false
 });
 
 // ── Identify user after auth resolves ──

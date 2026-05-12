@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllNet — The NBA 2K Experience, But Real Life</title>
+<meta name="description" content="Daily 3-point contests. Weekly dunk challenges. Pickup games that count. Earn real rewards playing basketball.">
+<meta property="og:title" content="AllNet — The NBA 2K Experience, But Real Life">
+<meta property="og:description" content="Daily 3-point contests. Weekly dunk challenges. Pickup games that count. Stars convert to Visa gift cards.">
+<meta property="og:image" content="https://allnetgames.com/img/landing/og-banner.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://allnetgames.com">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AllNet — The NBA 2K Experience, But Real Life">
+<meta name="twitter:description" content="Daily 3-point contests. Weekly dunk challenges. Pickup games that count. Stars convert to Visa gift cards.">
+<meta name="twitter:image" content="https://allnetgames.com/img/landing/og-banner.png">
+<link rel="icon" href="/img/landing/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/img/landing/favicon.png">
+<script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
+<script src="js/posthog.js"></script>
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1772975143883614');fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1772975143883614&ev=PageView&noscript=1"/></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;color:#fff;font-family:'Google Sans Flex',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+
+/* ---- NAV ---- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(50px);-webkit-backdrop-filter:blur(50px);background:rgba(0,0,0,.32);border-bottom:1px solid #3e3e3e}
+.nav__inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:20px 19px}
+.nav__logo{height:31px;width:auto}
+.nav__cta{background:#F74501;color:#fff;font-family:'Google Sans Flex',sans-serif;font-weight:700;font-size:18px;line-height:32px;padding:12px 24px;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;transition:filter .2s}
+.nav__cta:hover{filter:brightness(1.15)}
+@media(max-width:640px){
+  .nav__inner{padding:16px}
+  .nav__logo{height:22px}
+  .nav__cta{font-size:13px;padding:8px 12px;line-height:16px}
+}
+
+/* ---- HERO ---- */
+.hero{max-width:1440px;margin:0 auto;padding:192px 160px 200px;text-align:center;position:relative;z-index:2}
+.hero__headline{font-family:'Montserrat',sans-serif;font-weight:800;font-size:64px;line-height:64px;text-transform:uppercase;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.hero__headline-ghost{-webkit-text-fill-color:#000000;-webkit-text-stroke-width:2px;-webkit-text-stroke-color:#fff;color:transparent;paint-order:stroke fill}
+.hero__sub{font-family:'Google Sans Flex',sans-serif;font-weight:400;font-size:24px;line-height:32px;max-width:552px;margin:0 auto 40px}
+.hero__form{display:flex;gap:16px;justify-content:center;max-width:700px;margin:0 auto}
+.hero__input{background:rgba(247,69,1,.08);border:1px solid #F74501;padding:16px;font-family:'Google Sans Flex',sans-serif;font-size:20px;line-height:32px;color:#fff;width:480px;outline:none;transition:border-color .2s}
+.hero__input::placeholder{color:rgba(255,255,255,.5)}
+.hero__input:focus{border-color:#ff6a30}
+.hero__btn{background:#F74501;color:#fff;font-family:'Google Sans Flex',sans-serif;font-weight:700;font-size:18px;line-height:32px;padding:16px 24px;border:none;cursor:pointer;text-transform:uppercase;white-space:nowrap;transition:filter .2s}
+.hero__btn:hover{filter:brightness(1.15)}
+.hero__success{display:none;padding:16px 24px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);margin:16px auto 0;max-width:700px;font-family:'Google Sans Flex',sans-serif;font-weight:600;font-size:16px;color:#22C55E;text-align:center}
+.hero__counter{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F74501;margin-top:16px}
+.hero__founding{font-family:'JetBrains Mono',monospace;font-size:11px;color:#999;margin-top:8px}
+@media(max-width:900px){
+  .hero{padding:140px 24px 128px}
+  .hero__headline{font-size:clamp(40px,7vw,52px);line-height:1;gap:4px}
+  .hero__sub{font-size:16px;line-height:26px;margin-bottom:28px}
+  .hero__form{flex-direction:column;align-items:stretch;max-width:480px}
+  .hero__input{width:100%;font-size:16px;padding:14px}
+  .hero__btn{font-size:15px;padding:14px 20px}
+}
+
+/* ---- PLAYER IMAGE ---- */
+.player{position:relative;z-index:1;max-width:1024px;margin:-60px auto 0}
+.player img{width:100%;height:auto}
+@media(max-width:900px){
+  .player{margin-top:-30px;max-width:100%}
+}
+
+/* ---- THREE MODES ---- */
+.modes{max-width:1440px;margin:0 auto;padding:128px 160px;text-align:center;position:relative;z-index:2}
+.modes__title{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:56px;line-height:56px;text-transform:uppercase;margin-bottom:64px}
+.modes__title span{-webkit-text-fill-color:#000000;-webkit-text-stroke-width:2px;-webkit-text-stroke-color:#fff;color:transparent;paint-order:stroke fill}
+.modes__grid{display:flex;gap:24px;justify-content:center}
+.modes__card{background:rgba(255,255,255,.08);border:1px solid #3b3b3b;padding:24px;text-align:left;flex:1;max-width:357px;overflow:hidden}
+.modes__card-title{font-family:'Montserrat',sans-serif;font-weight:800;font-size:32px;line-height:40px;text-transform:uppercase;margin-bottom:24px}
+.modes__card-body{font-family:'Google Sans Flex',sans-serif;font-weight:500;font-size:20px;line-height:32px}
+@media(max-width:900px){
+  .modes{padding:80px 24px}
+  .modes__title{font-size:clamp(28px,6vw,48px);line-height:1.05;margin-bottom:40px}
+  .modes__grid{flex-direction:column;gap:16px}
+  .modes__card{max-width:100%}
+  .modes__card-title{font-size:24px;line-height:32px;margin-bottom:16px}
+  .modes__card-body{font-size:16px;line-height:26px}
+}
+
+/* ---- BALLISLIFE ---- */
+.ballislife{position:relative;z-index:1;max-width:1102px;margin:0 auto;text-align:center;padding:20px 24px}
+.ballislife img{width:100%;height:auto;opacity:.85}
+
+/* ---- BG BLURS ---- */
+.blurs{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden;z-index:0}
+.blur-blue{position:absolute;width:750px;height:750px;top:1800px;left:-400px;background:radial-gradient(circle,rgba(59,130,246,.25) 0%,transparent 70%);filter:blur(120px)}
+.blur-orange{position:absolute;width:750px;height:750px;top:2400px;right:-300px;background:radial-gradient(circle,rgba(247,69,1,.2) 0%,transparent 70%);filter:blur(120px)}
+
+/* ---- WHY SECTION ---- */
+.why{max-width:1440px;margin:0 auto;padding:132px 160px;position:relative;z-index:2}
+.why__label{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:24px;line-height:32px;letter-spacing:.96px;text-transform:uppercase;margin-bottom:32px}
+.why__body{font-family:'Google Sans Flex',sans-serif;font-weight:500;font-size:48px;line-height:64px;max-width:1120px}
+.why__body .hl{color:#F74501}
+@media(max-width:900px){
+  .why{padding:80px 24px}
+  .why__label{font-size:16px;margin-bottom:20px}
+  .why__body{font-size:clamp(22px,5vw,36px);line-height:1.4}
+}
+
+/* ---- STEPS ---- */
+.steps-section{max-width:1440px;margin:0 auto;padding:132px 160px;position:relative;z-index:2}
+.steps__title{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:56px;line-height:56px;text-transform:uppercase;margin-bottom:32px}
+.steps__title span{-webkit-text-fill-color:#000000;-webkit-text-stroke-width:2px;-webkit-text-stroke-color:#fff;color:transparent;paint-order:stroke fill}
+.step{display:flex;gap:32px;align-items:center;margin-bottom:24px}
+.step__num{font-family:'Oswald',sans-serif;font-weight:700;font-size:48px;line-height:64px;color:#F74501;min-width:56px}
+.step__title{font-family:'Google Sans Flex',sans-serif;font-weight:500;font-size:32px;line-height:40px;color:#fff}
+.step__desc{font-family:'Google Sans Flex',sans-serif;font-weight:400;font-size:24px;line-height:32px;color:#a4a4a4;margin-top:8px}
+@media(max-width:900px){
+  .steps-section{padding:80px 24px}
+  .steps__title{font-size:clamp(26px,6vw,44px);line-height:1.05;margin-bottom:24px}
+  .step{gap:20px;margin-bottom:20px}
+  .step__num{font-size:32px;line-height:48px;min-width:40px}
+  .step__title{font-size:20px;line-height:28px}
+  .step__desc{font-size:15px;line-height:24px}
+}
+
+/* ---- FOOTER ---- */
+.footer{background:#000;padding:43px 24px;text-align:center;position:relative;z-index:2;border-top:1px solid #222}
+.footer__text{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:24px;line-height:32px;letter-spacing:7.68px;text-transform:uppercase;color:#fff;margin-bottom:32px}
+.footer__text span{color:#F74501}
+.footer__badges{display:flex;justify-content:center;gap:16px;margin-bottom:24px;opacity:.35}
+.footer__badge{font-family:'Google Sans Flex',sans-serif;font-size:12px;font-weight:600;color:#999;padding:10px 20px;border:1px solid #333}
+.footer__links{display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap}
+.footer__link{font-family:'JetBrains Mono',monospace;font-size:11px;color:#666;transition:color .2s}
+.footer__link:hover{color:#F74501}
+.footer__copy{font-family:'JetBrains Mono',monospace;font-size:10px;color:#444}
+@media(max-width:900px){
+  .footer__text{font-size:14px;letter-spacing:4px;margin-bottom:24px}
+  .footer__badges{flex-direction:column;align-items:center;gap:8px}
+  .footer__links{gap:16px}
+}
+
+/* ---- FAQ ---- */
+.faq{max-width:1440px;margin:0 auto;padding:96px 160px;position:relative;z-index:2;border-top:1px solid #222}
+.mx{max-width:900px;margin:0 auto}
+.faq__label{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:24px;line-height:32px;letter-spacing:.96px;text-transform:uppercase;color:#fff;margin-bottom:24px}
+.faq-item{border-bottom:1px solid #222;overflow:hidden}
+.faq-q{padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;user-select:none}
+.faq-q__text{font-family:'Google Sans Flex',sans-serif;font-size:18px;font-weight:600;color:#fff}
+.faq-q__icon{font-size:20px;color:#999;transition:transform .3s;flex-shrink:0}
+.faq-item.open .faq-q__icon{transform:rotate(45deg)}
+.faq-a{max-height:0;transition:max-height .3s ease;overflow:hidden}
+.faq-item.open .faq-a{max-height:200px}
+.faq-a__text{font-family:'Google Sans Flex',sans-serif;font-size:16px;color:#999;line-height:1.65;padding-bottom:20px}
+@media(max-width:900px){
+  .faq{padding:64px 24px}
+  .faq-q__text{font-size:15px}
+  .faq-a__text{font-size:14px}
+}
+
+/* ---- BOTTOM CTA ---- */
+.bottom-cta{max-width:1440px;margin:0 auto;padding:96px 160px;text-align:center;position:relative;z-index:2}
+.bottom-cta__title{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(28px,4vw,40px);text-transform:uppercase;margin-bottom:8px}
+.bottom-cta__title em{font-style:normal;color:#F74501}
+.bottom-cta__counter{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F74501;margin-bottom:24px}
+.bottom-cta__form{display:flex;gap:16px;justify-content:center;max-width:700px;margin:0 auto}
+.bottom-cta__success{display:none;padding:16px 24px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);margin:0 auto 16px;max-width:700px;font-family:'Google Sans Flex',sans-serif;font-weight:600;font-size:16px;color:#22C55E}
+.bottom-cta__fine{font-family:'JetBrains Mono',monospace;font-size:11px;color:#666;margin-top:12px}
+@media(max-width:900px){
+  .bottom-cta{padding:64px 24px}
+  .bottom-cta__form{flex-direction:column;align-items:stretch;max-width:480px}
+}
+
+/* ---- SCROLL REVEAL ---- */
+.sr{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.sr.vis{opacity:1;transform:translateY(0)}
+.hi{opacity:0;transform:translateY(20px);animation:heroIn .7s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes heroIn{to{opacity:1;transform:translateY(0)}}
+.hi-1{animation-delay:.1s}.hi-2{animation-delay:.25s}.hi-3{animation-delay:.45s}
+</style>
+</head>
+<body>
+
+<!-- Blurs -->
+<div class="blurs">
+  <div class="blur-blue"></div>
+  <div class="blur-orange"></div>
+</div>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav__inner">
+    <img class="nav__logo" src="/img/landing/white-logo-allnet.svg" alt="AllNet Games">
+    <button class="nav__cta" onclick="document.getElementById('hero-email').focus();window.scrollTo({top:0,behavior:'smooth'})">Join Waitlist</button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero__headline hi hi-1">
+    <div class="hero__headline-ghost">THE NBA2K EXPERIENCE,</div>
+    <div>BUT MAKE IT REAL LIFE.</div>
+  </div>
+  <p class="hero__sub hi hi-2">Daily 3-point contests. Weekly dunk challenges. Pickup games that count. All with real rewards.</p>
+  <form class="hero__form hi hi-3" id="hero-form" onsubmit="return handleWaitlist(event,'hero')">
+    <input class="hero__input" id="hero-email" type="email" placeholder="Enter email address here" required>
+    <button class="hero__btn" type="submit">Join Waitlist</button>
+  </form>
+  <div class="hero__success" id="hero-success">You're on the list. We'll notify you at launch.</div>
+  <div class="hero__counter hi hi-3" id="hero-counter"></div>
+  <p class="hero__founding hi hi-3">Early signups receive a Founding Hooper badge with a unique number.</p>
+</section>
+
+<!-- Player Image -->
+<div class="player sr" onclick="document.getElementById('hero-email').focus();window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer;pointer-events:auto" title="This could be your career card">
+  <img src="/img/landing/john-edwards-min.png" alt="AllNet Player Career Card — Your Name" width="1024" height="1024" style="pointer-events:none">
+</div>
+
+<!-- Three Modes -->
+<section class="modes sr">
+  <h2 class="modes__title">THREE MODES <span>to compete</span></h2>
+  <div class="modes__grid">
+    <div class="modes__card">
+      <div class="modes__card-title">3-Point<br>Contest</div>
+      <p class="modes__card-body">21 shots. Record your attempt from any court. Your score hits your city's daily leaderboard. Top scorers earn Stars. Resets every midnight.</p>
+    </div>
+    <div class="modes__card">
+      <div class="modes__card-title">Dunk<br>Contest</div>
+      <p class="modes__card-body">Submit your best dunk video each week. The community votes — anyone can upvote, no account needed. Top 10 in your state win big.</p>
+    </div>
+    <div class="modes__card">
+      <div class="modes__card-title">Pickup<br>Games</div>
+      <p class="modes__card-body">Create or join a game at any court. 1v1 to 5v5. Every match is GPS-verified. Every opponent rates you on skill and sportsmanship. Currently only in OC + LA.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Ballislife -->
+<div class="ballislife sr">
+  <img src="/img/landing/ballislife-min.png" alt="Ball Is Life">
+</div>
+
+<!-- Why AllNet -->
+<section class="why sr">
+  <p class="why__label">Why AllNet Games?</p>
+  <p class="why__body">Compete in <span class="hl">daily 3-point contests</span> and <span class="hl">weekly dunk challenges</span> from <span class="hl">any court</span> — even your backyard. <span class="hl">Play pickup</span> with anyone in your area. <span class="hl">Earn Stars</span> win or lose, <span class="hl">customize</span> your <span class="hl">profile</span>, and <span class="hl">earn</span> real <span class="hl">money</span> via gift cards. Build a <span class="hl">career</span> profile, post <span class="hl">highlights</span>, <span class="hl">grow</span> your <span class="hl">following</span>, and unlock sponsorship opportunities.</p>
+</section>
+
+<!-- Steps -->
+<section class="steps-section sr">
+  <h2 class="steps__title">START COMPETING <span>IN 4 STEPS</span></h2>
+  <div class="step">
+    <div class="step__num">01</div>
+    <div>
+      <div class="step__title">Once you receive the invitation, download AllNet</div>
+      <div class="step__desc">Free on iOS and Android. Sign up with Google or Apple in one tap.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step__num">02</div>
+    <div>
+      <div class="step__title">Head to any court</div>
+      <div class="step__desc">No specific court required. Any court with a 3-point line or a rim works.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step__num">03</div>
+    <div>
+      <div class="step__title">Record and compete</div>
+      <div class="step__desc">Film your 3PT attempt or dunk in-app. Or start a pickup game at the court.</div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step__num">04</div>
+    <div>
+      <div class="step__title">Earn and climb</div>
+      <div class="step__desc">Win Stars for placements, streaks, and challenges. Stars convert to Visa gift cards.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq sr">
+  <div class="mx">
+    <div class="faq__label">Questions</div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">Is this actually free?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Yes. AllNet is free to download and free to use. No entry fees, no subscriptions, no hidden costs.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">Can I really earn money playing basketball?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Yes. You earn Stars by competing on leaderboards, winning challenges, maintaining streaks, and playing pickup games. Stars convert to Visa gift cards at 1,000 Stars = $1.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">How do you prevent fake scores?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Every 3PT attempt and dunk is recorded in-app with GPS verification. Videos are public on the leaderboard. Anyone can flag a suspicious score, and confirmed fraud results in suspension.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">Do I need other players nearby?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Not for 3-Point Contest or Dunk Contest — you can compete solo at any court, anywhere in the US. Pickup games require other players and are currently live in Orange County and Greater LA.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">What makes this different from other basketball apps?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">AllNet verifies participation. Your scores are recorded on video, your games are GPS-verified, and your opponents rate you. It's not self-reported stats — it's proven.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">How old do I need to be?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">13 or older.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Bottom CTA -->
+<section class="bottom-cta sr">
+  <div class="mx">
+    <h2 class="bottom-cta__title">Your city's leaderboard is <em>forming.</em></h2>
+    <div class="bottom-cta__counter" id="bottom-counter"></div>
+    <form class="bottom-cta__form" id="bottom-form" onsubmit="return handleWaitlist(event,'bottom')">
+      <input class="hero__input" type="email" placeholder="Enter email address here" required>
+      <button class="hero__btn" type="submit">Join Waitlist</button>
+    </form>
+    <div class="bottom-cta__success" id="bottom-success">You're on the list. We'll notify you at launch.</div>
+    <p class="bottom-cta__fine">We'll notify you the moment the app goes live.</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <p class="footer__text">Coming Soon. <span>June 2026</span>.</p>
+  <div class="footer__badges">
+    <div class="footer__badge">App Store · Coming Soon</div>
+    <div class="footer__badge">Google Play · Coming Soon</div>
+  </div>
+  <div class="footer__links">
+    <a class="footer__link" href="https://instagram.com/allnetgames" target="_blank">Instagram</a>
+    <a class="footer__link" href="https://tiktok.com/@allnetgames" target="_blank">TikTok</a>
+    <a class="footer__link" href="/privacy">Privacy Policy</a>
+    <a class="footer__link" href="/terms">Terms of Service</a>
+  </div>
+  <div class="footer__copy">© 2026 AllNet Games</div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODAwNzMsImV4cCI6MjA4OTM1NjA3M30.4K6ZT-eNOGbvXxJkN_Dt7aLv80GlC0rrTLcIUPExwp0';
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); observer.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.sr').forEach(el => observer.observe(el));
+
+function toggleFaq(el) { el.parentElement.classList.toggle('open'); }
+
+// Fetch real waitlist count
+let waitlistCount = 0;
+async function fetchWaitlistCount() {
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_waitlist_count', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' }
+    });
+    const count = await res.json();
+    waitlistCount = (count || 0) + 500;
+    updateCounters();
+  } catch (err) { console.log('Count fetch failed'); }
+}
+function updateCounters() {
+  const h = document.getElementById('hero-counter');
+  const b = document.getElementById('bottom-counter');
+  if (waitlistCount > 0) {
+    if (h) h.textContent = waitlistCount + ' players on the waitlist';
+    if (b) b.textContent = 'Join ' + waitlistCount + ' players on the waitlist';
+  }
+}
+fetchWaitlistCount();
+
+// Parse UTM params
+function getUTM() {
+  const p = new URLSearchParams(window.location.search);
+  return { utm_source: p.get('utm_source'), utm_medium: p.get('utm_medium'), utm_campaign: p.get('utm_campaign') };
+}
+
+async function handleWaitlist(e, location) {
+  e.preventDefault();
+  const form = e.target;
+  const email = form.querySelector('input[type="email"]').value;
+  const btn = form.querySelector('button[type="submit"]');
+  const origText = btn.textContent;
+  const utm = getUTM();
+
+  btn.textContent = 'Joining...';
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+
+  if (typeof posthog !== 'undefined') posthog.capture('waitlist_signup', { email_location: location });
+  if (typeof fbq !== 'undefined') fbq('track', 'Lead');
+
+  let ok = false;
+  // Write to Supabase (ignore duplicates)
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/waitlist', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal,resolution=ignore-duplicates'
+      },
+      body: JSON.stringify({
+        email: email,
+        source: location,
+        utm_source: utm.utm_source,
+        utm_medium: utm.utm_medium,
+        utm_campaign: utm.utm_campaign
+      })
+    });
+    ok = res.ok || res.status === 409;
+  } catch (err) {}
+
+  // Also write to MailerLite
+  try {
+    const formData = new FormData();
+    formData.append('fields[email]', email);
+    await fetch('https://assets.mailerlite.com/jsonp/2263931/forms/187207449308038898/subscribe', {
+      method: 'POST', body: formData, mode: 'no-cors'
+    });
+    ok = true;
+  } catch (err) {}
+
+  if (ok) {
+    form.style.display = 'none';
+    document.getElementById(location + '-success').style.display = 'block';
+    waitlistCount++;
+    updateCounters();
+  } else {
+    btn.textContent = origText;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    const errEl = document.createElement('div');
+    errEl.style.cssText = 'padding:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#ef4444;font-size:14px;margin-top:12px;text-align:center';
+    errEl.textContent = 'Something went wrong. Please try again.';
+    form.parentNode.insertBefore(errEl, form.nextSibling);
+    setTimeout(() => errEl.remove(), 5000);
+  }
+  return false;
+}
+</script>
+</body>
+</html>

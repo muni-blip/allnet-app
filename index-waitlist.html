@@ -10,6 +10,10 @@
 <meta property="og:image" content="https://allnetgames.com/img/landing/og-banner.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://allnetgames.com">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AllNet — The NBA 2K Experience, But Real Life">
+<meta name="twitter:description" content="Daily 3-point contests. Weekly dunk challenges. Pickup games that count. Stars convert to Visa gift cards.">
+<meta name="twitter:image" content="https://allnetgames.com/img/landing/og-banner.png">
 <link rel="icon" href="/img/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="/img/icon-192.png">
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
@@ -49,6 +53,8 @@ img{display:block;max-width:100%}
 .hero__btn{background:#F74501;color:#fff;font-family:'Google Sans Flex',sans-serif;font-weight:700;font-size:18px;line-height:32px;padding:16px 24px;border:none;cursor:pointer;text-transform:uppercase;white-space:nowrap;transition:filter .2s}
 .hero__btn:hover{filter:brightness(1.15)}
 .hero__success{display:none;padding:16px 24px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);margin:16px auto 0;max-width:700px;font-family:'Google Sans Flex',sans-serif;font-weight:600;font-size:16px;color:#22C55E;text-align:center}
+.hero__counter{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F74501;margin-top:16px}
+.hero__founding{font-family:'JetBrains Mono',monospace;font-size:11px;color:#999;margin-top:8px}
 @media(max-width:900px){
   .hero{padding:140px 24px 128px}
   .hero__headline{font-size:clamp(40px,7vw,52px);line-height:1;gap:4px}
@@ -120,11 +126,50 @@ img{display:block;max-width:100%}
 }
 
 /* ---- FOOTER ---- */
-.footer{background:#000;padding:43px 24px;text-align:center;position:relative;z-index:2}
-.footer__text{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:24px;line-height:32px;letter-spacing:7.68px;text-transform:uppercase;color:#fff}
+.footer{background:#000;padding:43px 24px;text-align:center;position:relative;z-index:2;border-top:1px solid #222}
+.footer__text{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:24px;line-height:32px;letter-spacing:7.68px;text-transform:uppercase;color:#fff;margin-bottom:32px}
 .footer__text span{color:#F74501}
+.footer__badges{display:flex;justify-content:center;gap:16px;margin-bottom:24px;opacity:.35}
+.footer__badge{font-family:'Google Sans Flex',sans-serif;font-size:12px;font-weight:600;color:#999;padding:10px 20px;border:1px solid #333}
+.footer__links{display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap}
+.footer__link{font-family:'JetBrains Mono',monospace;font-size:11px;color:#666;transition:color .2s}
+.footer__link:hover{color:#F74501}
+.footer__copy{font-family:'JetBrains Mono',monospace;font-size:10px;color:#444}
 @media(max-width:900px){
-  .footer__text{font-size:14px;letter-spacing:4px}
+  .footer__text{font-size:14px;letter-spacing:4px;margin-bottom:24px}
+  .footer__badges{flex-direction:column;align-items:center;gap:8px}
+  .footer__links{gap:16px}
+}
+
+/* ---- FAQ ---- */
+.faq{max-width:1440px;margin:0 auto;padding:96px 160px;position:relative;z-index:2;border-top:1px solid #222}
+.mx{max-width:900px;margin:0 auto}
+.faq__label{font-family:'Google Sans Flex',sans-serif;font-weight:800;font-size:24px;line-height:32px;letter-spacing:.96px;text-transform:uppercase;color:#fff;margin-bottom:24px}
+.faq-item{border-bottom:1px solid #222;overflow:hidden}
+.faq-q{padding:20px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;user-select:none}
+.faq-q__text{font-family:'Google Sans Flex',sans-serif;font-size:18px;font-weight:600;color:#fff}
+.faq-q__icon{font-size:20px;color:#999;transition:transform .3s;flex-shrink:0}
+.faq-item.open .faq-q__icon{transform:rotate(45deg)}
+.faq-a{max-height:0;transition:max-height .3s ease;overflow:hidden}
+.faq-item.open .faq-a{max-height:200px}
+.faq-a__text{font-family:'Google Sans Flex',sans-serif;font-size:16px;color:#999;line-height:1.65;padding-bottom:20px}
+@media(max-width:900px){
+  .faq{padding:64px 24px}
+  .faq-q__text{font-size:15px}
+  .faq-a__text{font-size:14px}
+}
+
+/* ---- BOTTOM CTA ---- */
+.bottom-cta{max-width:1440px;margin:0 auto;padding:96px 160px;text-align:center;position:relative;z-index:2}
+.bottom-cta__title{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(28px,4vw,40px);text-transform:uppercase;margin-bottom:8px}
+.bottom-cta__title em{font-style:normal;color:#F74501}
+.bottom-cta__counter{font-family:'JetBrains Mono',monospace;font-size:13px;color:#F74501;margin-bottom:24px}
+.bottom-cta__form{display:flex;gap:16px;justify-content:center;max-width:700px;margin:0 auto}
+.bottom-cta__success{display:none;padding:16px 24px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);margin:0 auto 16px;max-width:700px;font-family:'Google Sans Flex',sans-serif;font-weight:600;font-size:16px;color:#22C55E}
+.bottom-cta__fine{font-family:'JetBrains Mono',monospace;font-size:11px;color:#666;margin-top:12px}
+@media(max-width:900px){
+  .bottom-cta{padding:64px 24px}
+  .bottom-cta__form{flex-direction:column;align-items:stretch;max-width:480px}
 }
 
 /* ---- SCROLL REVEAL ---- */
@@ -163,6 +208,8 @@ img{display:block;max-width:100%}
     <button class="hero__btn" type="submit">Join Waitlist</button>
   </form>
   <div class="hero__success" id="hero-success">You're on the list. We'll notify you at launch.</div>
+  <div class="hero__counter hi hi-3" id="hero-counter"></div>
+  <p class="hero__founding hi hi-3">Early signups receive a Founding Hooper badge with a unique number.</p>
 </section>
 
 <!-- Player Image -->
@@ -233,9 +280,83 @@ img{display:block;max-width:100%}
   </div>
 </section>
 
+<!-- FAQ -->
+<section class="faq sr">
+  <div class="mx">
+    <div class="faq__label">Questions</div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">Is this actually free?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Yes. AllNet is free to download and free to use. No entry fees, no subscriptions, no hidden costs.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">Can I really earn money playing basketball?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Yes. You earn Stars by competing on leaderboards, winning challenges, maintaining streaks, and playing pickup games. Stars convert to Visa gift cards at 1,000 Stars = $1.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">How do you prevent fake scores?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Every 3PT attempt and dunk is recorded in-app with GPS verification. Videos are public on the leaderboard. Anyone can flag a suspicious score, and confirmed fraud results in suspension.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">Do I need other players nearby?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">Not for 3-Point Contest or Dunk Contest — you can compete solo at any court, anywhere in the US. Pickup games require other players and are currently live in Orange County and Greater LA.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">What makes this different from other basketball apps?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">AllNet verifies participation. Your scores are recorded on video, your games are GPS-verified, and your opponents rate you. It's not self-reported stats — it's proven.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q__text">How old do I need to be?</span>
+        <span class="faq-q__icon">+</span>
+      </div>
+      <div class="faq-a"><p class="faq-a__text">13 or older.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Bottom CTA -->
+<section class="bottom-cta sr">
+  <div class="mx">
+    <h2 class="bottom-cta__title">Your city's leaderboard is <em>forming.</em></h2>
+    <div class="bottom-cta__counter" id="bottom-counter"></div>
+    <form class="bottom-cta__form" id="bottom-form" onsubmit="return handleWaitlist(event,'bottom')">
+      <input class="hero__input" type="email" placeholder="Enter email address here" required>
+      <button class="hero__btn" type="submit">Join Waitlist</button>
+    </form>
+    <div class="bottom-cta__success" id="bottom-success">You're on the list. We'll notify you at launch.</div>
+    <p class="bottom-cta__fine">We'll notify you the moment the app goes live.</p>
+  </div>
+</section>
+
 <!-- Footer -->
 <footer class="footer">
   <p class="footer__text">Coming Soon. <span>Summer 2026</span>.</p>
+  <div class="footer__badges">
+    <div class="footer__badge">App Store · Coming Soon</div>
+    <div class="footer__badge">Google Play · Coming Soon</div>
+  </div>
+  <div class="footer__links">
+    <a class="footer__link" href="https://instagram.com/allnetgames" target="_blank">Instagram</a>
+    <a class="footer__link" href="https://tiktok.com/@allnetgames" target="_blank">TikTok</a>
+    <a class="footer__link" href="/privacy">Privacy Policy</a>
+    <a class="footer__link" href="/terms">Terms of Service</a>
+  </div>
+  <div class="footer__copy">© 2026 AllNet Games</div>
 </footer>
 
 <script>
@@ -243,6 +364,21 @@ const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); observer.unobserve(e.target); } });
 }, { threshold: 0.12 });
 document.querySelectorAll('.sr').forEach(el => observer.observe(el));
+
+// FAQ toggle
+function toggleFaq(el) {
+  el.parentElement.classList.toggle('open');
+}
+
+// Waitlist counter
+let waitlistCount = 79;
+function updateCounters() {
+  const h = document.getElementById('hero-counter');
+  const b = document.getElementById('bottom-counter');
+  if (h) h.textContent = waitlistCount + ' players on the waitlist';
+  if (b) b.textContent = 'Join ' + waitlistCount + ' players on the waitlist';
+}
+updateCounters();
 
 async function handleWaitlist(e, location) {
   e.preventDefault();
@@ -261,6 +397,8 @@ async function handleWaitlist(e, location) {
   }
   form.style.display = 'none';
   document.getElementById(location + '-success').style.display = 'block';
+  waitlistCount++;
+  updateCounters();
   return false;
 }
 </script>

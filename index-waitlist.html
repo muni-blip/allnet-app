@@ -360,41 +360,82 @@ img{display:block;max-width:100%}
 </footer>
 
 <script>
+const SUPABASE_URL = 'https://orrpowyewsioyxztwkdq.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ycnBvd3lld3Npb3l4enR3a2RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMTk2NzAsImV4cCI6MjA1ODU5NTY3MH0.a2ZCYV6CnVJMCmCqORlieYjl0VI14CY0cMFB2dHOh4A';
+
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); observer.unobserve(e.target); } });
 }, { threshold: 0.12 });
 document.querySelectorAll('.sr').forEach(el => observer.observe(el));
 
-// FAQ toggle
-function toggleFaq(el) {
-  el.parentElement.classList.toggle('open');
-}
+function toggleFaq(el) { el.parentElement.classList.toggle('open'); }
 
-// Waitlist counter
-let waitlistCount = 79;
+// Fetch real waitlist count
+let waitlistCount = 0;
+async function fetchWaitlistCount() {
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_waitlist_count', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' }
+    });
+    const count = await res.json();
+    waitlistCount = count || 0;
+    updateCounters();
+  } catch (err) { console.log('Count fetch failed'); }
+}
 function updateCounters() {
   const h = document.getElementById('hero-counter');
   const b = document.getElementById('bottom-counter');
-  if (h) h.textContent = waitlistCount + ' players on the waitlist';
-  if (b) b.textContent = 'Join ' + waitlistCount + ' players on the waitlist';
+  if (waitlistCount > 0) {
+    if (h) h.textContent = waitlistCount + ' players on the waitlist';
+    if (b) b.textContent = 'Join ' + waitlistCount + ' players on the waitlist';
+  }
 }
-updateCounters();
+fetchWaitlistCount();
+
+// Parse UTM params
+function getUTM() {
+  const p = new URLSearchParams(window.location.search);
+  return { utm_source: p.get('utm_source'), utm_medium: p.get('utm_medium'), utm_campaign: p.get('utm_campaign') };
+}
 
 async function handleWaitlist(e, location) {
   e.preventDefault();
   const form = e.target;
   const email = form.querySelector('input[type="email"]').value;
+  const utm = getUTM();
+
   if (typeof posthog !== 'undefined') posthog.capture('waitlist_signup', { email_location: location });
   if (typeof fbq !== 'undefined') fbq('track', 'Lead');
+
+  // Write to Supabase
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/waitlist', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        email: email,
+        source: location,
+        utm_source: utm.utm_source,
+        utm_medium: utm.utm_medium,
+        utm_campaign: utm.utm_campaign
+      })
+    });
+  } catch (err) { console.log('Supabase insert failed'); }
+
+  // Also write to MailerLite
   try {
     const formData = new FormData();
     formData.append('fields[email]', email);
     await fetch('https://assets.mailerlite.com/jsonp/2263931/forms/187207449308038898/subscribe', {
       method: 'POST', body: formData, mode: 'no-cors'
     });
-  } catch (err) {
-    console.log('Waitlist signup submitted:', email);
-  }
+  } catch (err) {}
+
   form.style.display = 'none';
   document.getElementById(location + '-success').style.display = 'block';
   waitlistCount++;

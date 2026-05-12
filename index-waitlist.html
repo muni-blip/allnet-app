@@ -448,8 +448,7 @@ async function handleWaitlist(e, location) {
   if (ok) {
     form.style.display = 'none';
     document.getElementById(location + '-success').style.display = 'block';
-    waitlistCount++;
-    updateCounters();
+    fetchWaitlistCount();
   } else {
     btn.textContent = origText;
     btn.disabled = false;

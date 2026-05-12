@@ -17,12 +17,14 @@
 <link rel="icon" href="/img/landing/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/img/landing/favicon.png">
 <script defer data-domain="allnetgames.com" src="https://plausible.io/js/script.tagged-events.js"></script>
-<script src="js/posthog.js"></script>
+<script defer src="js/posthog.js"></script>
 <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','1772975143883614');fbq('track','PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1772975143883614&ev=PageView&noscript=1"/></noscript>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;700;800&family=Oswald:wght@700&family=Montserrat:wght@800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:#000;color:#fff;font-family:'Google Sans Flex',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -231,7 +233,7 @@ img{display:block;max-width:100%}
 
 <!-- Player Image -->
 <div class="player sr" onclick="document.getElementById('hero-email').focus();window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer;pointer-events:auto" title="This could be your career card">
-  <img src="/img/landing/john-edwards-min.png" alt="AllNet Player Career Card — Your Name" width="1024" height="1024" style="pointer-events:none">
+  <img src="/img/landing/john-edwards-min.png" alt="AllNet Player Career Card — Your Name" width="1024" height="1024" loading="lazy" style="pointer-events:none">
 </div>
 
 <!-- Three Modes -->

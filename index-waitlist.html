@@ -65,7 +65,7 @@ img{display:block;max-width:100%}
 }
 
 /* ---- PLAYER IMAGE ---- */
-.player{position:relative;z-index:1;max-width:1024px;margin:-60px auto 0;pointer-events:none}
+.player{position:relative;z-index:1;max-width:1024px;margin:-60px auto 0}
 .player img{width:100%;height:auto}
 @media(max-width:900px){
   .player{margin-top:-30px;max-width:100%}
@@ -213,8 +213,8 @@ img{display:block;max-width:100%}
 </section>
 
 <!-- Player Image -->
-<div class="player sr">
-  <img src="/img/landing/john-edwards-min.png" alt="AllNet Player Career Card" width="1024" height="1024">
+<div class="player sr" onclick="document.getElementById('hero-email').focus();window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer;pointer-events:auto" title="This could be your career card">
+  <img src="/img/landing/john-edwards-min.png" alt="AllNet Player Career Card — Your Name" width="1024" height="1024" style="pointer-events:none">
 </div>
 
 <!-- Three Modes -->
@@ -403,19 +403,26 @@ async function handleWaitlist(e, location) {
   e.preventDefault();
   const form = e.target;
   const email = form.querySelector('input[type="email"]').value;
+  const btn = form.querySelector('button[type="submit"]');
+  const origText = btn.textContent;
   const utm = getUTM();
+
+  btn.textContent = 'Joining...';
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
 
   if (typeof posthog !== 'undefined') posthog.capture('waitlist_signup', { email_location: location });
   if (typeof fbq !== 'undefined') fbq('track', 'Lead');
 
-  // Write to Supabase
+  let ok = false;
+  // Write to Supabase (ignore duplicates)
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/waitlist', {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/waitlist', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'return=minimal,resolution=ignore-duplicates'
       },
       body: JSON.stringify({
         email: email,
@@ -425,7 +432,8 @@ async function handleWaitlist(e, location) {
         utm_campaign: utm.utm_campaign
       })
     });
-  } catch (err) { console.log('Supabase insert failed'); }
+    ok = res.ok || res.status === 409;
+  } catch (err) {}
 
   // Also write to MailerLite
   try {
@@ -434,12 +442,24 @@ async function handleWaitlist(e, location) {
     await fetch('https://assets.mailerlite.com/jsonp/2263931/forms/187207449308038898/subscribe', {
       method: 'POST', body: formData, mode: 'no-cors'
     });
+    ok = true;
   } catch (err) {}
 
-  form.style.display = 'none';
-  document.getElementById(location + '-success').style.display = 'block';
-  waitlistCount++;
-  updateCounters();
+  if (ok) {
+    form.style.display = 'none';
+    document.getElementById(location + '-success').style.display = 'block';
+    waitlistCount++;
+    updateCounters();
+  } else {
+    btn.textContent = origText;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    const errEl = document.createElement('div');
+    errEl.style.cssText = 'padding:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#ef4444;font-size:14px;margin-top:12px;text-align:center';
+    errEl.textContent = 'Something went wrong. Please try again.';
+    form.parentNode.insertBefore(errEl, form.nextSibling);
+    setTimeout(() => errEl.remove(), 5000);
+  }
   return false;
 }
 </script>
